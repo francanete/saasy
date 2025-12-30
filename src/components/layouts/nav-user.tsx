@@ -55,9 +55,9 @@ export function NavUser({ user, plan }: NavUserProps) {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground group-data-[collapsible=icon]:justify-center"
             >
-              <Avatar className="h-8 w-8 rounded-lg">
+              <Avatar className="h-8 w-8 rounded-lg shrink-0">
                 <AvatarImage src={user.image || undefined} alt={user.name || user.email} />
                 <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
               </Avatar>

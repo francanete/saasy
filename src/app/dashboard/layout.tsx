@@ -12,7 +12,6 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { Separator } from "@/components/ui/separator";
 
 export default async function DashboardLayout({
   children,
@@ -48,9 +47,8 @@ export default async function DashboardLayout({
       </Suspense>
       <AppSidebar user={session.user} plan={subscription?.plan || "FREE"} />
       <SidebarInset>
-        <header className="flex h-12 shrink-0 items-center gap-2 border-b px-4">
+        <header className="flex h-12 shrink-0 items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
-          <Separator orientation="vertical" className="mr-2 h-4" />
           <span className="text-sm text-muted-foreground">Dashboard</span>
         </header>
         {subscription?.status === "TRIALING" &&

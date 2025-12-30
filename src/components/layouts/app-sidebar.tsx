@@ -41,12 +41,12 @@ const navigation = [
 export function AppSidebar({ user, plan }: AppSidebarProps) {
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b">
+      <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/dashboard">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <Link href="/dashboard" className="group-data-[collapsible=icon]:justify-center">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shrink-0">
                   <span className="text-sm font-bold">
                     {appConfig.name.charAt(0)}
                   </span>
@@ -64,7 +64,7 @@ export function AppSidebar({ user, plan }: AppSidebarProps) {
         <NavMain items={navigation} />
       </SidebarContent>
 
-      <SidebarFooter className="border-t">
+      <SidebarFooter>
         <NavUser user={user} plan={plan} />
       </SidebarFooter>
 
