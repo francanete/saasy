@@ -53,9 +53,10 @@ export default async function DashboardLayout({
           <Separator orientation="vertical" className="mr-2 h-4" />
           <span className="text-sm text-muted-foreground">Dashboard</span>
         </header>
-        {subscription?.status === "TRIALING" && subscription.currentPeriodEnd && (
-          <TrialBanner endsAt={subscription.currentPeriodEnd} />
-        )}
+        {subscription?.status === "TRIALING" &&
+          subscription.currentPeriodEnd && (
+            <TrialBanner endsAt={subscription.currentPeriodEnd} />
+          )}
         <main className="flex-1 p-6">{children}</main>
       </SidebarInset>
     </SidebarProvider>

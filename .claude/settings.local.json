@@ -4,5 +4,9 @@
       "Bash(npm view:*)",
       "WebFetch(domain:polar.sh)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "shadcn"
+  ],
+  "enableAllProjectMcpServers": true
 }
