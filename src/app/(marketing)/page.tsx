@@ -27,7 +27,7 @@ export default function HomePage() {
     <div className="flex flex-col">
       {/* Hero */}
       <section className="py-24 text-center">
-        <div className="container">
+        <div className="container mx-auto px-4 md:px-6">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
             Build Your SaaS
             <br />
@@ -50,7 +50,7 @@ export default function HomePage() {
 
       {/* Features */}
       <section id="features" className="py-24 bg-muted/30">
-        <div className="container">
+        <div className="container mx-auto px-4 md:px-6">
           <h2 className="text-3xl font-bold text-center mb-12">
             Everything You Need
           </h2>
@@ -72,7 +72,7 @@ export default function HomePage() {
 
       {/* CTA */}
       <section className="py-24">
-        <div className="container text-center">
+        <div className="container mx-auto px-4 md:px-6 text-center">
           <h2 className="text-3xl font-bold mb-4">Ready to Get Started?</h2>
           <p className="text-xl text-muted-foreground mb-8">
             Join thousands of developers building with {appConfig.name}.

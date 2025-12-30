@@ -19,7 +19,7 @@ const footerLinks = {
 export function Footer() {
   return (
     <footer className="border-t bg-muted/30">
-      <div className="container py-12">
+      <div className="container mx-auto px-4 md:px-6 py-12">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           <div>
             <Link href="/" className="text-xl font-bold">
