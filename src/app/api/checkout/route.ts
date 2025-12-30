@@ -1,0 +1,43 @@
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import { Polar } from "@polar-sh/sdk";
+import { NextResponse } from "next/server";
+import { getPolarProducts } from "@/lib/pricing";
+
+const polarClient = new Polar({
+  accessToken: process.env.POLAR_ACCESS_TOKEN!,
+  server: process.env.NODE_ENV === "production" ? "production" : "sandbox",
+});
+
+export async function POST(request: Request) {
+  const session = await auth.api.getSession({ headers: await headers() });
+
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { slug } = await request.json();
+  const products = getPolarProducts();
+  const product = products.find((p) => p.slug === slug);
+
+  if (!product) {
+    return NextResponse.json({ error: "Product not found" }, { status: 400 });
+  }
+
+  try {
+    const checkout = await polarClient.checkouts.create({
+      products: [product.productId],
+      customerEmail: session.user.email,
+      externalCustomerId: session.user.id,
+      successUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?checkout=success`,
+    });
+
+    return NextResponse.json({ url: checkout.url });
+  } catch (error) {
+    console.error("Checkout creation failed:", error);
+    return NextResponse.json(
+      { error: "Failed to create checkout" },
+      { status: 500 }
+    );
+  }
+}

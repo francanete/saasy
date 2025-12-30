@@ -18,6 +18,7 @@ export const subscriptionStatusEnum = pgEnum("subscription_status", [
   "PAST_DUE",
   "TRIALING",
 ]);
+export const billingTypeEnum = pgEnum("billing_type", ["recurring", "one_time"]);
 
 // ============ Auth Tables (Better Auth) ============
 // Note: Better Auth expects specific table names. We use pluralized names
@@ -127,12 +128,25 @@ export const subscriptions = pgTable(
       .notNull()
       .unique()
       .references(() => users.id, { onDelete: "cascade" }),
-    polarCustomerId: text("polar_customer_id").unique(),
-    polarSubscriptionId: text("polar_subscription_id").unique(),
+
+    // Polar IDs
+    polarCustomerId: text("polar_customer_id"),
+    polarSubscriptionId: text("polar_subscription_id"), // For recurring subscriptions
+    polarOrderId: text("polar_order_id"), // For one-time purchases (LTD)
+    polarProductId: text("polar_product_id"), // The actual Polar product purchased
+
+    // Billing info
+    billingType: billingTypeEnum("billing_type").default("recurring").notNull(),
     plan: planEnum("plan").default("FREE").notNull(),
     status: subscriptionStatusEnum("status").default("ACTIVE").notNull(),
+
+    // Period (NULL for lifetime purchases)
     currentPeriodEnd: timestamp("current_period_end"),
     cancelAtPeriodEnd: boolean("cancel_at_period_end").default(false),
+
+    // Sync tracking (for API fallback when webhooks fail)
+    lastSyncedAt: timestamp("last_synced_at"),
+
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()
@@ -140,10 +154,9 @@ export const subscriptions = pgTable(
       .$onUpdate(() => new Date()),
   },
   (table) => [
-    // Index for sync job queries (find stale ACTIVE/TRIALING subscriptions)
     index("subscriptions_status_idx").on(table.status),
-    // Composite index for finding subscriptions by status and last update
-    index("subscriptions_status_updated_idx").on(table.status, table.updatedAt),
+    index("subscriptions_billing_type_idx").on(table.billingType),
+    index("subscriptions_polar_customer_id_idx").on(table.polarCustomerId),
   ]
 );
 

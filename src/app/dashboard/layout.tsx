@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -5,6 +6,7 @@ import { db, subscriptions } from "@/lib/db";
 import { eq } from "drizzle-orm";
 import { TrialBanner } from "@/components/trial-banner";
 import { Sidebar } from "@/components/layouts/sidebar";
+import { CheckoutSuccessToast } from "@/components/checkout-success-toast";
 
 export default async function DashboardLayout({
   children,
@@ -35,6 +37,9 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex min-h-screen">
+      <Suspense fallback={null}>
+        <CheckoutSuccessToast />
+      </Suspense>
       <Sidebar user={session.user} plan={subscription?.plan || "FREE"} />
       <div className="flex-1">
         {subscription?.status === "TRIALING" && subscription.currentPeriodEnd && (

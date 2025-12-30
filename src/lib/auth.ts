@@ -1,26 +1,37 @@
 import { betterAuth } from "better-auth";
 import { magicLink } from "better-auth/plugins/magic-link";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { polar, checkout, portal, webhooks } from "@polar-sh/better-auth";
+import { Polar } from "@polar-sh/sdk";
 import { db } from "./db";
 import * as schema from "./db/schema";
 import { sendEmail } from "./email";
 import { appConfig } from "./config";
+import { getPolarProducts } from "./pricing";
+import {
+  upsertSubscription,
+  updateSubscriptionStatus,
+  mapPolarStatus,
+} from "./subscription";
+
+// Polar SDK client
+const polarClient = new Polar({
+  accessToken: process.env.POLAR_ACCESS_TOKEN!,
+  server: process.env.NODE_ENV === "production" ? "production" : "sandbox",
+});
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
     schema,
-    // Map our pluralized table names to Better Auth's expected names
     usePlural: true,
   }),
-  // No emailAndPassword - using magic link instead (passwordless)
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID || "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
       enabled: !!process.env.GOOGLE_CLIENT_ID,
     },
-    // GitHub removed - only Google OAuth
   },
   plugins: [
     magicLink({
@@ -37,20 +48,123 @@ export const auth = betterAuth({
           `,
         });
       },
-      expiresIn: 60 * 5, // 5 minutes
-      disableSignUp: false, // Allow new users via magic link
-      
+      expiresIn: 60 * 5,
+      disableSignUp: false,
+    }),
+    // Polar integration with dynamic products based on pricing mode
+    polar({
+      client: polarClient,
+      createCustomerOnSignUp: true,
+      use: [
+        checkout({
+          products: getPolarProducts(),
+          successUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?checkout=success`,
+          authenticatedUsersOnly: true,
+        }),
+        portal(),
+        webhooks({
+          secret: process.env.POLAR_WEBHOOK_SECRET!,
+
+          // One-time purchase (LTD)
+          onOrderPaid: async (payload) => {
+            const order = payload.data;
+            const customer = order.customer;
+            const product = order.product;
+
+            if (!customer.externalId) {
+              console.error(
+                "Polar webhook: No externalId on customer",
+                customer.id,
+              );
+              return;
+            }
+
+            if (!product) {
+              console.error("Polar webhook: No product on order", order.id);
+              return;
+            }
+
+            await upsertSubscription({
+              userId: customer.externalId,
+              polarCustomerId: customer.id,
+              polarOrderId: order.id,
+              polarProductId: product.id,
+              billingType: "one_time",
+              status: "ACTIVE",
+            });
+          },
+
+          // New recurring subscription
+          onSubscriptionCreated: async (payload) => {
+            const subscription = payload.data;
+            const customer = subscription.customer;
+            const product = subscription.product;
+
+            if (!customer.externalId) {
+              console.error(
+                "Polar webhook: No externalId on customer",
+                customer.id,
+              );
+              return;
+            }
+
+            if (!product) {
+              console.error(
+                "Polar webhook: No product on subscription",
+                subscription.id,
+              );
+              return;
+            }
+
+            await upsertSubscription({
+              userId: customer.externalId,
+              polarCustomerId: customer.id,
+              polarSubscriptionId: subscription.id,
+              polarProductId: product.id,
+              billingType: "recurring",
+              status: mapPolarStatus(subscription.status),
+              currentPeriodEnd: subscription.currentPeriodEnd
+                ? new Date(subscription.currentPeriodEnd)
+                : undefined,
+              cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+            });
+          },
+
+          // Subscription status/period changes
+          onSubscriptionUpdated: async (payload) => {
+            const subscription = payload.data;
+
+            await updateSubscriptionStatus({
+              polarSubscriptionId: subscription.id,
+              status: mapPolarStatus(subscription.status),
+              currentPeriodEnd: subscription.currentPeriodEnd
+                ? new Date(subscription.currentPeriodEnd)
+                : undefined,
+              cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+            });
+          },
+
+          // Subscription canceled
+          onSubscriptionCanceled: async (payload) => {
+            const subscription = payload.data;
+
+            await updateSubscriptionStatus({
+              polarSubscriptionId: subscription.id,
+              status: "CANCELED",
+            });
+          },
+        }),
+      ],
     }),
   ],
   session: {
-    expiresIn: 60 * 60 * 24 * 7, // 7 days
-    updateAge: 60 * 60 * 24, // 1 day
+    expiresIn: 60 * 60 * 24 * 7,
+    updateAge: 60 * 60 * 24,
     cookieCache: {
       enabled: true,
-      maxAge: 5 * 60, // 5 minutes
+      maxAge: 5 * 60,
     },
   },
-  // Base URL for auth callbacks
   baseURL: process.env.NEXT_PUBLIC_APP_URL,
 });
 
