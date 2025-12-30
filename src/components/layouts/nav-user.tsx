@@ -22,7 +22,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
 } from "@/components/ui/sidebar";
 import { signOut } from "@/lib/auth-client";
 
@@ -37,7 +36,6 @@ interface NavUserProps {
 }
 
 export function NavUser({ user, plan }: NavUserProps) {
-  const { isMobile } = useSidebar();
 
   const initials = user.name
     ? user.name
@@ -73,7 +71,7 @@ export function NavUser({ user, plan }: NavUserProps) {
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
-            side={isMobile ? "bottom" : "right"}
+            side="right"
             align="end"
             sideOffset={4}
           >

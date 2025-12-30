@@ -2,11 +2,12 @@
   "permissions": {
     "allow": [
       "Bash(npm view:*)",
-      "WebFetch(domain:polar.sh)"
+      "WebFetch(domain:polar.sh)",
+      "mcp__plugin_database-expert_context7__query-docs"
     ]
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "shadcn"
-  ],
-  "enableAllProjectMcpServers": true
+  ]
 }
