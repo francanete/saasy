@@ -1,14 +1,14 @@
 import { inngest } from "./client";
 import { db, users, subscriptions } from "@/lib/db";
 import { eq, and, lt, inArray, gte, isNull } from "drizzle-orm";
-import { sendEmail } from "@/lib/email";
+import { sendWelcomeEmail } from "@/lib/email";
 import {
   syncSubscriptionFromPolar,
   recoverPolarCustomerId,
 } from "@/lib/subscription";
 
 // Welcome email after signup
-export const sendWelcomeEmail = inngest.createFunction(
+export const welcomeEmailJob = inngest.createFunction(
   { id: "send-welcome-email" },
   { event: "user/created" },
   async ({ event }) => {
@@ -20,13 +20,7 @@ export const sendWelcomeEmail = inngest.createFunction(
       .where(eq(users.id, userId))
       .limit(1);
 
-    await sendEmail({
-      to: email,
-      subject: "Welcome to Pilotes!",
-      html: `<h1>Welcome, ${user?.name || "there"}!</h1>
-        <p>Thanks for signing up. We're excited to have you!</p>
-        <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard">Go to Dashboard</a></p>`,
-    });
+    await sendWelcomeEmail(email, user?.name || "there");
 
     return { sent: true };
   },
@@ -128,7 +122,7 @@ export const retryFailedWebhooks = inngest.createFunction(
 );
 
 export const functions = [
-  sendWelcomeEmail,
+  welcomeEmailJob,
   syncAllSubscriptions,
   retryFailedWebhooks,
 ];
