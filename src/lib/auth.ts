@@ -1,4 +1,5 @@
 import { betterAuth } from "better-auth";
+import { createAuthMiddleware } from "better-auth/api";
 import { magicLink } from "better-auth/plugins/magic-link";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { polar, checkout, portal, webhooks } from "@polar-sh/better-auth";
@@ -13,8 +14,8 @@ import {
   updateSubscriptionStatus,
   mapPolarStatus,
 } from "./subscription";
+import { inngest } from "./inngest/client";
 
-// Polar SDK client
 const polarClient = new Polar({
   accessToken: process.env.POLAR_ACCESS_TOKEN!,
   server: process.env.NODE_ENV === "production" ? "production" : "sandbox",
@@ -166,6 +167,30 @@ export const auth = betterAuth({
     },
   },
   baseURL: process.env.NEXT_PUBLIC_APP_URL,
+
+  hooks: {
+    after: createAuthMiddleware(async (ctx) => {
+      // Trigger welcome email on new user signup
+      // Paths: /sign-up (email), /callback/* (OAuth), /magic-link/verify (magic link)
+      const isSignupPath =
+        ctx.path.startsWith("/sign-up") ||
+        ctx.path.startsWith("/callback") ||
+        ctx.path.startsWith("/magic-link/verify");
+
+      if (isSignupPath) {
+        const newSession = ctx.context.newSession;
+        if (newSession) {
+          await inngest.send({
+            name: "user/created",
+            data: {
+              userId: newSession.user.id,
+              email: newSession.user.email,
+            },
+          });
+        }
+      }
+    }),
+  },
 });
 
 export type Session = typeof auth.$Infer.Session;

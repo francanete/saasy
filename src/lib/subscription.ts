@@ -36,7 +36,7 @@ export type UpsertSubscriptionData = {
 };
 
 export async function upsertSubscription(
-  data: UpsertSubscriptionData
+  data: UpsertSubscriptionData,
 ): Promise<void> {
   await db
     .insert(subscriptions)
@@ -77,7 +77,7 @@ export type UpdateSubscriptionData = {
 };
 
 export async function updateSubscriptionStatus(
-  data: UpdateSubscriptionData
+  data: UpdateSubscriptionData,
 ): Promise<void> {
   await db
     .update(subscriptions)
@@ -110,13 +110,44 @@ export function mapPolarStatus(polarStatus: string): SubscriptionStatusType {
 // ============ API Sync (Fallback for missed webhooks) ============
 
 /**
+ * Recover missing polarCustomerId by looking up the customer in Polar by externalId.
+ * This handles cases where the webhook failed to store the customer ID.
+ */
+export async function recoverPolarCustomerId(
+  userId: string,
+): Promise<string | null> {
+  const polar = new Polar({
+    accessToken: process.env.POLAR_ACCESS_TOKEN!,
+    server: process.env.NODE_ENV === "production" ? "production" : "sandbox",
+  });
+
+  try {
+    const customer = await polar.customers.getExternal({
+      externalId: userId,
+    });
+
+    // Store the recovered polarCustomerId
+    await db
+      .update(subscriptions)
+      .set({ polarCustomerId: customer.id })
+      .where(eq(subscriptions.userId, userId));
+
+    console.log(`Recovered polarCustomerId for user ${userId}: ${customer.id}`);
+    return customer.id;
+  } catch (error) {
+    // Customer not found in Polar - user never purchased
+    return null;
+  }
+}
+
+/**
  * Sync subscription from Polar API.
  * Called when local DB shows no access but user is a Polar customer.
  * This handles cases where webhooks may have failed.
  */
 export async function syncSubscriptionFromPolar(
   userId: string,
-  polarCustomerId: string
+  polarCustomerId: string,
 ): Promise<SubscriptionStatus> {
   const polar = new Polar({
     accessToken: process.env.POLAR_ACCESS_TOKEN!,
@@ -236,7 +267,7 @@ export async function syncSubscriptionFromPolar(
  * - If user has NO access but is a Polar customer: verify with API (max 1/hour)
  */
 export async function getSubscriptionStatus(
-  userId: string
+  userId: string,
 ): Promise<SubscriptionStatus> {
   const [subscription] = await db
     .select()
