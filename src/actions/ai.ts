@@ -1,5 +1,6 @@
 "use server";
 
+import { generateText } from "ai";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { models, type ModelName } from "@/lib/ai";
@@ -34,10 +35,11 @@ export async function summarizeText(
   }
 
   try {
-    const result = await models.flash.generateContent(
-      `Summarize the following text in 2-3 sentences:\n\n${text}`
-    );
-    return { success: true, data: result.response.text() };
+    const { text: summary } = await generateText({
+      model: models.flash,
+      prompt: `Summarize the following text in 2-3 sentences:\n\n${text}`,
+    });
+    return { success: true, data: summary };
   } catch (error) {
     console.error("Summarization failed:", error);
     return { success: false, error: "Failed to generate summary" };
@@ -54,8 +56,11 @@ export async function generateContent(
   }
 
   try {
-    const result = await models[model].generateContent(prompt);
-    return { success: true, data: result.response.text() };
+    const { text } = await generateText({
+      model: models[model],
+      prompt,
+    });
+    return { success: true, data: text };
   } catch (error) {
     console.error("Generation failed:", error);
     return { success: false, error: "Failed to generate content" };
