@@ -7,9 +7,9 @@ const google = createGoogleGenerativeAI({
 // Model configurations for Vercel AI SDK
 export const models = {
   // Fast model for quick responses (chat, summaries)
-  flash: google("gemini-1.5-flash"),
+  flash: google("gemini-2.0-flash"),
   // More capable model for complex reasoning
-  pro: google("gemini-1.5-pro"),
+  pro: google("gemini-2.0-flash"),
 };
 
 export type ModelName = keyof typeof models;
