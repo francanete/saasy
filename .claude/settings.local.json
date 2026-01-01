@@ -4,9 +4,13 @@
       "Bash(npm view:*)",
       "WebFetch(domain:polar.sh)",
       "mcp__plugin_database-expert_context7__query-docs",
-      "mcp__plugin_database-expert_context7__resolve-library-id"
+      "mcp__plugin_database-expert_context7__resolve-library-id",
+      "Bash(grep:*)",
+      "Bash(ls:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": ["shadcn"]
+  "enabledMcpjsonServers": [
+    "shadcn"
+  ]
 }
