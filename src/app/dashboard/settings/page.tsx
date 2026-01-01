@@ -2,7 +2,13 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { db, subscriptions } from "@/lib/db";
 import { eq } from "drizzle-orm";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -56,12 +62,17 @@ export default async function SettingsPage() {
             <CardContent className="space-y-6">
               <div className="flex items-center gap-4">
                 <Avatar className="h-20 w-20">
-                  <AvatarImage src={user.image || undefined} alt={user.name || "User"} />
-                  <AvatarFallback className="text-lg">{initials}</AvatarFallback>
+                  <AvatarImage
+                    src={user.image || undefined}
+                    alt={user.name || "User"}
+                  />
+                  <AvatarFallback className="text-lg">
+                    {initials}
+                  </AvatarFallback>
                 </Avatar>
                 <div>
                   <p className="font-medium">{user.name || "No name set"}</p>
-                  <p className="text-sm text-muted-foreground">{user.email}</p>
+                  <p className="text-muted-foreground text-sm">{user.email}</p>
                 </div>
               </div>
 
@@ -69,11 +80,11 @@ export default async function SettingsPage() {
 
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">
+                  <label className="text-muted-foreground text-sm font-medium">
                     Email
                   </label>
                   <p className="mt-1">{user.email}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-muted-foreground mt-1 text-xs">
                     Email cannot be changed directly.
                   </p>
                 </div>

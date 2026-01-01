@@ -182,30 +182,30 @@ pnpm add -D drizzle-kit@0.31.8 typescript@5.9.3
 
 ### Package Versions Reference
 
-| Package | Version | Purpose |
-|---------|---------|---------|
-| `next` | 16.1.1 | Framework (via create-next-app) |
-| `react` | 19.2.3 | UI library (via create-next-app) |
-| `typescript` | 5.9.3 | Type checking |
-| `tailwindcss` | 4.1.18 | Styling (via create-next-app) |
-| `drizzle-orm` | 0.45.1 | Database ORM |
-| `drizzle-kit` | 0.31.8 | Drizzle CLI/migrations |
-| `@neondatabase/serverless` | 1.0.2 | Neon PostgreSQL driver |
-| `@paralleldrive/cuid2` | 3.0.4 | ID generation |
-| `better-auth` | 1.4.9 | Authentication |
-| `@polar-sh/better-auth` | 1.6.3 | Polar + Better Auth plugin |
-| `@polar-sh/sdk` | 0.42.1 | Polar.sh payments SDK |
-| `@tanstack/react-query` | 5.90.14 | Server state management |
-| `@google/generative-ai` | 0.24.1 | Google AI (Gemini) |
-| `@upstash/ratelimit` | 2.0.7 | Rate limiting |
-| `@upstash/redis` | 1.36.0 | Redis client for rate limiting |
-| `inngest` | 3.48.1 | Background jobs |
-| `resend` | 6.6.0 | Transactional email |
-| `zod` | 4.2.1 | Schema validation |
-| `class-variance-authority` | 0.7.1 | Component variants |
-| `clsx` | 2.1.1 | Class name utility |
-| `tailwind-merge` | 2.6.0 | Tailwind class merging |
-| `lucide-react` | 0.562.0 | Icons |
+| Package                    | Version | Purpose                          |
+| -------------------------- | ------- | -------------------------------- |
+| `next`                     | 16.1.1  | Framework (via create-next-app)  |
+| `react`                    | 19.2.3  | UI library (via create-next-app) |
+| `typescript`               | 5.9.3   | Type checking                    |
+| `tailwindcss`              | 4.1.18  | Styling (via create-next-app)    |
+| `drizzle-orm`              | 0.45.1  | Database ORM                     |
+| `drizzle-kit`              | 0.31.8  | Drizzle CLI/migrations           |
+| `@neondatabase/serverless` | 1.0.2   | Neon PostgreSQL driver           |
+| `@paralleldrive/cuid2`     | 3.0.4   | ID generation                    |
+| `better-auth`              | 1.4.9   | Authentication                   |
+| `@polar-sh/better-auth`    | 1.6.3   | Polar + Better Auth plugin       |
+| `@polar-sh/sdk`            | 0.42.1  | Polar.sh payments SDK            |
+| `@tanstack/react-query`    | 5.90.14 | Server state management          |
+| `@google/generative-ai`    | 0.24.1  | Google AI (Gemini)               |
+| `@upstash/ratelimit`       | 2.0.7   | Rate limiting                    |
+| `@upstash/redis`           | 1.36.0  | Redis client for rate limiting   |
+| `inngest`                  | 3.48.1  | Background jobs                  |
+| `resend`                   | 6.6.0   | Transactional email              |
+| `zod`                      | 4.2.1   | Schema validation                |
+| `class-variance-authority` | 0.7.1   | Component variants               |
+| `clsx`                     | 2.1.1   | Class name utility               |
+| `tailwind-merge`           | 2.6.0   | Tailwind class merging           |
+| `lucide-react`             | 0.562.0 | Icons                            |
 
 ### Setup shadcn/ui
 
@@ -254,6 +254,7 @@ The default `globals.css` will look like:
 ```
 
 **Key differences from Tailwind v3:**
+
 - No `tailwind.config.ts` - configuration is in CSS
 - Use `@theme` directive for custom design tokens
 - Use `@import "tailwindcss"` instead of `@tailwind` directives
@@ -413,6 +414,7 @@ export default defineConfig({
 > **Better Auth Compatibility:** Better Auth expects specific table names (`user`, `session`, `account`, `verification` - singular). We use pluralized names (`users`, `sessions`, etc.) for convention, then configure table mapping in the Drizzle adapter. See Step 3 for the adapter configuration.
 >
 > Alternatively, you can generate the schema using Better Auth's CLI:
+>
 > ```bash
 > npx @better-auth/cli generate --config ./src/lib/auth.ts
 > ```
@@ -608,10 +610,10 @@ export type NewSubscription = typeof subscriptions.$inferInsert;
 
 Neon provides two drivers with different trade-offs:
 
-| Driver | Use Case | Transactions | Cold Start |
-|--------|----------|--------------|------------|
-| `neon-http` | Serverless, edge functions | Single-statement only | ~50ms |
-| `neon-serverless` (WebSocket) | Long transactions, connection pooling | Full support | ~100-200ms |
+| Driver                        | Use Case                              | Transactions          | Cold Start |
+| ----------------------------- | ------------------------------------- | --------------------- | ---------- |
+| `neon-http`                   | Serverless, edge functions            | Single-statement only | ~50ms      |
+| `neon-serverless` (WebSocket) | Long transactions, connection pooling | Full support          | ~100-200ms |
 
 **Recommendation:** Use `neon-http` for most serverless workloads (API routes, Server Actions). Switch to WebSocket only if you need interactive transactions.
 
@@ -1996,9 +1998,12 @@ function mapPolarStatus(status: string | null): string {
 }
 
 // Exported for use in webhook handler
-export function mapPlan(productId: string | null): "FREE" | "PRO" | "ENTERPRISE" {
+export function mapPlan(
+  productId: string | null
+): "FREE" | "PRO" | "ENTERPRISE" {
   if (!productId) return "FREE";
-  if (productId === process.env.POLAR_ENTERPRISE_PRODUCT_ID) return "ENTERPRISE";
+  if (productId === process.env.POLAR_ENTERPRISE_PRODUCT_ID)
+    return "ENTERPRISE";
   if (productId === process.env.POLAR_PRO_PRODUCT_ID) return "PRO";
   return "FREE";
 }
@@ -2006,7 +2011,10 @@ export function mapPlan(productId: string | null): "FREE" | "PRO" | "ENTERPRISE"
 export function mapStatus(
   status: string
 ): "ACTIVE" | "CANCELED" | "PAST_DUE" | "TRIALING" {
-  const statuses: Record<string, "ACTIVE" | "CANCELED" | "PAST_DUE" | "TRIALING"> = {
+  const statuses: Record<
+    string,
+    "ACTIVE" | "CANCELED" | "PAST_DUE" | "TRIALING"
+  > = {
     active: "ACTIVE",
     canceled: "CANCELED",
     past_due: "PAST_DUE",
@@ -2203,7 +2211,7 @@ export async function createCheckout(
       productId,
       customerEmail: session.user.email,
       metadata: {
-        userId: session.user.id,  // This is passed to webhooks
+        userId: session.user.id, // This is passed to webhooks
       },
       successUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?checkout=success`,
       cancelUrl: `${process.env.NEXT_PUBLIC_APP_URL}/pricing?checkout=canceled`,
@@ -2540,7 +2548,10 @@ export const syncAllSubscriptions = inngest.createFunction(
       .from(subscriptions)
       .where(
         and(
-          lt(subscriptions.updatedAt, new Date(Date.now() - 24 * 60 * 60 * 1000)),
+          lt(
+            subscriptions.updatedAt,
+            new Date(Date.now() - 24 * 60 * 60 * 1000)
+          ),
           inArray(subscriptions.status, ["ACTIVE", "TRIALING"])
         )
       );
@@ -3083,7 +3094,8 @@ async function rateLimitedHandler(req: NextRequest) {
   ];
 
   if (sensitiveEndpoints.some((endpoint) => path.includes(endpoint))) {
-    const { success, headers: rateLimitHeaders } = await checkIPRateLimit("auth");
+    const { success, headers: rateLimitHeaders } =
+      await checkIPRateLimit("auth");
 
     if (!success) {
       return NextResponse.json(

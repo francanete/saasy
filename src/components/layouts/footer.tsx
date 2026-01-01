@@ -11,18 +11,18 @@ const footerLinks = [
 export function Footer() {
   return (
     <footer className="border-t">
-      <div className="container mx-auto px-4 md:px-6 py-6">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-          <Link href="/" className="font-semibold text-foreground">
+      <div className="container mx-auto px-4 py-6 md:px-6">
+        <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+          <Link href="/" className="text-foreground font-semibold">
             {appConfig.name}
           </Link>
 
-          <nav className="flex items-center gap-1 text-sm text-muted-foreground">
+          <nav className="text-muted-foreground flex items-center gap-1 text-sm">
             {footerLinks.map((link, index) => (
               <span key={link.name} className="flex items-center">
                 <Link
                   href={link.href}
-                  className="hover:text-foreground transition-colors px-2"
+                  className="hover:text-foreground px-2 transition-colors"
                 >
                   {link.name}
                 </Link>
@@ -33,7 +33,7 @@ export function Footer() {
             ))}
           </nav>
 
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             © {new Date().getFullYear()} {appConfig.name}
           </p>
         </div>

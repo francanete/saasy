@@ -35,8 +35,7 @@ export default async function DashboardLayout({
 
   // Require active subscription or trial to access dashboard
   const hasAccess =
-    subscription?.status === "ACTIVE" ||
-    subscription?.status === "TRIALING";
+    subscription?.status === "ACTIVE" || subscription?.status === "TRIALING";
   if (!hasAccess) {
     redirect("/pricing?reason=no_subscription");
   }
@@ -50,7 +49,7 @@ export default async function DashboardLayout({
       <SidebarInset>
         <header className="flex h-12 shrink-0 items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
-          <span className="text-sm text-muted-foreground">Dashboard</span>
+          <span className="text-muted-foreground text-sm">Dashboard</span>
         </header>
         {subscription?.status === "TRIALING" &&
           subscription.currentPeriodEnd && (

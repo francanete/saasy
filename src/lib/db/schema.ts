@@ -18,7 +18,10 @@ export const subscriptionStatusEnum = pgEnum("subscription_status", [
   "PAST_DUE",
   "TRIALING",
 ]);
-export const billingTypeEnum = pgEnum("billing_type", ["recurring", "one_time"]);
+export const billingTypeEnum = pgEnum("billing_type", [
+  "recurring",
+  "one_time",
+]);
 
 // ============ Auth Tables (Better Auth) ============
 // Note: Better Auth expects specific table names. We use pluralized names

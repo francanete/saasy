@@ -52,31 +52,31 @@ export function Navbar() {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        className={`fixed top-0 right-0 left-0 z-50 transition-all duration-300 ${
           isScrolled || isMobileMenuOpen
-            ? "bg-white/80 backdrop-blur-md border-b border-gray-200/50 shadow-sm"
-            : "bg-white/0 border-b border-transparent"
+            ? "border-b border-gray-200/50 bg-white/80 shadow-sm backdrop-blur-md"
+            : "border-b border-transparent bg-white/0"
         }`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16 md:h-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between md:h-20">
             {/* Logo */}
-            <div className="shrink-0 flex items-center">
+            <div className="flex shrink-0 items-center">
               <Link
                 href="/"
-                className="text-xl font-bold text-gray-900 tracking-tight"
+                className="text-xl font-bold tracking-tight text-gray-900"
               >
                 {appConfig.name}
               </Link>
             </div>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-8">
+            <div className="hidden items-center space-x-8 md:flex">
               {navigation.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors duration-200"
+                  className="text-sm font-medium text-gray-600 transition-colors duration-200 hover:text-gray-900"
                 >
                   {item.name}
                 </Link>
@@ -86,12 +86,12 @@ export function Navbar() {
             {/* Right Side - Auth & Mobile Menu Button */}
             <div className="flex items-center gap-4">
               {/* Desktop Auth */}
-              <div className="hidden md:flex items-center gap-4">
+              <div className="hidden items-center gap-4 md:flex">
                 {isPending ? null : session ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className="flex items-center focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 rounded-full">
-                        <Avatar className="h-9 w-9 ring-2 ring-gray-100 hover:ring-gray-200 transition-all">
+                      <button className="flex items-center rounded-full focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none">
+                        <Avatar className="h-9 w-9 ring-2 ring-gray-100 transition-all hover:ring-gray-200">
                           <AvatarImage
                             src={session.user.image || undefined}
                             alt={
@@ -112,11 +112,11 @@ export function Navbar() {
                       <DropdownMenuLabel className="font-normal">
                         <div className="flex flex-col space-y-1">
                           {session.user.name && (
-                            <p className="text-sm font-medium leading-none">
+                            <p className="text-sm leading-none font-medium">
                               {session.user.name}
                             </p>
                           )}
-                          <p className="text-xs leading-none text-muted-foreground">
+                          <p className="text-muted-foreground text-xs leading-none">
                             {session.user.email}
                           </p>
                         </div>
@@ -148,7 +148,7 @@ export function Navbar() {
                   <>
                     <Link
                       href="/login"
-                      className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors duration-200"
+                      className="text-sm font-medium text-gray-600 transition-colors duration-200 hover:text-gray-900"
                     >
                       Sign in
                     </Link>
@@ -163,7 +163,7 @@ export function Navbar() {
               <div className="flex md:hidden">
                 <button
                   onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                  className="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 transition-colors"
+                  className="inline-flex items-center justify-center rounded-md p-2 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none focus:ring-inset"
                   aria-expanded={isMobileMenuOpen}
                 >
                   <span className="sr-only">Open main menu</span>
@@ -180,17 +180,17 @@ export function Navbar() {
 
         {/* Mobile Menu Overlay */}
         <div
-          className={`md:hidden fixed inset-0 z-40 bg-white transform transition-transform duration-300 ease-in-out ${
+          className={`fixed inset-0 z-40 transform bg-white transition-transform duration-300 ease-in-out md:hidden ${
             isMobileMenuOpen ? "translate-x-0" : "translate-x-full"
           }`}
           style={{ top: "64px" }}
         >
-          <div className="px-4 pt-4 pb-3 space-y-2 border-t border-gray-100">
+          <div className="space-y-2 border-t border-gray-100 px-4 pt-4 pb-3">
             {navigation.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
-                className="block px-3 py-4 rounded-md text-base font-medium text-gray-900 hover:bg-gray-50 transition-colors"
+                className="block rounded-md px-3 py-4 text-base font-medium text-gray-900 transition-colors hover:bg-gray-50"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 {item.name}
@@ -198,8 +198,8 @@ export function Navbar() {
             ))}
 
             {isPending ? null : session ? (
-              <div className="pt-4 mt-4 border-t border-gray-100">
-                <div className="flex items-center px-3 mb-4">
+              <div className="mt-4 border-t border-gray-100 pt-4">
+                <div className="mb-4 flex items-center px-3">
                   <Avatar className="h-10 w-10 ring-2 ring-gray-100">
                     <AvatarImage
                       src={session.user.image || undefined}
@@ -222,7 +222,7 @@ export function Navbar() {
                 </div>
                 <Link
                   href="/dashboard"
-                  className="flex items-center px-3 py-4 rounded-md text-base font-medium text-gray-900 hover:bg-gray-50 transition-colors"
+                  className="flex items-center rounded-md px-3 py-4 text-base font-medium text-gray-900 transition-colors hover:bg-gray-50"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <LayoutDashboard className="mr-3 h-5 w-5 text-gray-500" />
@@ -230,7 +230,7 @@ export function Navbar() {
                 </Link>
                 <Link
                   href="/dashboard/settings"
-                  className="flex items-center px-3 py-4 rounded-md text-base font-medium text-gray-900 hover:bg-gray-50 transition-colors"
+                  className="flex items-center rounded-md px-3 py-4 text-base font-medium text-gray-900 transition-colors hover:bg-gray-50"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <Settings className="mr-3 h-5 w-5 text-gray-500" />
@@ -241,24 +241,24 @@ export function Navbar() {
                     signOut();
                     setIsMobileMenuOpen(false);
                   }}
-                  className="flex items-center w-full px-3 py-4 rounded-md text-base font-medium text-gray-900 hover:bg-gray-50 transition-colors"
+                  className="flex w-full items-center rounded-md px-3 py-4 text-base font-medium text-gray-900 transition-colors hover:bg-gray-50"
                 >
                   <LogOut className="mr-3 h-5 w-5 text-gray-500" />
                   Sign out
                 </button>
               </div>
             ) : (
-              <div className="pt-4 mt-4 border-t border-gray-100 space-y-2">
+              <div className="mt-4 space-y-2 border-t border-gray-100 pt-4">
                 <Link
                   href="/login"
-                  className="block px-3 py-4 rounded-md text-base font-medium text-gray-900 hover:bg-gray-50 transition-colors"
+                  className="block rounded-md px-3 py-4 text-base font-medium text-gray-900 transition-colors hover:bg-gray-50"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Sign in
                 </Link>
                 <Link
                   href="/register"
-                  className="block px-3 py-4 rounded-md text-base font-medium text-white bg-gray-900 hover:bg-gray-800 transition-colors text-center"
+                  className="block rounded-md bg-gray-900 px-3 py-4 text-center text-base font-medium text-white transition-colors hover:bg-gray-800"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Get Started

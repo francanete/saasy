@@ -23,7 +23,7 @@ export const welcomeEmailJob = inngest.createFunction(
     await sendWelcomeEmail(email, user?.name || "there");
 
     return { sent: true };
-  },
+  }
 );
 
 // Daily sync of all subscriptions with Polar
@@ -42,10 +42,10 @@ export const syncAllSubscriptions = inngest.createFunction(
         and(
           lt(
             subscriptions.lastSyncedAt,
-            new Date(Date.now() - 24 * 60 * 60 * 1000),
+            new Date(Date.now() - 24 * 60 * 60 * 1000)
           ),
-          inArray(subscriptions.status, ["ACTIVE", "TRIALING"]),
-        ),
+          inArray(subscriptions.status, ["ACTIVE", "TRIALING"])
+        )
       );
 
     let synced = 0;
@@ -69,7 +69,7 @@ export const syncAllSubscriptions = inngest.createFunction(
       } catch (error) {
         console.error(
           `Failed to sync subscription for user ${sub.userId}:`,
-          error,
+          error
         );
       }
 
@@ -78,7 +78,7 @@ export const syncAllSubscriptions = inngest.createFunction(
     }
 
     return { synced, recovered };
-  },
+  }
 );
 
 export const functions = [welcomeEmailJob, syncAllSubscriptions];

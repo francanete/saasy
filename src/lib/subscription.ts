@@ -36,7 +36,7 @@ export type UpsertSubscriptionData = {
 };
 
 export async function upsertSubscription(
-  data: UpsertSubscriptionData,
+  data: UpsertSubscriptionData
 ): Promise<void> {
   await db
     .insert(subscriptions)
@@ -77,7 +77,7 @@ export type UpdateSubscriptionData = {
 };
 
 export async function updateSubscriptionStatus(
-  data: UpdateSubscriptionData,
+  data: UpdateSubscriptionData
 ): Promise<void> {
   await db
     .update(subscriptions)
@@ -114,7 +114,7 @@ export function mapPolarStatus(polarStatus: string): SubscriptionStatusType {
  * This handles cases where the webhook failed to store the customer ID.
  */
 export async function recoverPolarCustomerId(
-  userId: string,
+  userId: string
 ): Promise<string | null> {
   const polar = new Polar({
     accessToken: process.env.POLAR_ACCESS_TOKEN!,
@@ -147,7 +147,7 @@ export async function recoverPolarCustomerId(
  */
 export async function syncSubscriptionFromPolar(
   userId: string,
-  polarCustomerId: string,
+  polarCustomerId: string
 ): Promise<SubscriptionStatus> {
   const polar = new Polar({
     accessToken: process.env.POLAR_ACCESS_TOKEN!,
@@ -267,7 +267,7 @@ export async function syncSubscriptionFromPolar(
  * - If user has NO access but is a Polar customer: verify with API (max 1/hour)
  */
 export async function getSubscriptionStatus(
-  userId: string,
+  userId: string
 ): Promise<SubscriptionStatus> {
   const [subscription] = await db
     .select()

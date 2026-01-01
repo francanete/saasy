@@ -7,17 +7,20 @@ import { appConfig } from "@/lib/config";
 const features = [
   {
     title: "Fast & Modern",
-    description: "Built with Next.js 16, Tailwind CSS, and TypeScript for the best developer experience.",
+    description:
+      "Built with Next.js 16, Tailwind CSS, and TypeScript for the best developer experience.",
     icon: Zap,
   },
   {
     title: "Secure by Default",
-    description: "Better Auth for authentication, with OAuth support and secure session management.",
+    description:
+      "Better Auth for authentication, with OAuth support and secure session management.",
     icon: Shield,
   },
   {
     title: "AI-Ready",
-    description: "Integrated with Google AI SDK for building intelligent features.",
+    description:
+      "Integrated with Google AI SDK for building intelligent features.",
     icon: Sparkles,
   },
 ];
@@ -28,16 +31,16 @@ export default function HomePage() {
       {/* Hero */}
       <section className="py-24 text-center">
         <div className="container mx-auto px-4 md:px-6">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
+          <h1 className="mb-6 text-4xl font-bold md:text-6xl">
             Build Your SaaS
             <br />
             <span className="text-primary">Faster Than Ever</span>
           </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
+          <p className="text-muted-foreground mx-auto mb-8 max-w-2xl text-xl">
             A modern, production-ready SaaS boilerplate with authentication,
             payments, AI integration, and everything you need to launch.
           </p>
-          <div className="flex gap-4 justify-center">
+          <div className="flex justify-center gap-4">
             <Button size="lg" asChild>
               <Link href="/register">Get Started</Link>
             </Button>
@@ -49,16 +52,16 @@ export default function HomePage() {
       </section>
 
       {/* Features */}
-      <section id="features" className="py-24 bg-muted/30">
+      <section id="features" className="bg-muted/30 py-24">
         <div className="container mx-auto px-4 md:px-6">
-          <h2 className="text-3xl font-bold text-center mb-12">
+          <h2 className="mb-12 text-center text-3xl font-bold">
             Everything You Need
           </h2>
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid gap-8 md:grid-cols-3">
             {features.map((feature) => (
               <Card key={feature.title}>
                 <CardHeader>
-                  <feature.icon className="h-10 w-10 text-primary mb-2" />
+                  <feature.icon className="text-primary mb-2 h-10 w-10" />
                   <CardTitle>{feature.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -72,9 +75,9 @@ export default function HomePage() {
 
       {/* CTA */}
       <section className="py-24">
-        <div className="container mx-auto px-4 md:px-6 text-center">
-          <h2 className="text-3xl font-bold mb-4">Ready to Get Started?</h2>
-          <p className="text-xl text-muted-foreground mb-8">
+        <div className="container mx-auto px-4 text-center md:px-6">
+          <h2 className="mb-4 text-3xl font-bold">Ready to Get Started?</h2>
+          <p className="text-muted-foreground mb-8 text-xl">
             Join thousands of developers building with {appConfig.name}.
           </p>
           <Button size="lg" asChild>

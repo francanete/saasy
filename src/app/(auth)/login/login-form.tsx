@@ -71,7 +71,7 @@ export function LoginForm() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Click the link in your email to sign in. The link expires in 5
             minutes.
           </p>
@@ -91,7 +91,9 @@ export function LoginForm() {
     <Card>
       <CardHeader>
         <CardTitle>Sign In</CardTitle>
-        <CardDescription>Enter your email to receive a magic link</CardDescription>
+        <CardDescription>
+          Enter your email to receive a magic link
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleMagicLink} className="space-y-4">
@@ -105,7 +107,7 @@ export function LoginForm() {
               placeholder="you@example.com"
             />
           </div>
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {error && <p className="text-sm text-red-500">{error}</p>}
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Sending..." : "Send Magic Link"}
           </Button>
@@ -116,7 +118,7 @@ export function LoginForm() {
             <span className="w-full border-t" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">Or</span>
+            <span className="bg-background text-muted-foreground px-2">Or</span>
           </div>
         </div>
 

@@ -32,7 +32,11 @@ export function NavMain({ items }: NavMainProps) {
             const isActive = pathname === item.href;
             return (
               <SidebarMenuItem key={item.name}>
-                <SidebarMenuButton asChild isActive={isActive} tooltip={item.name}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive}
+                  tooltip={item.name}
+                >
                   <Link href={item.href}>
                     <item.icon />
                     <span>{item.name}</span>

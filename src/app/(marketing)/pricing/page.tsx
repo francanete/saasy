@@ -23,18 +23,18 @@ export default async function PricingPage({
     <div className="py-24">
       <div className="container">
         {showSubscriptionMessage && (
-          <div className="mb-8 mx-auto max-w-2xl rounded-lg border border-amber-200 bg-amber-50 p-4 text-center dark:border-amber-800 dark:bg-amber-950">
+          <div className="mx-auto mb-8 max-w-2xl rounded-lg border border-amber-200 bg-amber-50 p-4 text-center dark:border-amber-800 dark:bg-amber-950">
             <p className="text-amber-800 dark:text-amber-200">
               Start your free trial to access the dashboard. All plans include a
               14-day trial period.
             </p>
           </div>
         )}
-        <div className="text-center mb-16">
-          <h1 className="text-4xl font-bold mb-4">
+        <div className="mb-16 text-center">
+          <h1 className="mb-4 text-4xl font-bold">
             Simple, Transparent Pricing
           </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-muted-foreground mx-auto max-w-2xl text-xl">
             Choose the plan that fits your needs. All plans include a 14-day
             free trial.
           </p>

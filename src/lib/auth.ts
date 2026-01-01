@@ -97,7 +97,7 @@ export const auth = betterAuth({
               console.error(
                 "Polar webhook: Cannot resolve user for customer",
                 customer.id,
-                customer.email,
+                customer.email
               );
               return;
             }
@@ -128,7 +128,7 @@ export const auth = betterAuth({
               console.error(
                 "Polar webhook: Cannot resolve user for customer",
                 customer.id,
-                customer.email,
+                customer.email
               );
               return;
             }
@@ -136,7 +136,7 @@ export const auth = betterAuth({
             if (!product) {
               console.error(
                 "Polar webhook: No product on subscription",
-                subscription.id,
+                subscription.id
               );
               return;
             }

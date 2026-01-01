@@ -67,7 +67,7 @@ export function ProfileForm({ defaultValues }: ProfileFormProps) {
         />
 
         {form.formState.errors.root && (
-          <p className="text-sm text-destructive">
+          <p className="text-destructive text-sm">
             {form.formState.errors.root.message}
           </p>
         )}

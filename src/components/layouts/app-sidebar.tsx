@@ -45,14 +45,19 @@ export function AppSidebar({ user, plan }: AppSidebarProps) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/dashboard" className="group-data-[collapsible=icon]:justify-center">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shrink-0">
+              <Link
+                href="/dashboard"
+                className="group-data-[collapsible=icon]:justify-center"
+              >
+                <div className="bg-primary text-primary-foreground flex aspect-square size-8 shrink-0 items-center justify-center rounded-lg">
                   <span className="text-sm font-bold">
                     {appConfig.name.charAt(0)}
                   </span>
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
-                  <span className="truncate font-semibold">{appConfig.name}</span>
+                  <span className="truncate font-semibold">
+                    {appConfig.name}
+                  </span>
                 </div>
               </Link>
             </SidebarMenuButton>

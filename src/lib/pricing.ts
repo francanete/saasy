@@ -151,7 +151,7 @@ async function fetchPolarPrices(): Promise<Map<string, number>> {
 
     for (const product of result.items) {
       const slug = getPolarProducts().find(
-        (p) => p.productId === product.id,
+        (p) => p.productId === product.id
       )?.slug;
       if (slug && product.prices?.[0]) {
         const price = product.prices[0];

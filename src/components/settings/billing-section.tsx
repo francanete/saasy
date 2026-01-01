@@ -1,6 +1,12 @@
 "use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -43,10 +49,10 @@ export function BillingSection({ subscription }: BillingSectionProps) {
       <CardContent className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-muted-foreground">
+            <p className="text-muted-foreground text-sm font-medium">
               Current Plan
             </p>
-            <div className="flex items-center gap-2 mt-1">
+            <div className="mt-1 flex items-center gap-2">
               <span className="text-2xl font-bold">{plan}</span>
               <Badge variant={planColors[plan]}>{plan}</Badge>
             </div>
@@ -58,7 +64,7 @@ export function BillingSection({ subscription }: BillingSectionProps) {
           <>
             <Separator />
             <div>
-              <p className="text-sm font-medium text-muted-foreground">
+              <p className="text-muted-foreground text-sm font-medium">
                 {subscription.cancelAtPeriodEnd
                   ? "Access until"
                   : "Next billing date"}
@@ -74,7 +80,7 @@ export function BillingSection({ subscription }: BillingSectionProps) {
                 )}
               </p>
               {subscription.cancelAtPeriodEnd && (
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-muted-foreground mt-1 text-sm">
                   Your subscription will not renew.
                 </p>
               )}
@@ -86,7 +92,7 @@ export function BillingSection({ subscription }: BillingSectionProps) {
           <>
             <Separator />
             <div>
-              <p className="text-sm font-medium text-muted-foreground">
+              <p className="text-muted-foreground text-sm font-medium">
                 Billing Type
               </p>
               <p className="mt-1">Lifetime access</p>

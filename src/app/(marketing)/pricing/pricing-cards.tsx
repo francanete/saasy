@@ -65,13 +65,13 @@ export function PricingCards({ plans }: PricingCardsProps) {
   return (
     <>
       {error && (
-        <div className="mb-8 p-4 bg-red-50 text-red-600 rounded-lg text-center">
+        <div className="mb-8 rounded-lg bg-red-50 p-4 text-center text-red-600">
           {error}
         </div>
       )}
 
       <div
-        className={`grid gap-8 max-w-5xl mx-auto ${
+        className={`mx-auto grid max-w-5xl gap-8 ${
           plans.length === 2 ? "md:grid-cols-2" : "md:grid-cols-3"
         }`}
       >
@@ -80,7 +80,7 @@ export function PricingCards({ plans }: PricingCardsProps) {
             key={plan.name}
             className={`relative ${
               plan.highlighted
-                ? "border-primary shadow-lg scale-105"
+                ? "border-primary scale-105 shadow-lg"
                 : "border-border"
             }`}
           >
@@ -94,7 +94,7 @@ export function PricingCards({ plans }: PricingCardsProps) {
               <CardDescription>{plan.description}</CardDescription>
               <div className="mt-4">
                 {plan.originalPrice && (
-                  <span className="text-lg text-muted-foreground line-through mr-2">
+                  <span className="text-muted-foreground mr-2 text-lg line-through">
                     {plan.originalPrice}
                   </span>
                 )}
@@ -108,7 +108,7 @@ export function PricingCards({ plans }: PricingCardsProps) {
               <ul className="space-y-3">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-primary" />
+                    <Check className="text-primary h-4 w-4" />
                     <span className="text-sm">{feature}</span>
                   </li>
                 ))}

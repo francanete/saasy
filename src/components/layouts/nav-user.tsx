@@ -36,7 +36,6 @@ interface NavUserProps {
 }
 
 export function NavUser({ user, plan }: NavUserProps) {
-
   const initials = user.name
     ? user.name
         .split(" ")
@@ -55,15 +54,24 @@ export function NavUser({ user, plan }: NavUserProps) {
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground group-data-[collapsible=icon]:justify-center"
             >
-              <Avatar className="h-8 w-8 rounded-lg shrink-0">
-                <AvatarImage src={user.image || undefined} alt={user.name || user.email} />
-                <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
+              <Avatar className="h-8 w-8 shrink-0 rounded-lg">
+                <AvatarImage
+                  src={user.image || undefined}
+                  alt={user.name || user.email}
+                />
+                <AvatarFallback className="rounded-lg">
+                  {initials}
+                </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
-                <span className="truncate font-semibold">{user.name || user.email}</span>
-                <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+                <span className="truncate font-semibold">
+                  {user.name || user.email}
+                </span>
+                <span className="text-muted-foreground truncate text-xs">
+                  {user.email}
+                </span>
               </div>
-              <span className="px-2 py-0.5 text-xs rounded-full bg-primary/10 text-primary group-data-[collapsible=icon]:hidden">
+              <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-xs group-data-[collapsible=icon]:hidden">
                 {plan}
               </span>
               <ChevronsUpDown className="ml-auto size-4 group-data-[collapsible=icon]:hidden" />
@@ -78,12 +86,21 @@ export function NavUser({ user, plan }: NavUserProps) {
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={user.image || undefined} alt={user.name || user.email} />
-                  <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
+                  <AvatarImage
+                    src={user.image || undefined}
+                    alt={user.name || user.email}
+                  />
+                  <AvatarFallback className="rounded-lg">
+                    {initials}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">{user.name || user.email}</span>
-                  <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+                  <span className="truncate font-semibold">
+                    {user.name || user.email}
+                  </span>
+                  <span className="text-muted-foreground truncate text-xs">
+                    {user.email}
+                  </span>
                 </div>
               </div>
             </DropdownMenuLabel>
