@@ -57,6 +57,7 @@ export function PricingCards({ plans }: PricingCardsProps) {
         window.location.href = data.url;
       }
     } catch (err) {
+      console.error("Checkout error:", err);
       setError("Failed to start checkout. Please try again.");
       setLoadingPlan(null);
     }

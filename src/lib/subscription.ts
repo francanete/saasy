@@ -135,7 +135,7 @@ export async function recoverPolarCustomerId(
     console.log(`Recovered polarCustomerId for user ${userId}: ${customer.id}`);
     return customer.id;
   } catch (error) {
-    // Customer not found in Polar - user never purchased
+    console.error("Failed to recover polarCustomerId:", error);
     return null;
   }
 }
