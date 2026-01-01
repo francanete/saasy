@@ -4,7 +4,8 @@ import { magicLink } from "better-auth/plugins/magic-link";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { polar, checkout, portal, webhooks } from "@polar-sh/better-auth";
 import { Polar } from "@polar-sh/sdk";
-import { db } from "./db";
+import { eq } from "drizzle-orm";
+import { db, users } from "./db";
 import * as schema from "./db/schema";
 import { sendEmail } from "./email";
 import { appConfig } from "./config";
@@ -15,6 +16,25 @@ import {
   mapPolarStatus,
 } from "./subscription";
 import { inngest } from "./inngest/client";
+
+// Helper to resolve user ID from Polar customer
+// Handles race condition where external_id may not be set yet
+async function resolveUserId(customer: {
+  externalId?: string | null;
+  email: string;
+}): Promise<string | null> {
+  if (customer.externalId) {
+    return customer.externalId;
+  }
+
+  // Fallback: look up user by email
+  const user = await db.query.users.findFirst({
+    where: eq(users.email, customer.email),
+    columns: { id: true },
+  });
+
+  return user?.id ?? null;
+}
 
 const polarClient = new Polar({
   accessToken: process.env.POLAR_ACCESS_TOKEN!,
@@ -72,10 +92,12 @@ export const auth = betterAuth({
             const customer = order.customer;
             const product = order.product;
 
-            if (!customer.externalId) {
+            const userId = await resolveUserId(customer);
+            if (!userId) {
               console.error(
-                "Polar webhook: No externalId on customer",
+                "Polar webhook: Cannot resolve user for customer",
                 customer.id,
+                customer.email,
               );
               return;
             }
@@ -86,7 +108,7 @@ export const auth = betterAuth({
             }
 
             await upsertSubscription({
-              userId: customer.externalId,
+              userId,
               polarCustomerId: customer.id,
               polarOrderId: order.id,
               polarProductId: product.id,
@@ -101,10 +123,12 @@ export const auth = betterAuth({
             const customer = subscription.customer;
             const product = subscription.product;
 
-            if (!customer.externalId) {
+            const userId = await resolveUserId(customer);
+            if (!userId) {
               console.error(
-                "Polar webhook: No externalId on customer",
+                "Polar webhook: Cannot resolve user for customer",
                 customer.id,
+                customer.email,
               );
               return;
             }
@@ -118,7 +142,7 @@ export const auth = betterAuth({
             }
 
             await upsertSubscription({
-              userId: customer.externalId,
+              userId,
               polarCustomerId: customer.id,
               polarSubscriptionId: subscription.id,
               polarProductId: product.id,

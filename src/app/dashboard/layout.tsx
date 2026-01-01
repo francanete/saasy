@@ -33,12 +33,13 @@ export default async function DashboardLayout({
     .where(eq(subscriptions.userId, session.user.id))
     .limit(1);
 
-  // For now, allow access even without subscription (FREE tier)
-  // Uncomment below to require subscription:
-  // const hasAccess = subscription?.status === "ACTIVE" || subscription?.status === "TRIALING";
-  // if (!hasAccess) {
-  //   redirect("/pricing?reason=no_subscription");
-  // }
+  // Require active subscription or trial to access dashboard
+  const hasAccess =
+    subscription?.status === "ACTIVE" ||
+    subscription?.status === "TRIALING";
+  if (!hasAccess) {
+    redirect("/pricing?reason=no_subscription");
+  }
 
   return (
     <SidebarProvider>

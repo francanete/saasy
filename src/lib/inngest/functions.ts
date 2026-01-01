@@ -1,6 +1,6 @@
 import { inngest } from "./client";
 import { db, users, subscriptions } from "@/lib/db";
-import { eq, and, lt, inArray, gte, isNull } from "drizzle-orm";
+import { eq, and, lt, inArray } from "drizzle-orm";
 import { sendWelcomeEmail } from "@/lib/email";
 import {
   syncSubscriptionFromPolar,
@@ -81,48 +81,4 @@ export const syncAllSubscriptions = inngest.createFunction(
   },
 );
 
-// Retry failed webhooks - check for users who signed up but have no subscription record
-export const retryFailedWebhooks = inngest.createFunction(
-  { id: "retry-failed-webhooks" },
-  { cron: "*/15 * * * *" }, // Every 15 minutes
-  async () => {
-    // Find users created in the last hour without a subscription record
-    const recentUsersWithoutSub = await db
-      .select({ id: users.id })
-      .from(users)
-      .leftJoin(subscriptions, eq(users.id, subscriptions.userId))
-      .where(
-        and(
-          gte(users.createdAt, new Date(Date.now() - 60 * 60 * 1000)),
-          isNull(subscriptions.id),
-        ),
-      );
-
-    let recovered = 0;
-
-    for (const user of recentUsersWithoutSub) {
-      // Create a free subscription for users without one
-      try {
-        await db.insert(subscriptions).values({
-          userId: user.id,
-          status: "ACTIVE",
-        });
-        recovered++;
-      } catch (error) {
-        // Subscription might already exist due to race condition
-        console.error(
-          `Failed to create subscription for user ${user.id}:`,
-          error,
-        );
-      }
-    }
-
-    return { checked: recentUsersWithoutSub.length, recovered };
-  },
-);
-
-export const functions = [
-  welcomeEmailJob,
-  syncAllSubscriptions,
-  retryFailedWebhooks,
-];
+export const functions = [welcomeEmailJob, syncAllSubscriptions];
