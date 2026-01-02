@@ -5,10 +5,12 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { models, type ModelName } from "@/lib/ai";
 import { getSubscriptionStatus } from "@/lib/subscription";
+import { checkAIGenerationRateLimit } from "@/lib/rate-limit";
+import { trackAIUsage } from "@/lib/ai-usage";
 
 type ActionResult<T> =
   | { success: true; data: T }
-  | { success: false; error: string };
+  | { success: false; error: string; resetAt?: Date };
 
 async function requireSubscription(): Promise<
   { userId: string } | { error: string }
@@ -34,11 +36,39 @@ export async function summarizeText(
     return { success: false, error: authResult.error };
   }
 
+  // Rate limit check
+  const rateLimit = await checkAIGenerationRateLimit(authResult.userId, "pro");
+
+  // Fire-and-forget analytics to Upstash
+  rateLimit.pending.catch(() => {});
+
+  if (!rateLimit.success) {
+    return {
+      success: false,
+      error: "Rate limit exceeded. Please wait a moment.",
+      resetAt: rateLimit.resetAt,
+    };
+  }
+
   try {
-    const { text: summary } = await generateText({
+    const startTime = Date.now();
+    const { text: summary, usage, finishReason } = await generateText({
       model: models.flash,
       prompt: `Summarize the following text in 2-3 sentences:\n\n${text}`,
     });
+
+    // Fire-and-forget token tracking
+    trackAIUsage({
+      userId: authResult.userId,
+      model: "flash",
+      feature: "summarize",
+      promptTokens: usage.inputTokens ?? 0,
+      completionTokens: usage.outputTokens ?? 0,
+      totalTokens: usage.totalTokens ?? 0,
+      finishReason,
+      durationMs: Date.now() - startTime,
+    });
+
     return { success: true, data: summary };
   } catch (error) {
     console.error("Summarization failed:", error);
@@ -55,11 +85,39 @@ export async function generateContent(
     return { success: false, error: authResult.error };
   }
 
+  // Rate limit check
+  const rateLimit = await checkAIGenerationRateLimit(authResult.userId, "pro");
+
+  // Fire-and-forget analytics to Upstash
+  rateLimit.pending.catch(() => {});
+
+  if (!rateLimit.success) {
+    return {
+      success: false,
+      error: "Rate limit exceeded. Please wait a moment.",
+      resetAt: rateLimit.resetAt,
+    };
+  }
+
   try {
-    const { text } = await generateText({
+    const startTime = Date.now();
+    const { text, usage, finishReason } = await generateText({
       model: models[model],
       prompt,
     });
+
+    // Fire-and-forget token tracking
+    trackAIUsage({
+      userId: authResult.userId,
+      model,
+      feature: "generate",
+      promptTokens: usage.inputTokens ?? 0,
+      completionTokens: usage.outputTokens ?? 0,
+      totalTokens: usage.totalTokens ?? 0,
+      finishReason,
+      durationMs: Date.now() - startTime,
+    });
+
     return { success: true, data: text };
   } catch (error) {
     console.error("Generation failed:", error);

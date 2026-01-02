@@ -5,24 +5,11 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send } from "lucide-react";
-
-const SYSTEM_PROMPT = `You are a helpful assistant for Pilotes, a SaaS application.
-
-PRICING:
-- Free plan: Up to 3 projects, basic analytics, community support
-- Pro Monthly: $19/month - Unlimited projects, advanced analytics, priority support
-- Pro Annual: $190/year (save 17%)
-
-SUPPORT:
-- Free users: Community support
-- Pro users: Priority email support
-
-Be helpful, concise, and friendly.`;
+import { Send, AlertCircle } from "lucide-react";
 
 export default function ChatPage() {
   const [input, setInput] = useState("");
-  const { messages, sendMessage, status } = useChat({
+  const { messages, sendMessage, status, error } = useChat({
     transport: new DefaultChatTransport({
       api: "/api/chat",
     }),
@@ -36,7 +23,7 @@ export default function ChatPage() {
     sendMessage(
       { text: input },
       {
-        body: { model: "flash", system: SYSTEM_PROMPT },
+        body: { model: "flash" },
       }
     );
     setInput("");
@@ -46,9 +33,19 @@ export default function ChatPage() {
     <div className="flex h-[calc(100vh-8rem)] flex-col">
       <h1 className="mb-4 text-2xl font-bold">AI Assistant</h1>
 
+      {/* Error display */}
+      {error && (
+        <div className="bg-destructive/10 text-destructive mb-4 flex items-center gap-2 rounded-lg p-3">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <span>
+            {error.message || "Something went wrong. Please try again."}
+          </span>
+        </div>
+      )}
+
       {/* Messages */}
       <div className="mb-4 flex-1 space-y-4 overflow-y-auto">
-        {messages.length === 0 && (
+        {messages.length === 0 && !error && (
           <p className="text-muted-foreground py-8 text-center">
             Ask me anything about Pilotes - pricing, features, or support!
           </p>

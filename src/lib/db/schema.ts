@@ -6,6 +6,7 @@ import {
   pgEnum,
   uniqueIndex,
   index,
+  integer,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
@@ -163,6 +164,44 @@ export const subscriptions = pgTable(
   ]
 );
 
+// ============ AI Usage Table ============
+export const aiUsage = pgTable(
+  "ai_usage",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+
+    // Request metadata
+    model: text("model").notNull(),
+    feature: text("feature").notNull(), // "chat" | "summarize" | "generate"
+
+    // Token usage
+    promptTokens: integer("prompt_tokens").notNull(),
+    completionTokens: integer("completion_tokens").notNull(),
+    totalTokens: integer("total_tokens").notNull(),
+
+    // Response metadata
+    finishReason: text("finish_reason"),
+    durationMs: integer("duration_ms"),
+
+    // Timestamps
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    index("ai_usage_user_id_idx").on(table.userId),
+    index("ai_usage_created_at_idx").on(table.createdAt),
+    index("ai_usage_user_created_idx").on(table.userId, table.createdAt),
+  ]
+);
+
 // ============ Relations ============
 export const usersRelations = relations(users, ({ many, one }) => ({
   sessions: many(sessions),
@@ -171,6 +210,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
     fields: [users.id],
     references: [subscriptions.userId],
   }),
+  aiUsage: many(aiUsage),
 }));
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -194,9 +234,18 @@ export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
   }),
 }));
 
+export const aiUsageRelations = relations(aiUsage, ({ one }) => ({
+  user: one(users, {
+    fields: [aiUsage.userId],
+    references: [users.id],
+  }),
+}));
+
 // ============ Type Exports ============
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Session = typeof sessions.$inferSelect;
 export type Subscription = typeof subscriptions.$inferSelect;
 export type NewSubscription = typeof subscriptions.$inferInsert;
+export type AIUsage = typeof aiUsage.$inferSelect;
+export type NewAIUsage = typeof aiUsage.$inferInsert;
