@@ -1,5 +1,5 @@
 export const appConfig = {
-  name: "Pilotes",
+  name: "Saasy",
   email: {
     from: "noreply@simplesubscriber.com",
   },

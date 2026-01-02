@@ -37,7 +37,7 @@ export async function sendEmail({ to, subject, html, from }: SendEmailOptions) {
 export async function sendWelcomeEmail(email: string, name: string) {
   return sendEmail({
     to: email,
-    subject: "Welcome to Pilotes!",
+    subject: "Welcome to Saasy!",
     html: `
       <h1>Welcome, ${name}!</h1>
       <p>Thanks for signing up. We're excited to have you!</p>

@@ -3,7 +3,7 @@ import { getPricingPlans } from "@/lib/pricing";
 import { PricingCards } from "./pricing-cards";
 
 export const metadata: Metadata = {
-  title: "Pricing | Pilotes",
+  title: "Pricing | Saasy",
   description: "Simple, transparent pricing for teams of all sizes",
 };
 
