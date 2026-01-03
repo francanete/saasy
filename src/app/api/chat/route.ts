@@ -1,17 +1,8 @@
 import { streamText } from "ai";
 import { models, type ModelName } from "@/lib/ai";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
-import { getSubscriptionStatus } from "@/lib/subscription";
-import { checkAIChatRateLimit } from "@/lib/rate-limit";
 import { trackAIUsage } from "@/lib/ai-usage";
-import { handleApiError } from "@/lib/api-utils";
-import {
-  UnauthorizedError,
-  ForbiddenError,
-  RateLimitError,
-  BadRequestError,
-} from "@/lib/errors";
+import { protectedApiRoute } from "@/lib/dal";
+import { BadRequestError } from "@/lib/errors";
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -30,44 +21,15 @@ SUPPORT:
 
 Be helpful, concise, and friendly.`;
 
-export async function POST(req: Request) {
-  try {
-    // 1. Auth check
-    const session = await auth.api.getSession({ headers: await headers() });
-    if (!session) {
-      throw new UnauthorizedError();
-    }
+export const POST = protectedApiRoute(
+  async (request, { session }) => {
+    const { messages, model = "flash" } = await request.json();
 
-    // 2. Subscription check - AI requires active subscription
-    const subscription = await getSubscriptionStatus(session.user.id);
-    if (!subscription.hasAccess) {
-      throw new ForbiddenError("Active subscription required to use AI features");
-    }
-
-    // 3. Rate limit check
-    const tier = subscription.hasAccess ? "pro" : "free";
-    const rateLimit = await checkAIChatRateLimit(session.user.id, tier);
-
-    // Fire-and-forget analytics to Upstash
-    rateLimit.pending.catch(() => {});
-
-    if (!rateLimit.success) {
-      throw new RateLimitError(
-        "Too many requests. Please wait a moment.",
-        rateLimit.resetAt,
-        rateLimit.remaining
-      );
-    }
-
-    // 4. Parse request (ignore client system prompt for security)
-    const { messages, model = "flash" } = await req.json();
-
-    // 5. Validate model name
     if (!(model in models)) {
       throw new BadRequestError("Invalid model");
     }
 
-    // 6. Convert UIMessage format (parts) to ModelMessage format (content)
+    // Convert UIMessage format (parts) to ModelMessage format (content)
     const modelMessages = messages.map(
       (msg: {
         role: string;
@@ -85,7 +47,6 @@ export async function POST(req: Request) {
       })
     );
 
-    // 7. Stream with token tracking
     const startTime = Date.now();
     const result = streamText({
       model: models[model as ModelName],
@@ -107,7 +68,6 @@ export async function POST(req: Request) {
     });
 
     return result.toUIMessageStreamResponse();
-  } catch (error) {
-    return handleApiError(error);
-  }
-}
+  },
+  { rateLimit: { type: "chat" } }
+);

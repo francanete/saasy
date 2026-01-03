@@ -1,24 +1,16 @@
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
 import { Polar } from "@polar-sh/sdk";
 import { NextResponse } from "next/server";
 import { getPolarProducts } from "@/lib/pricing";
-import { handleApiError } from "@/lib/api-utils";
-import { UnauthorizedError, BadRequestError } from "@/lib/errors";
+import { protectedApiRoute } from "@/lib/dal";
+import { BadRequestError } from "@/lib/errors";
 
 const polarClient = new Polar({
   accessToken: process.env.POLAR_ACCESS_TOKEN!,
   server: process.env.NODE_ENV === "production" ? "production" : "sandbox",
 });
 
-export async function POST(request: Request) {
-  try {
-    const session = await auth.api.getSession({ headers: await headers() });
-
-    if (!session) {
-      throw new UnauthorizedError();
-    }
-
+export const POST = protectedApiRoute(
+  async (request, { session }) => {
     const { slug } = await request.json();
     const products = getPolarProducts();
     const product = products.find((p) => p.slug === slug);
@@ -35,7 +27,6 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ url: checkout.url });
-  } catch (error) {
-    return handleApiError(error);
-  }
-}
+  },
+  { requireSubscription: false }
+);

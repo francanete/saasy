@@ -1,37 +1,19 @@
 "use server";
 
 import { generateText } from "ai";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
 import { models, type ModelName } from "@/lib/ai";
-import { getSubscriptionStatus } from "@/lib/subscription";
 import { checkAIGenerationRateLimit } from "@/lib/rate-limit";
 import { trackAIUsage } from "@/lib/ai-usage";
+import { requirePaidAccess } from "@/lib/dal";
 
 type ActionResult<T> =
   | { success: true; data: T }
   | { success: false; error: string; resetAt?: Date };
 
-async function requireSubscription(): Promise<
-  { userId: string } | { error: string }
-> {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) {
-    return { error: "Unauthorized" };
-  }
-
-  const subscription = await getSubscriptionStatus(session.user.id);
-  if (!subscription.hasAccess) {
-    return { error: "Active subscription required" };
-  }
-
-  return { userId: session.user.id };
-}
-
 export async function summarizeText(
   text: string
 ): Promise<ActionResult<string>> {
-  const authResult = await requireSubscription();
+  const authResult = await requirePaidAccess();
   if ("error" in authResult) {
     return { success: false, error: authResult.error };
   }
@@ -80,7 +62,7 @@ export async function generateContent(
   prompt: string,
   model: ModelName = "flash"
 ): Promise<ActionResult<string>> {
-  const authResult = await requireSubscription();
+  const authResult = await requirePaidAccess();
   if ("error" in authResult) {
     return { success: false, error: authResult.error };
   }
