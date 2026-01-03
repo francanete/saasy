@@ -3,6 +3,8 @@ import { headers } from "next/headers";
 import { Polar } from "@polar-sh/sdk";
 import { NextResponse } from "next/server";
 import { getPolarProducts } from "@/lib/pricing";
+import { handleApiError } from "@/lib/api-utils";
+import { UnauthorizedError, BadRequestError } from "@/lib/errors";
 
 const polarClient = new Polar({
   accessToken: process.env.POLAR_ACCESS_TOKEN!,
@@ -10,21 +12,21 @@ const polarClient = new Polar({
 });
 
 export async function POST(request: Request) {
-  const session = await auth.api.getSession({ headers: await headers() });
-
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const { slug } = await request.json();
-  const products = getPolarProducts();
-  const product = products.find((p) => p.slug === slug);
-
-  if (!product) {
-    return NextResponse.json({ error: "Product not found" }, { status: 400 });
-  }
-
   try {
+    const session = await auth.api.getSession({ headers: await headers() });
+
+    if (!session) {
+      throw new UnauthorizedError();
+    }
+
+    const { slug } = await request.json();
+    const products = getPolarProducts();
+    const product = products.find((p) => p.slug === slug);
+
+    if (!product) {
+      throw new BadRequestError("Product not found");
+    }
+
     const checkout = await polarClient.checkouts.create({
       products: [product.productId],
       customerEmail: session.user.email,
@@ -34,10 +36,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ url: checkout.url });
   } catch (error) {
-    console.error("Checkout creation failed:", error);
-    return NextResponse.json(
-      { error: "Failed to create checkout" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
