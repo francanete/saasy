@@ -1,6 +1,6 @@
 import "server-only";
 import { db } from "./db";
-import { aiUsage, featureRateLimits } from "./db/schema";
+import { aiUsage, featureRateLimits, Plan } from "./db/schema";
 import { eq, gte, sql, and } from "drizzle-orm";
 
 export type AIRateLimitResult = {
@@ -11,16 +11,11 @@ export type AIRateLimitResult = {
 };
 
 // Cache for AI limits per plan
-const limitCache = new Map<string, { limit: number | null; expiresAt: number }>();
+const limitCache = new Map<
+  string,
+  { limit: number | null; expiresAt: number }
+>();
 const CACHE_TTL_MS = 60_000; // 1 minute
-
-// Default limits by plan (fallback if DB unavailable)
-const DEFAULT_LIMITS: Record<string, number | null> = {
-  FREE: 50,
-  STARTER: 250,
-  GROWTH: 1000,
-  SCALE: null, // unlimited
-};
 
 /**
  * Clear the AI limit cache.
@@ -50,8 +45,9 @@ function getTodayStart(): Date {
 }
 
 /**
- * Get AI rate limit for a plan.
+ * Get AI rate limit for a plan from the database.
  * Uses in-memory cache with 60s TTL.
+ * DB is the single source of truth - seeded by seed-tiers.ts
  */
 async function getAILimit(plan: string): Promise<number | null> {
   const cached = limitCache.get(plan);
@@ -61,19 +57,15 @@ async function getAILimit(plan: string): Promise<number | null> {
   }
 
   try {
-    // Query for the AI limit for this plan
-    // First try feature = "ai", then fall back to any active limit for the plan
     const config = await db.query.featureRateLimits.findFirst({
       where: and(
-        eq(
-          featureRateLimits.plan,
-          plan as "FREE" | "STARTER" | "GROWTH" | "SCALE"
-        ),
+        eq(featureRateLimits.plan, plan as Plan),
         eq(featureRateLimits.isActive, true)
       ),
     });
 
-    const limit = config?.requestsPerDay ?? DEFAULT_LIMITS[plan] ?? DEFAULT_LIMITS.FREE;
+    // DB is the source of truth - null means not configured or unlimited
+    const limit = config?.requestsPerDay ?? null;
 
     limitCache.set(plan, {
       limit,
@@ -82,9 +74,9 @@ async function getAILimit(plan: string): Promise<number | null> {
 
     return limit;
   } catch (error) {
-    console.error("Failed to fetch AI limit:", error);
-    // Return default on error
-    return DEFAULT_LIMITS[plan] ?? DEFAULT_LIMITS.FREE;
+    console.error("Failed to fetch AI limit from DB:", error);
+    // Fail open - allow request if database unavailable
+    return null;
   }
 }
 
@@ -97,12 +89,7 @@ async function countAIRequestsToday(userId: string): Promise<number> {
   const result = await db
     .select({ count: sql<number>`COUNT(*)::int` })
     .from(aiUsage)
-    .where(
-      and(
-        eq(aiUsage.userId, userId),
-        gte(aiUsage.createdAt, todayStart)
-      )
-    );
+    .where(and(eq(aiUsage.userId, userId), gte(aiUsage.createdAt, todayStart)));
 
   return result[0]?.count ?? 0;
 }
