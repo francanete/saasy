@@ -73,7 +73,7 @@ src/
     ├── email.ts            # Resend email service
     ├── errors.ts           # Error handling utilities
     ├── pricing.ts          # Polar pricing integration
-    ├── rate-limit.ts       # Upstash rate limiting
+    ├── rate-limit.ts       # AI rate limiting (database-based)
     ├── subscription.ts     # Subscription management
     └── utils.ts            # General utilities (cn)
 ```
@@ -87,7 +87,7 @@ src/
   - `send-welcome-email` - Welcome email after user signup
   - `sync-all-subscriptions` - Daily cron (3 AM) to sync subscriptions with Polar
 - **Email**: Resend for transactional emails
-- **Rate Limiting**: Upstash Redis with tiered limits (free/pro) for AI chat and generation
+- **Rate Limiting**: Database-based daily AI request limits per plan (uses aiUsage table)
 - **Forms**: React Hook Form + Zod validation
 - **Data Fetching**: TanStack React Query
 - **Toasts**: Sonner for notifications
@@ -96,11 +96,13 @@ src/
 ### Database Schema
 
 Main tables in `src/lib/db/schema.ts`:
+
 - `users`, `sessions`, `accounts`, `verifications` - Better Auth tables
 - `subscriptions` - Tracks Polar subscriptions/orders with `billingType` (recurring/one_time)
 - `aiUsage` - Tracks AI token usage per user (model, feature, tokens, duration)
 
 Enums:
+
 - `plan`: FREE, PRO, ENTERPRISE
 - `subscription_status`: ACTIVE, CANCELED, PAST_DUE, TRIALING
 - `billing_type`: recurring, one_time
@@ -118,11 +120,11 @@ Use `@/*` to import from `src/*` (configured in tsconfig.json).
 ## Environment Variables
 
 Key environment variables needed:
+
 - `DATABASE_URL` - Neon PostgreSQL connection string
 - `BETTER_AUTH_SECRET` - Auth secret key
 - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` - Google OAuth
 - `GOOGLE_AI_API_KEY` - Google AI (Gemini) API key
 - `POLAR_ACCESS_TOKEN`, `POLAR_WEBHOOK_SECRET` - Polar.sh integration
 - `RESEND_API_KEY` - Resend email service
-- `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` - Upstash Redis
 - `NEXT_PUBLIC_PRICING_MODE` - "recurring" or "ltd" for pricing mode

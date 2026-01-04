@@ -28,7 +28,7 @@ interface AppSidebarProps {
     name?: string | null;
     image?: string | null;
   };
-  plan: "FREE" | "PRO" | "ENTERPRISE";
+  plan: "FREE" | "STARTER" | "GROWTH" | "SCALE";
 }
 
 const navigation = [

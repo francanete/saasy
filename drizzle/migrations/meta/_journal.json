@@ -29,6 +29,13 @@
       "when": 1767349733661,
       "tag": "0003_wise_korath",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1767465835455,
+      "tag": "0004_colorful_magus",
+      "breakpoints": true
     }
   ]
 }

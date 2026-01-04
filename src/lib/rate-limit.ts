@@ -1,99 +1,145 @@
-import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
+import "server-only";
+import { db } from "./db";
+import { aiUsage, featureRateLimits, Plan } from "./db/schema";
+import { eq, gte, sql, and } from "drizzle-orm";
 
-// Single Redis instance for all rate limiters
-const redis = Redis.fromEnv();
-
-// AI Chat rate limiters per subscription tier
-// Using exact @upstash/ratelimit prefix for dashboard compatibility
-const aiChatLimiter = {
-  free: new Ratelimit({
-    redis,
-    limiter: Ratelimit.slidingWindow(10, "1h"),
-    analytics: true,
-    prefix: "@upstash/ratelimit",
-  }),
-  pro: new Ratelimit({
-    redis,
-    limiter: Ratelimit.slidingWindow(100, "1h"),
-    analytics: true,
-    prefix: "@upstash/ratelimit",
-  }),
-};
-
-// AI Generation rate limiters (for server actions)
-const aiGenerationLimiter = {
-  free: new Ratelimit({
-    redis,
-    limiter: Ratelimit.slidingWindow(5, "1h"),
-    analytics: true,
-    prefix: "@upstash/ratelimit",
-  }),
-  pro: new Ratelimit({
-    redis,
-    limiter: Ratelimit.slidingWindow(50, "1h"),
-    analytics: true,
-    prefix: "@upstash/ratelimit",
-  }),
-};
-
-export type RateLimitTier = "free" | "pro";
-
-export type RateLimitResult = {
+export type AIRateLimitResult = {
   success: boolean;
   remaining: number;
   resetAt: Date;
-  pending: Promise<unknown>; // Must be awaited or passed to waitUntil for analytics
+  limit: number;
 };
 
+// Cache for AI limits per plan
+const limitCache = new Map<
+  string,
+  { limit: number | null; expiresAt: number }
+>();
+const CACHE_TTL_MS = 60_000; // 1 minute
+
 /**
- * Check rate limit for AI chat endpoints
- * @param userId - The user's ID
- * @param tier - Subscription tier ("free" or "pro")
- * @returns Rate limit result with success status, remaining requests, and reset time
+ * Clear the AI limit cache.
+ * Call this after admin updates rate limits.
  */
-export async function checkAIChatRateLimit(
-  userId: string,
-  tier: RateLimitTier = "free"
-): Promise<RateLimitResult> {
+export function clearAILimitCache(): void {
+  limitCache.clear();
+}
+
+/**
+ * Get the next day start (midnight UTC) for reset time
+ */
+function getNextDayStart(): Date {
+  const tomorrow = new Date();
+  tomorrow.setUTCHours(0, 0, 0, 0);
+  tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+  return tomorrow;
+}
+
+/**
+ * Get today's start (midnight UTC) for window calculation
+ */
+function getTodayStart(): Date {
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+  return today;
+}
+
+/**
+ * Get AI rate limit for a plan from the database.
+ * Uses in-memory cache with 60s TTL.
+ * DB is the single source of truth - seeded by seed-tiers.ts
+ */
+async function getAILimit(plan: string): Promise<number | null> {
+  const cached = limitCache.get(plan);
+
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.limit;
+  }
+
   try {
-    const limiter = aiChatLimiter[tier];
-    const { success, remaining, reset, pending } = await limiter.limit(userId);
-    return { success, remaining, resetAt: new Date(reset), pending };
+    const config = await db.query.featureRateLimits.findFirst({
+      where: and(
+        eq(featureRateLimits.plan, plan as Plan),
+        eq(featureRateLimits.isActive, true)
+      ),
+    });
+
+    // DB is the source of truth - null means not configured or unlimited
+    const limit = config?.requestsPerDay ?? null;
+
+    limitCache.set(plan, {
+      limit,
+      expiresAt: Date.now() + CACHE_TTL_MS,
+    });
+
+    return limit;
   } catch (error) {
-    console.error("AI chat rate limit check failed:", error);
-    // Fail open - allow request if Redis unavailable
-    return {
-      success: true,
-      remaining: 999,
-      resetAt: new Date(Date.now() + 3600000),
-      pending: Promise.resolve(),
-    };
+    console.error("Failed to fetch AI limit from DB:", error);
+    // Fail open - allow request if database unavailable
+    return null;
   }
 }
 
 /**
- * Check rate limit for AI generation endpoints (summarize, generate content)
- * @param userId - The user's ID
- * @param tier - Subscription tier ("free" or "pro")
- * @returns Rate limit result with success status, remaining requests, and reset time
+ * Count AI requests for a user today.
  */
-export async function checkAIGenerationRateLimit(
+async function countAIRequestsToday(userId: string): Promise<number> {
+  const todayStart = getTodayStart();
+
+  const result = await db
+    .select({ count: sql<number>`COUNT(*)::int` })
+    .from(aiUsage)
+    .where(and(eq(aiUsage.userId, userId), gte(aiUsage.createdAt, todayStart)));
+
+  return result[0]?.count ?? 0;
+}
+
+/**
+ * Check AI rate limit for a user.
+ * Counts all AI requests (chat, summarize, generate) toward one daily limit.
+ */
+export async function checkAIRateLimit(
   userId: string,
-  tier: RateLimitTier = "free"
-): Promise<RateLimitResult> {
+  plan: string
+): Promise<AIRateLimitResult> {
   try {
-    const limiter = aiGenerationLimiter[tier];
-    const { success, remaining, reset, pending } = await limiter.limit(userId);
-    return { success, remaining, resetAt: new Date(reset), pending };
+    const limit = await getAILimit(plan);
+
+    // Unlimited plan
+    if (limit === null) {
+      return {
+        success: true,
+        remaining: Infinity,
+        resetAt: getNextDayStart(),
+        limit: Infinity,
+      };
+    }
+
+    const count = await countAIRequestsToday(userId);
+
+    if (count >= limit) {
+      return {
+        success: false,
+        remaining: 0,
+        resetAt: getNextDayStart(),
+        limit,
+      };
+    }
+
+    return {
+      success: true,
+      remaining: Math.max(0, limit - count - 1), // -1 accounts for current request
+      resetAt: getNextDayStart(),
+      limit,
+    };
   } catch (error) {
-    console.error("AI generation rate limit check failed:", error);
-    // Fail open - allow request if Redis unavailable
+    console.error("AI rate limit check failed:", error);
+    // Fail open - allow request if database unavailable
     return {
       success: true,
       remaining: 999,
-      resetAt: new Date(Date.now() + 3600000),
-      pending: Promise.resolve(),
+      resetAt: getNextDayStart(),
+      limit: 999,
     };
   }
 }

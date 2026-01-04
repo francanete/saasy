@@ -19,8 +19,9 @@ interface BillingSectionProps {
 
 const planColors = {
   FREE: "secondary",
-  PRO: "default",
-  ENTERPRISE: "default",
+  STARTER: "default",
+  GROWTH: "default",
+  SCALE: "default",
 } as const;
 
 const statusColors = {

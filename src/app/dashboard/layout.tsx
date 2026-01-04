@@ -2,8 +2,7 @@ import { Suspense } from "react";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { db, subscriptions } from "@/lib/db";
-import { eq } from "drizzle-orm";
+import { getSubscriptionStatus } from "@/lib/subscription";
 import { TrialBanner } from "@/components/trial-banner";
 import { AppSidebar } from "@/components/layouts/app-sidebar";
 import { CheckoutSuccessToast } from "@/components/checkout-success-toast";
@@ -26,35 +25,23 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  // Get subscription status
-  const [subscription] = await db
-    .select()
-    .from(subscriptions)
-    .where(eq(subscriptions.userId, session.user.id))
-    .limit(1);
-
-  // Require active subscription or trial to access dashboard
-  const hasAccess =
-    subscription?.status === "ACTIVE" || subscription?.status === "TRIALING";
-  if (!hasAccess) {
-    redirect("/pricing?reason=no_subscription");
-  }
+  // Get subscription status - no redirect gate, let features handle access
+  const subscription = await getSubscriptionStatus(session.user.id);
 
   return (
     <SidebarProvider>
       <Suspense fallback={null}>
         <CheckoutSuccessToast />
       </Suspense>
-      <AppSidebar user={session.user} plan={subscription?.plan || "FREE"} />
+      <AppSidebar user={session.user} plan={subscription.plan} />
       <SidebarInset>
         <header className="flex h-12 shrink-0 items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
           <span className="text-muted-foreground text-sm">Dashboard</span>
         </header>
-        {subscription?.status === "TRIALING" &&
-          subscription.currentPeriodEnd && (
-            <TrialBanner endsAt={subscription.currentPeriodEnd} />
-          )}
+        {subscription.status === "TRIALING" && subscription.expiresAt && (
+          <TrialBanner endsAt={subscription.expiresAt} />
+        )}
         <main className="flex-1 p-6">{children}</main>
       </SidebarInset>
     </SidebarProvider>
