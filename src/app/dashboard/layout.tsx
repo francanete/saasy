@@ -37,7 +37,13 @@ export default async function DashboardLayout({
       <Suspense fallback={null}>
         <CheckoutSuccessToast />
       </Suspense>
-      <AppSidebar user={session.user} plan={subscription.plan} isAdmin={isAdmin} />
+      <AppSidebar
+        user={session.user}
+        plan={subscription.plan}
+        subscriptionStatus={subscription.status}
+        expiresAt={subscription.expiresAt}
+        isAdmin={isAdmin}
+      />
       <SidebarInset>
         <header className="flex h-12 shrink-0 items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />

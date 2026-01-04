@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import dayjs from "dayjs";
 import { ChevronsUpDown, CreditCard, LogOut, Settings } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -19,6 +20,8 @@ import {
 } from "@/components/ui/sidebar";
 import { signOut } from "@/lib/auth-client";
 
+type SubscriptionStatus = "ACTIVE" | "CANCELED" | "PAST_DUE" | "TRIALING" | "NONE";
+
 interface NavUserProps {
   user: {
     id: string;
@@ -27,9 +30,24 @@ interface NavUserProps {
     image?: string | null;
   };
   plan: "FREE" | "STARTER" | "GROWTH" | "SCALE";
+  subscriptionStatus?: SubscriptionStatus;
+  expiresAt?: Date | null;
 }
 
-export function NavUser({ user, plan }: NavUserProps) {
+function formatPlanName(plan: string): string {
+  return plan.charAt(0).toUpperCase() + plan.slice(1).toLowerCase();
+}
+
+function getTrialDaysRemaining(expiresAt: Date): number {
+  return Math.max(0, dayjs(expiresAt).diff(dayjs(), "day"));
+}
+
+export function NavUser({
+  user,
+  plan,
+  subscriptionStatus,
+  expiresAt,
+}: NavUserProps) {
   const initials = user.name
     ? user.name
         .split(" ")
@@ -38,6 +56,19 @@ export function NavUser({ user, plan }: NavUserProps) {
         .toUpperCase()
         .slice(0, 2)
     : user.email.slice(0, 2).toUpperCase();
+
+  const isTrialing = subscriptionStatus === "TRIALING";
+  const trialDaysRemaining = expiresAt ? getTrialDaysRemaining(expiresAt) : 0;
+
+  const getPlanDisplay = () => {
+    if (isTrialing && expiresAt) {
+      if (trialDaysRemaining === 0) {
+        return "Trial ends today";
+      }
+      return `Trial • ${trialDaysRemaining} day${trialDaysRemaining !== 1 ? "s" : ""} remaining`;
+    }
+    return formatPlanName(plan);
+  };
 
   return (
     <SidebarMenu>
@@ -48,12 +79,12 @@ export function NavUser({ user, plan }: NavUserProps) {
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground group-data-[collapsible=icon]:justify-center"
             >
-              <Avatar className="h-8 w-8 shrink-0 rounded-lg">
+              <Avatar className="h-8 w-8 shrink-0 rounded-full">
                 <AvatarImage
                   src={user.image || undefined}
                   alt={user.name || user.email}
                 />
-                <AvatarFallback className="rounded-lg">
+                <AvatarFallback className="rounded-full">
                   {initials}
                 </AvatarFallback>
               </Avatar>
@@ -62,12 +93,9 @@ export function NavUser({ user, plan }: NavUserProps) {
                   {user.name || user.email}
                 </span>
                 <span className="text-muted-foreground truncate text-xs">
-                  {user.email}
+                  {getPlanDisplay()}
                 </span>
               </div>
-              <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-xs group-data-[collapsible=icon]:hidden">
-                {plan}
-              </span>
               <ChevronsUpDown className="ml-auto size-4 group-data-[collapsible=icon]:hidden" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
@@ -79,12 +107,12 @@ export function NavUser({ user, plan }: NavUserProps) {
           >
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <Avatar className="h-8 w-8 rounded-lg">
+                <Avatar className="h-8 w-8 rounded-full">
                   <AvatarImage
                     src={user.image || undefined}
                     alt={user.name || user.email}
                   />
-                  <AvatarFallback className="rounded-lg">
+                  <AvatarFallback className="rounded-full">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
@@ -93,7 +121,7 @@ export function NavUser({ user, plan }: NavUserProps) {
                     {user.name || user.email}
                   </span>
                   <span className="text-muted-foreground truncate text-xs">
-                    {user.email}
+                    {getPlanDisplay()}
                   </span>
                 </div>
               </div>
