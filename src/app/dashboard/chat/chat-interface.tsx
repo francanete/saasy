@@ -6,7 +6,7 @@ import { DefaultChatTransport } from "ai";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, AlertCircle } from "lucide-react";
-import { handleRateLimitError } from "@/lib/handle-rate-limit";
+import { handleRateLimitError } from "@/lib/handle-rate-limit-error";
 
 export function ChatInterface() {
   const [input, setInput] = useState("");
