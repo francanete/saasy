@@ -1,7 +1,7 @@
 import { streamText } from "ai";
 import { models, type ModelName } from "@/lib/ai";
 import { trackAIUsage } from "@/lib/ai-usage";
-import { protectedApiRoute } from "@/lib/dal";
+import { protectedApiRouteWrapper } from "@/lib/dal";
 import { BadRequestError } from "@/lib/errors";
 
 // Allow streaming responses up to 30 seconds
@@ -21,7 +21,7 @@ SUPPORT:
 
 Be helpful, concise, and friendly.`;
 
-export const POST = protectedApiRoute(
+export const POST = protectedApiRouteWrapper(
   async (request, { session }) => {
     const { messages, model = "flash" } = await request.json();
 
@@ -52,9 +52,9 @@ export const POST = protectedApiRoute(
       model: models[model as ModelName],
       system: SYSTEM_PROMPT,
       messages: modelMessages,
-      onFinish: async ({ usage, finishReason }) => {
-        // Fire-and-forget token tracking
-        await trackAIUsage({
+      onFinish: ({ usage, finishReason }) => {
+        // True fire-and-forget token tracking (no await)
+        trackAIUsage({
           userId: session.user.id,
           model: model as ModelName,
           feature: "chat",
@@ -63,11 +63,11 @@ export const POST = protectedApiRoute(
           totalTokens: usage.totalTokens ?? 0,
           finishReason,
           durationMs: Date.now() - startTime,
-        });
+        }).catch(() => {});
       },
     });
 
     return result.toUIMessageStreamResponse();
   },
-  { rateLimit: { type: "chat" } }
+  { rateLimit: { feature: "chat" } }
 );

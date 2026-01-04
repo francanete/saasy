@@ -4,19 +4,24 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { auth, type Session } from "./auth";
 import { getSubscriptionStatus, type SubscriptionStatus } from "./subscription";
-import {
-  checkAIChatRateLimit,
-  checkAIGenerationRateLimit,
-  type RateLimitResult,
-} from "./rate-limit";
+import { checkRateLimit, type RateLimitResult } from "./rate-limit";
 import { handleApiError } from "./api-utils";
+
+// ============ Errors ============
+
+export class AuthError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "AuthError";
+  }
+}
 
 // ============ Types ============
 
 export type AuthOptions = {
-  requireSubscription?: boolean; // default: true
+  requirePaid?: boolean; // default: true = requires any paid plan (not FREE)
   rateLimit?: {
-    type: "chat" | "generation";
+    feature: string; // Feature key for rate limiting (e.g., "chat", "generation")
   };
 };
 
@@ -42,29 +47,30 @@ export const getCurrentSession = cache(async () => {
 
 // ============ Server Action Helper ============
 
-export async function requirePaidAccess(): Promise<
-  { userId: string } | { error: string }
-> {
+export async function requirePaidAccess(): Promise<{
+  userId: string;
+  plan: string;
+}> {
   const session = await getCurrentSession();
   if (!session) {
-    return { error: "Unauthorized" };
+    throw new AuthError("Unauthorized");
   }
 
   const subscription = await getSubscriptionStatus(session.user.id);
   if (!subscription.hasAccess) {
-    return { error: "Active subscription required" };
+    throw new AuthError("Active subscription required");
   }
 
-  return { userId: session.user.id };
+  return { userId: session.user.id, plan: subscription.plan };
 }
 
 // ============ API Route Wrapper ============
 
-export function protectedApiRoute<P = Record<string, string>>(
+export function protectedApiRouteWrapper<P = Record<string, string>>(
   handler: AuthHandler<P>,
   options: AuthOptions = {}
 ): (request: Request, context?: RouteContext<P>) => Promise<Response> {
-  const { requireSubscription = true, rateLimit } = options;
+  const { requirePaid = true, rateLimit } = options;
 
   return async (request: Request, routeContext?: RouteContext<P>) => {
     try {
@@ -77,23 +83,28 @@ export function protectedApiRoute<P = Record<string, string>>(
         );
       }
 
-      // 2. Subscription check (default: required)
+      // 2. Get subscription status
       const subscription = await getSubscriptionStatus(session.user.id);
-      if (requireSubscription && !subscription.hasAccess) {
+
+      // 3. Paid access check (default: required)
+      if (requirePaid && subscription.plan === "FREE") {
         return NextResponse.json(
-          { error: "Active subscription required", code: "FORBIDDEN" },
+          {
+            error: "This feature requires a paid plan",
+            code: "UPGRADE_REQUIRED",
+          },
           { status: 403 }
         );
       }
 
-      // 3. Rate limit check (optional)
+      // 4. Rate limit check (optional)
       let rateLimitResult: RateLimitResult | undefined;
       if (rateLimit) {
-        const tier = subscription.hasAccess ? "pro" : "free";
-        rateLimitResult =
-          rateLimit.type === "chat"
-            ? await checkAIChatRateLimit(session.user.id, tier)
-            : await checkAIGenerationRateLimit(session.user.id, tier);
+        rateLimitResult = await checkRateLimit(
+          session.user.id,
+          subscription.plan,
+          rateLimit.feature
+        );
 
         // Fire-and-forget analytics
         rateLimitResult.pending.catch(() => {});
@@ -108,18 +119,19 @@ export function protectedApiRoute<P = Record<string, string>>(
               code: "RATE_LIMIT",
               resetAt: rateLimitResult.resetAt.toISOString(),
               remaining: rateLimitResult.remaining,
+              limitType: rateLimitResult.limitType,
             },
             { status: 429, headers: { "Retry-After": String(retryAfter) } }
           );
         }
       }
 
-      // 4. Await params for dynamic routes
+      // 5. Await params for dynamic routes
       const params = routeContext?.params
         ? await routeContext.params
         : ({} as P);
 
-      // 5. Call handler with context
+      // 6. Call handler with context
       return await handler(request, {
         session,
         subscription,
@@ -130,4 +142,29 @@ export function protectedApiRoute<P = Record<string, string>>(
       return handleApiError(error);
     }
   };
+}
+
+// ============ Admin Access Helper ============
+
+export async function requireAdminAccess(): Promise<{
+  userId: string;
+  isAdmin: true;
+}> {
+  const session = await getCurrentSession();
+  if (!session) {
+    throw new AuthError("Unauthorized");
+  }
+
+  // Verify email is verified (security hardening)
+  if (!session.user.emailVerified) {
+    throw new AuthError("Email not verified");
+  }
+
+  const adminEmails =
+    process.env.ADMIN_EMAILS?.split(",").map((e) => e.trim()) ?? [];
+  if (!adminEmails.includes(session.user.email)) {
+    throw new AuthError("Admin access required");
+  }
+
+  return { userId: session.user.id, isAdmin: true };
 }

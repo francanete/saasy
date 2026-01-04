@@ -96,11 +96,13 @@ src/
 ### Database Schema
 
 Main tables in `src/lib/db/schema.ts`:
+
 - `users`, `sessions`, `accounts`, `verifications` - Better Auth tables
 - `subscriptions` - Tracks Polar subscriptions/orders with `billingType` (recurring/one_time)
 - `aiUsage` - Tracks AI token usage per user (model, feature, tokens, duration)
 
 Enums:
+
 - `plan`: FREE, PRO, ENTERPRISE
 - `subscription_status`: ACTIVE, CANCELED, PAST_DUE, TRIALING
 - `billing_type`: recurring, one_time
@@ -118,6 +120,7 @@ Use `@/*` to import from `src/*` (configured in tsconfig.json).
 ## Environment Variables
 
 Key environment variables needed:
+
 - `DATABASE_URL` - Neon PostgreSQL connection string
 - `BETTER_AUTH_SECRET` - Auth secret key
 - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` - Google OAuth

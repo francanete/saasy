@@ -1,6 +1,7 @@
 import { Polar } from "@polar-sh/sdk";
-import { db, subscriptions } from "./db";
-import { eq } from "drizzle-orm";
+import { db, subscriptions, type Plan } from "./db";
+import { eq, desc } from "drizzle-orm";
+import { getPlanFromPolarProduct } from "./product-tier-mapping";
 
 // How often to re-verify with Polar API (1 hour)
 const SYNC_INTERVAL_MS = 60 * 60 * 1000;
@@ -19,6 +20,7 @@ export type SubscriptionStatus = {
   isLifetime: boolean;
   polarProductId: string | null;
   expiresAt: Date | null;
+  plan: Plan;
 };
 
 // ============ Webhook Helpers ============
@@ -38,6 +40,8 @@ export type UpsertSubscriptionData = {
 export async function upsertSubscription(
   data: UpsertSubscriptionData
 ): Promise<void> {
+  const plan = getPlanFromPolarProduct(data.polarProductId);
+
   await db
     .insert(subscriptions)
     .values({
@@ -50,7 +54,7 @@ export async function upsertSubscription(
       status: data.status,
       currentPeriodEnd: data.currentPeriodEnd,
       cancelAtPeriodEnd: data.cancelAtPeriodEnd ?? false,
-      plan: "PRO", // Default to PRO for any paid product
+      plan,
     })
     .onConflictDoUpdate({
       target: subscriptions.userId,
@@ -63,7 +67,7 @@ export async function upsertSubscription(
         status: data.status,
         currentPeriodEnd: data.currentPeriodEnd,
         cancelAtPeriodEnd: data.cancelAtPeriodEnd ?? false,
-        plan: "PRO",
+        plan, // Also update plan on conflict
         updatedAt: new Date(),
       },
     });
@@ -186,6 +190,7 @@ export async function syncSubscriptionFromPolar(
           .where(eq(subscriptions.userId, userId));
 
         const hasAccess = sub.status === "active" || sub.status === "trialing";
+        const plan = getPlanFromPolarProduct(product.id);
         return {
           hasAccess,
           status: mapPolarStatus(sub.status),
@@ -195,6 +200,7 @@ export async function syncSubscriptionFromPolar(
           expiresAt: sub.currentPeriodEnd
             ? new Date(sub.currentPeriodEnd)
             : null,
+          plan: hasAccess ? plan : "FREE",
         };
       }
     }
@@ -227,6 +233,7 @@ export async function syncSubscriptionFromPolar(
         isLifetime: true,
         polarProductId: paidOrder.product.id,
         expiresAt: null,
+        plan: getPlanFromPolarProduct(paidOrder.product.id),
       };
     }
 
@@ -243,6 +250,7 @@ export async function syncSubscriptionFromPolar(
       isLifetime: false,
       polarProductId: null,
       expiresAt: null,
+      plan: "FREE",
     };
   } catch (error) {
     console.error("Failed to sync subscription from Polar:", error);
@@ -255,6 +263,7 @@ export async function syncSubscriptionFromPolar(
       isLifetime: false,
       polarProductId: null,
       expiresAt: null,
+      plan: "FREE",
     };
   }
 }
@@ -269,11 +278,10 @@ export async function syncSubscriptionFromPolar(
 export async function getSubscriptionStatus(
   userId: string
 ): Promise<SubscriptionStatus> {
-  const [subscription] = await db
-    .select()
-    .from(subscriptions)
-    .where(eq(subscriptions.userId, userId))
-    .limit(1);
+  const subscription = await db.query.subscriptions.findFirst({
+    where: eq(subscriptions.userId, userId),
+    orderBy: desc(subscriptions.createdAt),
+  });
 
   if (!subscription) {
     return {
@@ -283,7 +291,52 @@ export async function getSubscriptionStatus(
       isLifetime: false,
       polarProductId: null,
       expiresAt: null,
+      plan: "FREE",
     };
+  }
+
+  // For recurring subscriptions: check if period ended but status not updated
+  // This handles webhook delays - Polar has the real status (ACTIVE or CANCELED)
+  const periodEnded =
+    subscription.billingType === "recurring" &&
+    subscription.currentPeriodEnd &&
+    subscription.currentPeriodEnd < new Date() &&
+    subscription.status === "TRIALING";
+
+  if (periodEnded && subscription.polarCustomerId) {
+    // Sync with Polar to get real status (converted to ACTIVE or CANCELED)
+    await syncSubscriptionFromPolar(userId, subscription.polarCustomerId);
+
+    // Re-fetch after sync to get updated status
+    const updated = await db.query.subscriptions.findFirst({
+      where: eq(subscriptions.userId, userId),
+      orderBy: desc(subscriptions.createdAt),
+    });
+
+    if (updated) {
+      const isActive =
+        updated.status === "ACTIVE" || updated.status === "TRIALING";
+      return {
+        hasAccess: isActive,
+        status: isActive ? updated.status : "NONE",
+        billingType: updated.billingType as BillingType | null,
+        isLifetime: updated.billingType === "one_time",
+        polarProductId: updated.polarProductId,
+        expiresAt: updated.currentPeriodEnd,
+        plan: isActive ? (updated.plan as Plan) : "FREE",
+      };
+    } else {
+      // Sync completed but no subscription found - user has no access
+      return {
+        hasAccess: false,
+        status: "NONE",
+        billingType: null,
+        isLifetime: false,
+        polarProductId: null,
+        expiresAt: null,
+        plan: "FREE",
+      };
+    }
   }
 
   const hasAccess =
@@ -311,5 +364,6 @@ export async function getSubscriptionStatus(
     isLifetime,
     polarProductId: subscription.polarProductId,
     expiresAt: subscription.currentPeriodEnd,
+    plan: hasAccess ? (subscription.plan as Plan) : "FREE",
   };
 }

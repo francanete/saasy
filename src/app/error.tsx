@@ -19,7 +19,9 @@ export default function Error({
       <h2 className="text-xl font-semibold">Something went wrong!</h2>
       <p className="text-muted-foreground">{error.message}</p>
       {error.digest && (
-        <p className="text-xs text-muted-foreground">Error ID: {error.digest}</p>
+        <p className="text-muted-foreground text-xs">
+          Error ID: {error.digest}
+        </p>
       )}
       <Button onClick={reset}>Try again</Button>
     </div>

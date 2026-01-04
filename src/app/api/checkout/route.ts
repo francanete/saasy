@@ -1,7 +1,7 @@
 import { Polar } from "@polar-sh/sdk";
 import { NextResponse } from "next/server";
 import { getPolarProducts } from "@/lib/pricing";
-import { protectedApiRoute } from "@/lib/dal";
+import { protectedApiRouteWrapper } from "@/lib/dal";
 import { BadRequestError } from "@/lib/errors";
 
 const polarClient = new Polar({
@@ -9,7 +9,7 @@ const polarClient = new Polar({
   server: process.env.NODE_ENV === "production" ? "production" : "sandbox",
 });
 
-export const POST = protectedApiRoute(
+export const POST = protectedApiRouteWrapper(
   async (request, { session }) => {
     const { slug } = await request.json();
     const products = getPolarProducts();
@@ -28,5 +28,5 @@ export const POST = protectedApiRoute(
 
     return NextResponse.json({ url: checkout.url });
   },
-  { requireSubscription: false }
+  { requirePaid: false }
 );

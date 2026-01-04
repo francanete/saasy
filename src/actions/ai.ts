@@ -4,7 +4,7 @@ import { generateText } from "ai";
 import { models, type ModelName } from "@/lib/ai";
 import { checkAIGenerationRateLimit } from "@/lib/rate-limit";
 import { trackAIUsage } from "@/lib/ai-usage";
-import { requirePaidAccess } from "@/lib/dal";
+import { requirePaidAccess, AuthError } from "@/lib/dal";
 
 type ActionResult<T> =
   | { success: true; data: T }
@@ -13,35 +13,36 @@ type ActionResult<T> =
 export async function summarizeText(
   text: string
 ): Promise<ActionResult<string>> {
-  const authResult = await requirePaidAccess();
-  if ("error" in authResult) {
-    return { success: false, error: authResult.error };
-  }
-
-  // Rate limit check
-  const rateLimit = await checkAIGenerationRateLimit(authResult.userId, "pro");
-
-  // Fire-and-forget analytics to Upstash
-  rateLimit.pending.catch(() => {});
-
-  if (!rateLimit.success) {
-    return {
-      success: false,
-      error: "Rate limit exceeded. Please wait a moment.",
-      resetAt: rateLimit.resetAt,
-    };
-  }
-
   try {
+    const { userId, plan } = await requirePaidAccess();
+
+    // Rate limit check using actual plan
+    const rateLimit = await checkAIGenerationRateLimit(userId, plan);
+
+    // Fire-and-forget analytics to Upstash
+    rateLimit.pending.catch(() => {});
+
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: "Rate limit exceeded. Please wait a moment.",
+        resetAt: rateLimit.resetAt,
+      };
+    }
+
     const startTime = Date.now();
-    const { text: summary, usage, finishReason } = await generateText({
+    const {
+      text: summary,
+      usage,
+      finishReason,
+    } = await generateText({
       model: models.flash,
       prompt: `Summarize the following text in 2-3 sentences:\n\n${text}`,
     });
 
     // Fire-and-forget token tracking
     trackAIUsage({
-      userId: authResult.userId,
+      userId,
       model: "flash",
       feature: "summarize",
       promptTokens: usage.inputTokens ?? 0,
@@ -53,6 +54,9 @@ export async function summarizeText(
 
     return { success: true, data: summary };
   } catch (error) {
+    if (error instanceof AuthError) {
+      return { success: false, error: error.message };
+    }
     console.error("Summarization failed:", error);
     return { success: false, error: "Failed to generate summary" };
   }
@@ -62,26 +66,23 @@ export async function generateContent(
   prompt: string,
   model: ModelName = "flash"
 ): Promise<ActionResult<string>> {
-  const authResult = await requirePaidAccess();
-  if ("error" in authResult) {
-    return { success: false, error: authResult.error };
-  }
-
-  // Rate limit check
-  const rateLimit = await checkAIGenerationRateLimit(authResult.userId, "pro");
-
-  // Fire-and-forget analytics to Upstash
-  rateLimit.pending.catch(() => {});
-
-  if (!rateLimit.success) {
-    return {
-      success: false,
-      error: "Rate limit exceeded. Please wait a moment.",
-      resetAt: rateLimit.resetAt,
-    };
-  }
-
   try {
+    const { userId, plan } = await requirePaidAccess();
+
+    // Rate limit check using actual plan
+    const rateLimit = await checkAIGenerationRateLimit(userId, plan);
+
+    // Fire-and-forget analytics to Upstash
+    rateLimit.pending.catch(() => {});
+
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: "Rate limit exceeded. Please wait a moment.",
+        resetAt: rateLimit.resetAt,
+      };
+    }
+
     const startTime = Date.now();
     const { text, usage, finishReason } = await generateText({
       model: models[model],
@@ -90,7 +91,7 @@ export async function generateContent(
 
     // Fire-and-forget token tracking
     trackAIUsage({
-      userId: authResult.userId,
+      userId,
       model,
       feature: "generate",
       promptTokens: usage.inputTokens ?? 0,
@@ -102,6 +103,9 @@ export async function generateContent(
 
     return { success: true, data: text };
   } catch (error) {
+    if (error instanceof AuthError) {
+      return { success: false, error: error.message };
+    }
     console.error("Generation failed:", error);
     return { success: false, error: "Failed to generate content" };
   }

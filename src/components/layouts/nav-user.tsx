@@ -26,7 +26,7 @@ interface NavUserProps {
     name?: string | null;
     image?: string | null;
   };
-  plan: "FREE" | "PRO" | "ENTERPRISE";
+  plan: "FREE" | "STARTER" | "GROWTH" | "SCALE";
 }
 
 export function NavUser({ user, plan }: NavUserProps) {
