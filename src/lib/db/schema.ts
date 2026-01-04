@@ -23,6 +23,7 @@ export const billingTypeEnum = pgEnum("billing_type", [
   "recurring",
   "one_time",
 ]);
+export const roleEnum = pgEnum("role", ["user", "admin"]);
 
 // ============ Auth Tables (Better Auth) ============
 // Note: Better Auth expects specific table names. We use pluralized names
@@ -36,6 +37,7 @@ export const users = pgTable("users", {
   emailVerified: boolean("email_verified").default(false),
   name: text("name"),
   image: text("image"),
+  role: roleEnum("role").default("user").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
@@ -313,3 +315,4 @@ export type NewTierConfig = typeof tierConfigs.$inferInsert;
 export type FeatureRateLimit = typeof featureRateLimits.$inferSelect;
 export type NewFeatureRateLimit = typeof featureRateLimits.$inferInsert;
 export type Plan = "FREE" | "STARTER" | "GROWTH" | "SCALE";
+export type Role = "user" | "admin";

@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getSubscriptionStatus } from "@/lib/subscription";
+import { isUserAdmin } from "@/lib/dal";
 import { TrialBanner } from "@/components/trial-banner";
 import { AppSidebar } from "@/components/layouts/app-sidebar";
 import { CheckoutSuccessToast } from "@/components/checkout-success-toast";
@@ -25,15 +26,18 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  // Get subscription status - no redirect gate, let features handle access
-  const subscription = await getSubscriptionStatus(session.user.id);
+  // Get subscription status and admin status
+  const [subscription, isAdmin] = await Promise.all([
+    getSubscriptionStatus(session.user.id),
+    isUserAdmin(session.user.id),
+  ]);
 
   return (
     <SidebarProvider>
       <Suspense fallback={null}>
         <CheckoutSuccessToast />
       </Suspense>
-      <AppSidebar user={session.user} plan={subscription.plan} />
+      <AppSidebar user={session.user} plan={subscription.plan} isAdmin={isAdmin} />
       <SidebarInset>
         <header className="flex h-12 shrink-0 items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
