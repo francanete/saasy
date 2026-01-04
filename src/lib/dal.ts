@@ -2,10 +2,13 @@ import "server-only";
 import { cache } from "react";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
 import { auth, type Session } from "./auth";
 import { getSubscriptionStatus, type SubscriptionStatus } from "./subscription";
 import { checkAIRateLimit, type AIRateLimitResult } from "./rate-limit";
 import { handleApiError } from "./api-utils";
+import { db } from "./db";
+import { users } from "./db/schema";
 
 // ============ Errors ============
 
@@ -153,11 +156,26 @@ export async function requireAdminAccess(): Promise<{
     throw new AuthError("Email not verified");
   }
 
-  const adminEmails =
-    process.env.ADMIN_EMAILS?.split(",").map((e) => e.trim()) ?? [];
-  if (!adminEmails.includes(session.user.email)) {
+  // Check user role in database
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, session.user.id),
+    columns: { role: true },
+  });
+
+  if (!user || user.role !== "admin") {
     throw new AuthError("Admin access required");
   }
 
   return { userId: session.user.id, isAdmin: true };
+}
+
+// ============ Check Admin Status ============
+
+export async function isUserAdmin(userId: string): Promise<boolean> {
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, userId),
+    columns: { role: true },
+  });
+
+  return user?.role === "admin";
 }

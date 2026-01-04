@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth";
+import { isUserAdmin } from "@/lib/dal";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -16,10 +17,9 @@ export default async function AdminLayout({
   }
 
   // Check if user is admin
-  const adminEmails =
-    process.env.ADMIN_EMAILS?.split(",").map((e) => e.trim()) ?? [];
+  const isAdmin = await isUserAdmin(session.user.id);
 
-  if (!adminEmails.includes(session.user.email)) {
+  if (!isAdmin) {
     redirect("/dashboard");
   }
 

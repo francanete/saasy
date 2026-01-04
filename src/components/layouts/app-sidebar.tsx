@@ -6,6 +6,7 @@ import {
   MessageSquare,
   Settings,
   CreditCard,
+  Shield,
 } from "lucide-react";
 import {
   Sidebar,
@@ -16,6 +17,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
+  SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
@@ -29,6 +31,7 @@ interface AppSidebarProps {
     image?: string | null;
   };
   plan: "FREE" | "STARTER" | "GROWTH" | "SCALE";
+  isAdmin?: boolean;
 }
 
 const navigation = [
@@ -38,7 +41,11 @@ const navigation = [
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
-export function AppSidebar({ user, plan }: AppSidebarProps) {
+const adminNavigation = [
+  { name: "Tiers", href: "/dashboard/admin/tiers", icon: Shield },
+];
+
+export function AppSidebar({ user, plan, isAdmin }: AppSidebarProps) {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
@@ -67,6 +74,12 @@ export function AppSidebar({ user, plan }: AppSidebarProps) {
 
       <SidebarContent>
         <NavMain items={navigation} />
+        {isAdmin && (
+          <>
+            <SidebarSeparator />
+            <NavMain items={adminNavigation} label="Admin" />
+          </>
+        )}
       </SidebarContent>
 
       <SidebarFooter>

@@ -6,6 +6,7 @@ import { type LucideIcon } from "lucide-react";
 import {
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -19,13 +20,15 @@ interface NavItem {
 
 interface NavMainProps {
   items: NavItem[];
+  label?: string;
 }
 
-export function NavMain({ items }: NavMainProps) {
+export function NavMain({ items, label }: NavMainProps) {
   const pathname = usePathname();
 
   return (
     <SidebarGroup>
+      {label && <SidebarGroupLabel>{label}</SidebarGroupLabel>}
       <SidebarGroupContent>
         <SidebarMenu>
           {items.map((item) => {
