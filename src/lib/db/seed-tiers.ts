@@ -28,62 +28,12 @@ const tiers = [
   },
 ];
 
+// Single AI limit per plan (daily requests)
 const rateLimits = [
-  // FREE tier
-  {
-    plan: "FREE" as const,
-    feature: "chat",
-    requestsPerHour: 10,
-    requestsPerDay: 50,
-  },
-  {
-    plan: "FREE" as const,
-    feature: "generation",
-    requestsPerHour: 5,
-    requestsPerDay: 25,
-  },
-
-  // STARTER tier
-  {
-    plan: "STARTER" as const,
-    feature: "chat",
-    requestsPerHour: 50,
-    requestsPerDay: 250,
-  },
-  {
-    plan: "STARTER" as const,
-    feature: "generation",
-    requestsPerHour: 25,
-    requestsPerDay: 125,
-  },
-
-  // GROWTH tier
-  {
-    plan: "GROWTH" as const,
-    feature: "chat",
-    requestsPerHour: 200,
-    requestsPerDay: 1000,
-  },
-  {
-    plan: "GROWTH" as const,
-    feature: "generation",
-    requestsPerHour: 100,
-    requestsPerDay: 500,
-  },
-
-  // SCALE tier (null = unlimited daily)
-  {
-    plan: "SCALE" as const,
-    feature: "chat",
-    requestsPerHour: 1000,
-    requestsPerDay: null,
-  },
-  {
-    plan: "SCALE" as const,
-    feature: "generation",
-    requestsPerHour: 500,
-    requestsPerDay: null,
-  },
+  { plan: "FREE" as const, feature: "ai", requestsPerDay: 50 },
+  { plan: "STARTER" as const, feature: "ai", requestsPerDay: 250 },
+  { plan: "GROWTH" as const, feature: "ai", requestsPerDay: 1000 },
+  { plan: "SCALE" as const, feature: "ai", requestsPerDay: null }, // unlimited
 ];
 
 export async function seedTiers() {
@@ -114,7 +64,6 @@ export async function seedTiers() {
       .onConflictDoUpdate({
         target: [featureRateLimits.plan, featureRateLimits.feature],
         set: {
-          requestsPerHour: limit.requestsPerHour,
           requestsPerDay: limit.requestsPerDay,
           updatedAt: new Date(),
         },

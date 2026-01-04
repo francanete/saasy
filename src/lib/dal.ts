@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { auth, type Session } from "./auth";
 import { getSubscriptionStatus, type SubscriptionStatus } from "./subscription";
-import { checkRateLimit, type RateLimitResult } from "./rate-limit";
+import { checkAIRateLimit, type AIRateLimitResult } from "./rate-limit";
 import { handleApiError } from "./api-utils";
 
 // ============ Errors ============
@@ -20,15 +20,13 @@ export class AuthError extends Error {
 
 export type AuthOptions = {
   requirePaid?: boolean; // default: true = requires any paid plan (not FREE)
-  rateLimit?: {
-    feature: string; // Feature key for rate limiting (e.g., "chat", "generation")
-  };
+  rateLimit?: boolean; // true = check AI rate limit
 };
 
 export type AuthContext<P = Record<string, string>> = {
   session: NonNullable<Session>;
   subscription: SubscriptionStatus;
-  rateLimit?: RateLimitResult;
+  rateLimit?: AIRateLimitResult;
   params: P;
 };
 
@@ -98,16 +96,12 @@ export function protectedApiRouteWrapper<P = Record<string, string>>(
       }
 
       // 4. Rate limit check (optional)
-      let rateLimitResult: RateLimitResult | undefined;
+      let rateLimitResult: AIRateLimitResult | undefined;
       if (rateLimit) {
-        rateLimitResult = await checkRateLimit(
+        rateLimitResult = await checkAIRateLimit(
           session.user.id,
-          subscription.plan,
-          rateLimit.feature
+          subscription.plan
         );
-
-        // Fire-and-forget analytics
-        rateLimitResult.pending.catch(() => {});
 
         if (!rateLimitResult.success) {
           const retryAfter = Math.ceil(
@@ -119,7 +113,6 @@ export function protectedApiRouteWrapper<P = Record<string, string>>(
               code: "RATE_LIMIT",
               resetAt: rateLimitResult.resetAt.toISOString(),
               remaining: rateLimitResult.remaining,
-              limitType: rateLimitResult.limitType,
             },
             { status: 429, headers: { "Retry-After": String(retryAfter) } }
           );

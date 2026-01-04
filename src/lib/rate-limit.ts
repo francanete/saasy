@@ -1,185 +1,158 @@
-import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
+import "server-only";
 import { db } from "./db";
-import { featureRateLimits } from "./db/schema";
-import { eq, and } from "drizzle-orm";
+import { aiUsage, featureRateLimits } from "./db/schema";
+import { eq, gte, sql, and } from "drizzle-orm";
 
-const UPSTASH_PREFIX = "@upstash/ratelimit";
-
-// Single Redis instance for all rate limiters
-const redis = Redis.fromEnv();
-
-export type RateLimitResult = {
+export type AIRateLimitResult = {
   success: boolean;
   remaining: number;
   resetAt: Date;
   limit: number;
-  limitType: "hourly" | "daily";
-  pending: Promise<unknown>;
 };
 
-type FeatureLimitConfig = {
-  requestsPerHour: number;
-  requestsPerDay: number | null;
-};
-
-// Cache feature limits (per-request deduplication)
-const featureLimitCache = new Map<
-  string,
-  { config: FeatureLimitConfig; expiresAt: number }
->();
+// Cache for AI limits per plan
+const limitCache = new Map<string, { limit: number | null; expiresAt: number }>();
 const CACHE_TTL_MS = 60_000; // 1 minute
 
-// Default fallback limits if not configured in DB
-const DEFAULT_LIMITS: FeatureLimitConfig = {
-  requestsPerHour: 5,
-  requestsPerDay: 25,
+// Default limits by plan (fallback if DB unavailable)
+const DEFAULT_LIMITS: Record<string, number | null> = {
+  FREE: 50,
+  STARTER: 250,
+  GROWTH: 1000,
+  SCALE: null, // unlimited
 };
 
 /**
- * Clear the feature limit cache.
+ * Clear the AI limit cache.
  * Call this after admin updates rate limits.
  */
-export function clearFeatureLimitCache(): void {
-  featureLimitCache.clear();
+export function clearAILimitCache(): void {
+  limitCache.clear();
 }
 
 /**
- * Get rate limit config for a plan + feature combination.
+ * Get the next day start (midnight UTC) for reset time
+ */
+function getNextDayStart(): Date {
+  const tomorrow = new Date();
+  tomorrow.setUTCHours(0, 0, 0, 0);
+  tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+  return tomorrow;
+}
+
+/**
+ * Get today's start (midnight UTC) for window calculation
+ */
+function getTodayStart(): Date {
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+  return today;
+}
+
+/**
+ * Get AI rate limit for a plan.
  * Uses in-memory cache with 60s TTL.
  */
-async function getFeatureLimit(
-  plan: string,
-  feature: string
-): Promise<FeatureLimitConfig> {
-  const cacheKey = `${plan}:${feature}`;
-  const cached = featureLimitCache.get(cacheKey);
+async function getAILimit(plan: string): Promise<number | null> {
+  const cached = limitCache.get(plan);
 
   if (cached && cached.expiresAt > Date.now()) {
-    return cached.config;
+    return cached.limit;
   }
 
   try {
+    // Query for the AI limit for this plan
+    // First try feature = "ai", then fall back to any active limit for the plan
     const config = await db.query.featureRateLimits.findFirst({
       where: and(
         eq(
           featureRateLimits.plan,
           plan as "FREE" | "STARTER" | "GROWTH" | "SCALE"
         ),
-        eq(featureRateLimits.feature, feature),
         eq(featureRateLimits.isActive, true)
       ),
     });
 
-    const limits: FeatureLimitConfig = {
-      requestsPerHour:
-        config?.requestsPerHour ?? DEFAULT_LIMITS.requestsPerHour,
-      requestsPerDay: config?.requestsPerDay ?? DEFAULT_LIMITS.requestsPerDay,
-    };
+    const limit = config?.requestsPerDay ?? DEFAULT_LIMITS[plan] ?? DEFAULT_LIMITS.FREE;
 
-    featureLimitCache.set(cacheKey, {
-      config: limits,
+    limitCache.set(plan, {
+      limit,
       expiresAt: Date.now() + CACHE_TTL_MS,
     });
 
-    return limits;
+    return limit;
   } catch (error) {
-    console.error("Failed to fetch feature limits:", error);
-    // Return defaults on error
-    return DEFAULT_LIMITS;
+    console.error("Failed to fetch AI limit:", error);
+    // Return default on error
+    return DEFAULT_LIMITS[plan] ?? DEFAULT_LIMITS.FREE;
   }
 }
 
 /**
- * Generic rate limit check for any feature.
- * Checks daily limit FIRST, then hourly, to avoid race condition.
+ * Count AI requests for a user today.
  */
-export async function checkRateLimit(
+async function countAIRequestsToday(userId: string): Promise<number> {
+  const todayStart = getTodayStart();
+
+  const result = await db
+    .select({ count: sql<number>`COUNT(*)::int` })
+    .from(aiUsage)
+    .where(
+      and(
+        eq(aiUsage.userId, userId),
+        gte(aiUsage.createdAt, todayStart)
+      )
+    );
+
+  return result[0]?.count ?? 0;
+}
+
+/**
+ * Check AI rate limit for a user.
+ * Counts all AI requests (chat, summarize, generate) toward one daily limit.
+ */
+export async function checkAIRateLimit(
   userId: string,
-  plan: string,
-  feature: string
-): Promise<RateLimitResult> {
+  plan: string
+): Promise<AIRateLimitResult> {
   try {
-    const config = await getFeatureLimit(plan, feature);
+    const limit = await getAILimit(plan);
 
-    // Check daily limit FIRST to avoid consuming hourly quota
-    // when daily is exhausted (fixes race condition bug)
-    if (config.requestsPerDay) {
-      const dailyLimiter = new Ratelimit({
-        redis,
-        limiter: Ratelimit.slidingWindow(config.requestsPerDay, "1d"),
-        prefix: UPSTASH_PREFIX,
-        analytics: true,
-      });
-
-      // Include feature and window in identifier for proper namespacing
-      const dailyResult = await dailyLimiter.limit(
-        `${feature}:daily:${userId}`
-      );
-      dailyResult.pending.catch(() => {});
-
-      if (!dailyResult.success) {
-        return {
-          success: false,
-          remaining: dailyResult.remaining,
-          resetAt: new Date(dailyResult.reset),
-          limit: config.requestsPerDay,
-          limitType: "daily",
-          pending: dailyResult.pending,
-        };
-      }
+    // Unlimited plan
+    if (limit === null) {
+      return {
+        success: true,
+        remaining: Infinity,
+        resetAt: getNextDayStart(),
+        limit: Infinity,
+      };
     }
 
-    // Hourly limit check (only runs if daily passed or not configured)
-    const hourlyLimiter = new Ratelimit({
-      redis,
-      limiter: Ratelimit.slidingWindow(config.requestsPerHour, "1h"),
-      prefix: UPSTASH_PREFIX,
-      analytics: true,
-    });
+    const count = await countAIRequestsToday(userId);
 
-    // Include feature and window in identifier for proper namespacing
-    const hourlyResult = await hourlyLimiter.limit(
-      `${feature}:hourly:${userId}`
-    );
-    hourlyResult.pending.catch(() => {});
-
-    if (!hourlyResult.success) {
+    if (count >= limit) {
       return {
         success: false,
-        remaining: hourlyResult.remaining,
-        resetAt: new Date(hourlyResult.reset),
-        limit: config.requestsPerHour,
-        limitType: "hourly",
-        pending: hourlyResult.pending,
+        remaining: 0,
+        resetAt: getNextDayStart(),
+        limit,
       };
     }
 
     return {
       success: true,
-      remaining: hourlyResult.remaining,
-      resetAt: new Date(hourlyResult.reset),
-      limit: config.requestsPerHour,
-      limitType: "hourly",
-      pending: hourlyResult.pending,
+      remaining: Math.max(0, limit - count - 1), // -1 accounts for current request
+      resetAt: getNextDayStart(),
+      limit,
     };
   } catch (error) {
-    console.error(`Rate limit check failed for ${feature}:`, error);
-    // Fail open - allow request if Redis unavailable
+    console.error("AI rate limit check failed:", error);
+    // Fail open - allow request if database unavailable
     return {
       success: true,
       remaining: 999,
-      resetAt: new Date(Date.now() + 3600000),
+      resetAt: getNextDayStart(),
       limit: 999,
-      limitType: "hourly",
-      pending: Promise.resolve(),
     };
   }
 }
-
-// Convenience wrappers for backwards compatibility
-export const checkAIChatRateLimit = (userId: string, plan: string) =>
-  checkRateLimit(userId, plan, "chat");
-
-export const checkAIGenerationRateLimit = (userId: string, plan: string) =>
-  checkRateLimit(userId, plan, "generation");

@@ -2,7 +2,7 @@
 
 import { generateText } from "ai";
 import { models, type ModelName } from "@/lib/ai";
-import { checkAIGenerationRateLimit } from "@/lib/rate-limit";
+import { checkAIRateLimit } from "@/lib/rate-limit";
 import { trackAIUsage } from "@/lib/ai-usage";
 import { requirePaidAccess, AuthError } from "@/lib/dal";
 
@@ -17,10 +17,7 @@ export async function summarizeText(
     const { userId, plan } = await requirePaidAccess();
 
     // Rate limit check using actual plan
-    const rateLimit = await checkAIGenerationRateLimit(userId, plan);
-
-    // Fire-and-forget analytics to Upstash
-    rateLimit.pending.catch(() => {});
+    const rateLimit = await checkAIRateLimit(userId, plan);
 
     if (!rateLimit.success) {
       return {
@@ -70,10 +67,7 @@ export async function generateContent(
     const { userId, plan } = await requirePaidAccess();
 
     // Rate limit check using actual plan
-    const rateLimit = await checkAIGenerationRateLimit(userId, plan);
-
-    // Fire-and-forget analytics to Upstash
-    rateLimit.pending.catch(() => {});
+    const rateLimit = await checkAIRateLimit(userId, plan);
 
     if (!rateLimit.success) {
       return {

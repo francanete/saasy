@@ -1,5 +1,5 @@
 import { getCurrentSession } from "@/lib/dal";
-import { clearFeatureLimitCache } from "@/lib/rate-limit";
+import { clearAILimitCache } from "@/lib/rate-limit";
 import { NextResponse } from "next/server";
 
 export async function POST() {
@@ -13,7 +13,7 @@ export async function POST() {
   }
 
   // Clear rate limit config cache - new tier limits apply immediately
-  clearFeatureLimitCache();
+  clearAILimitCache();
 
   return NextResponse.json({ success: true });
 }

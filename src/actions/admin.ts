@@ -4,12 +4,11 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { tierConfigs, featureRateLimits } from "@/lib/db/schema";
 import { requireAdminAccess, AuthError } from "@/lib/dal";
-import { clearFeatureLimitCache } from "@/lib/rate-limit";
+import { clearAILimitCache } from "@/lib/rate-limit";
 import { eq, and, asc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 const updateRateLimitSchema = z.object({
-  requestsPerHour: z.number().int().min(1).max(10000).optional(),
   requestsPerDay: z.number().int().min(1).max(100000).nullable().optional(),
   isActive: z.boolean().optional(),
 });
@@ -73,7 +72,7 @@ export async function updateFeatureRateLimit(
       );
 
     // Clear rate limit cache so changes take effect immediately
-    clearFeatureLimitCache();
+    clearAILimitCache();
 
     revalidatePath("/dashboard/admin/tiers");
     return { success: true };
@@ -88,7 +87,6 @@ export async function updateFeatureRateLimit(
 export async function addFeatureRateLimit(
   plan: string,
   feature: string,
-  requestsPerHour: number,
   requestsPerDay: number | null
 ) {
   try {
@@ -104,11 +102,7 @@ export async function addFeatureRateLimit(
       return { success: false, error: "Feature name must be 2-50 characters" };
     }
 
-    // Validate limits
-    if (requestsPerHour < 1 || requestsPerHour > 10000) {
-      return { success: false, error: "Hourly limit must be 1-10000" };
-    }
-
+    // Validate daily limit
     if (
       requestsPerDay !== null &&
       (requestsPerDay < 1 || requestsPerDay > 100000)
@@ -119,11 +113,10 @@ export async function addFeatureRateLimit(
     await db.insert(featureRateLimits).values({
       plan: plan as "FREE" | "STARTER" | "GROWTH" | "SCALE",
       feature,
-      requestsPerHour,
       requestsPerDay,
     });
 
-    clearFeatureLimitCache();
+    clearAILimitCache();
     revalidatePath("/dashboard/admin/tiers");
     return { success: true };
   } catch (error) {
@@ -150,7 +143,7 @@ export async function deleteFeatureRateLimit(plan: string, feature: string) {
         )
       );
 
-    clearFeatureLimitCache();
+    clearAILimitCache();
     revalidatePath("/dashboard/admin/tiers");
     return { success: true };
   } catch (error) {

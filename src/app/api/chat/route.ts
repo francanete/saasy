@@ -69,5 +69,5 @@ export const POST = protectedApiRouteWrapper(
 
     return result.toUIMessageStreamResponse();
   },
-  { rateLimit: { feature: "chat" } }
+  { rateLimit: true }
 );

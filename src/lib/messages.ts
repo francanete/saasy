@@ -3,8 +3,6 @@
  */
 export const MESSAGES = {
   // Rate Limits
-  RATE_LIMIT_HOURLY: (minutes: number) =>
-    `You've reached your hourly limit. Resets in ${minutes} minute${minutes === 1 ? "" : "s"}.`,
   RATE_LIMIT_DAILY: (hours: number) =>
     `You've reached your daily limit. Resets in ${hours} hour${hours === 1 ? "" : "s"}.`,
   RATE_LIMIT_UPGRADE: "Upgrade your plan for higher limits.",

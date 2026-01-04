@@ -23,7 +23,6 @@ export function ChatInterface() {
           setIsRateLimited(true);
           handleRateLimitError({
             resetAt: data.resetAt,
-            limitType: data.limitType,
           });
         }
 

@@ -37,7 +37,6 @@ interface RateLimitsEditorProps {
 type EditingState = {
   plan: string;
   feature: string;
-  requestsPerHour: number;
   requestsPerDay: number | null;
 } | null;
 
@@ -48,7 +47,6 @@ export function RateLimitsEditor({ tiers, limits }: RateLimitsEditorProps) {
   const [newLimit, setNewLimit] = useState({
     plan: "FREE",
     feature: "",
-    requestsPerHour: 10,
     requestsPerDay: 50 as number | null,
   });
 
@@ -59,7 +57,6 @@ export function RateLimitsEditor({ tiers, limits }: RateLimitsEditorProps) {
     setEditing({
       plan: limit.plan,
       feature: limit.feature,
-      requestsPerHour: limit.requestsPerHour ?? 10,
       requestsPerDay: limit.requestsPerDay,
     });
   }
@@ -72,7 +69,6 @@ export function RateLimitsEditor({ tiers, limits }: RateLimitsEditorProps) {
         editing.plan,
         editing.feature,
         {
-          requestsPerHour: editing.requestsPerHour,
           requestsPerDay: editing.requestsPerDay,
         }
       );
@@ -124,7 +120,6 @@ export function RateLimitsEditor({ tiers, limits }: RateLimitsEditorProps) {
       const result = await addFeatureRateLimit(
         newLimit.plan,
         newLimit.feature.trim().toLowerCase(),
-        newLimit.requestsPerHour,
         newLimit.requestsPerDay
       );
 
@@ -134,7 +129,6 @@ export function RateLimitsEditor({ tiers, limits }: RateLimitsEditorProps) {
         setNewLimit({
           plan: "FREE",
           feature: "",
-          requestsPerHour: 10,
           requestsPerDay: 50,
         });
       } else {
@@ -147,9 +141,9 @@ export function RateLimitsEditor({ tiers, limits }: RateLimitsEditorProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold">Rate Limits by Feature</h2>
+          <h2 className="text-lg font-semibold">AI Rate Limits</h2>
           <p className="text-muted-foreground text-sm">
-            Configure rate limits for each feature and plan combination
+            Configure daily AI request limits per plan
           </p>
         </div>
         <Button onClick={() => setAdding(true)} disabled={adding}>
@@ -161,7 +155,7 @@ export function RateLimitsEditor({ tiers, limits }: RateLimitsEditorProps) {
       {adding && (
         <div className="bg-muted/50 rounded-lg border p-4">
           <h3 className="mb-4 font-medium">Add New Rate Limit</h3>
-          <div className="grid grid-cols-5 gap-4">
+          <div className="grid grid-cols-4 gap-4">
             <Select
               value={newLimit.plan}
               onValueChange={(v: string) =>
@@ -181,22 +175,10 @@ export function RateLimitsEditor({ tiers, limits }: RateLimitsEditorProps) {
             </Select>
 
             <Input
-              placeholder="Feature name (e.g., chat)"
+              placeholder="Feature name (e.g., ai)"
               value={newLimit.feature}
               onChange={(e) =>
                 setNewLimit({ ...newLimit, feature: e.target.value })
-              }
-            />
-
-            <Input
-              type="number"
-              placeholder="Per hour"
-              value={newLimit.requestsPerHour}
-              onChange={(e) =>
-                setNewLimit({
-                  ...newLimit,
-                  requestsPerHour: parseInt(e.target.value) || 1,
-                })
               }
             />
 
@@ -237,7 +219,6 @@ export function RateLimitsEditor({ tiers, limits }: RateLimitsEditorProps) {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-32">Plan</TableHead>
-                <TableHead>Requests/Hour</TableHead>
                 <TableHead>Requests/Day</TableHead>
                 <TableHead className="w-24">Active</TableHead>
                 <TableHead className="w-24">Actions</TableHead>
@@ -257,23 +238,6 @@ export function RateLimitsEditor({ tiers, limits }: RateLimitsEditorProps) {
                   <TableRow key={`${tier.plan}-${feature}`}>
                     <TableCell className="font-medium">
                       {tier.displayName}
-                    </TableCell>
-                    <TableCell>
-                      {isEditing ? (
-                        <Input
-                          type="number"
-                          className="w-24"
-                          value={editing.requestsPerHour}
-                          onChange={(e) =>
-                            setEditing({
-                              ...editing,
-                              requestsPerHour: parseInt(e.target.value) || 1,
-                            })
-                          }
-                        />
-                      ) : (
-                        (limit.requestsPerHour ?? "-")
-                      )}
                     </TableCell>
                     <TableCell>
                       {isEditing ? (
