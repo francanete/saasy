@@ -15,7 +15,7 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="flex min-h-[400px] flex-col items-center justify-center gap-4">
+    <div className="flex min-h-100 flex-col items-center justify-center gap-4">
       <h2 className="text-xl font-semibold">Something went wrong!</h2>
       <p className="text-muted-foreground">{error.message}</p>
       {error.digest && (
