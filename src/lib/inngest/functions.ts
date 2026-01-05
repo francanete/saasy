@@ -133,11 +133,11 @@ export const syncAllSubscriptions = inngest.createFunction(
 export const paidSignupEmailJob = inngest.createFunction(
   { id: "send-paid-signup-email" },
   { event: "user/paid-signup" },
-  async ({ event }) => {
+  async ({ event, step }) => {
     const { userId, email, name } = event.data;
 
     // Wait briefly for subscription to be created by webhook
-    await new Promise((r) => setTimeout(r, 1000));
+    await step.sleep("wait-for-webhook", "1s");
 
     // Get subscription to know the plan
     const subscription = await db.query.subscriptions.findFirst({
