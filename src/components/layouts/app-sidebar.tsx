@@ -23,6 +23,8 @@ import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
 import { appConfig } from "@/lib/config";
 
+type SubscriptionStatus = "ACTIVE" | "CANCELED" | "PAST_DUE" | "TRIALING" | "NONE";
+
 interface AppSidebarProps {
   user: {
     id: string;
@@ -31,6 +33,8 @@ interface AppSidebarProps {
     image?: string | null;
   };
   plan: "FREE" | "STARTER" | "GROWTH" | "SCALE";
+  subscriptionStatus?: SubscriptionStatus;
+  expiresAt?: Date | null;
   isAdmin?: boolean;
 }
 
@@ -45,7 +49,13 @@ const adminNavigation = [
   { name: "Tiers", href: "/dashboard/admin/tiers", icon: Shield },
 ];
 
-export function AppSidebar({ user, plan, isAdmin }: AppSidebarProps) {
+export function AppSidebar({
+  user,
+  plan,
+  subscriptionStatus,
+  expiresAt,
+  isAdmin,
+}: AppSidebarProps) {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
@@ -83,7 +93,12 @@ export function AppSidebar({ user, plan, isAdmin }: AppSidebarProps) {
       </SidebarContent>
 
       <SidebarFooter>
-        <NavUser user={user} plan={plan} />
+        <NavUser
+          user={user}
+          plan={plan}
+          subscriptionStatus={subscriptionStatus}
+          expiresAt={expiresAt}
+        />
       </SidebarFooter>
 
       <SidebarRail />

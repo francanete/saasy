@@ -13,6 +13,9 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 
+const REQUIRE_PAID_ACCESS =
+  process.env.NEXT_PUBLIC_REQUIRE_PAID_ACCESS === "true";
+
 export default async function DashboardLayout({
   children,
 }: {
@@ -32,12 +35,23 @@ export default async function DashboardLayout({
     isUserAdmin(session.user.id),
   ]);
 
+  // If paid access required and user is on FREE plan, redirect to gate
+  if (REQUIRE_PAID_ACCESS && subscription.plan === "FREE") {
+    redirect("/gate");
+  }
+
   return (
     <SidebarProvider>
       <Suspense fallback={null}>
         <CheckoutSuccessToast />
       </Suspense>
-      <AppSidebar user={session.user} plan={subscription.plan} isAdmin={isAdmin} />
+      <AppSidebar
+        user={session.user}
+        plan={subscription.plan}
+        subscriptionStatus={subscription.status}
+        expiresAt={subscription.expiresAt}
+        isAdmin={isAdmin}
+      />
       <SidebarInset>
         <header className="flex h-12 shrink-0 items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />

@@ -1,12 +1,10 @@
-import { Polar } from "@polar-sh/sdk";
-import { db, subscriptions, type Plan } from "./db";
-import { eq, desc } from "drizzle-orm";
+import { polarClient } from "./polar-client";
+import { db, subscriptions, type Plan, type BillingType } from "./db";
+import { eq } from "drizzle-orm";
 import { getPlanFromPolarProduct } from "./product-tier-mapping";
 
-// How often to re-verify with Polar API (1 hour)
-const SYNC_INTERVAL_MS = 60 * 60 * 1000;
+// ============ Types ============
 
-export type BillingType = "recurring" | "one_time";
 export type SubscriptionStatusType =
   | "ACTIVE"
   | "CANCELED"
@@ -21,6 +19,14 @@ export type SubscriptionStatus = {
   polarProductId: string | null;
   expiresAt: Date | null;
   plan: Plan;
+};
+
+// Plan tier hierarchy for comparison (higher tier wins)
+const PLAN_HIERARCHY: Record<Plan, number> = {
+  FREE: 0,
+  STARTER: 1,
+  GROWTH: 2,
+  SCALE: 3,
 };
 
 // ============ Webhook Helpers ============
@@ -55,6 +61,7 @@ export async function upsertSubscription(
       currentPeriodEnd: data.currentPeriodEnd,
       cancelAtPeriodEnd: data.cancelAtPeriodEnd ?? false,
       plan,
+      lastSyncedAt: new Date(),
     })
     .onConflictDoUpdate({
       target: subscriptions.userId,
@@ -67,7 +74,8 @@ export async function upsertSubscription(
         status: data.status,
         currentPeriodEnd: data.currentPeriodEnd,
         cancelAtPeriodEnd: data.cancelAtPeriodEnd ?? false,
-        plan, // Also update plan on conflict
+        plan,
+        lastSyncedAt: new Date(),
         updatedAt: new Date(),
       },
     });
@@ -89,6 +97,7 @@ export async function updateSubscriptionStatus(
       status: data.status,
       currentPeriodEnd: data.currentPeriodEnd,
       cancelAtPeriodEnd: data.cancelAtPeriodEnd,
+      lastSyncedAt: new Date(),
       updatedAt: new Date(),
     })
     .where(eq(subscriptions.polarSubscriptionId, data.polarSubscriptionId));
@@ -107,261 +116,185 @@ export function mapPolarStatus(polarStatus: string): SubscriptionStatusType {
     case "trialing":
       return "TRIALING";
     default:
-      return "ACTIVE";
+      // Unknown status - log and default to CANCELED for safety
+      // This prevents granting access for unknown/failed payment states
+      console.error(
+        `Unknown Polar subscription status: "${polarStatus}" - defaulting to CANCELED`
+      );
+      return "CANCELED";
   }
 }
 
-// ============ API Sync (Fallback for missed webhooks) ============
-
-/**
- * Recover missing polarCustomerId by looking up the customer in Polar by externalId.
- * This handles cases where the webhook failed to store the customer ID.
- */
-export async function recoverPolarCustomerId(
-  userId: string
-): Promise<string | null> {
-  const polar = new Polar({
-    accessToken: process.env.POLAR_ACCESS_TOKEN!,
-    server: process.env.NODE_ENV === "production" ? "production" : "sandbox",
-  });
-
-  try {
-    const customer = await polar.customers.getExternal({
-      externalId: userId,
-    });
-
-    // Store the recovered polarCustomerId
-    await db
-      .update(subscriptions)
-      .set({ polarCustomerId: customer.id })
-      .where(eq(subscriptions.userId, userId));
-
-    console.log(`Recovered polarCustomerId for user ${userId}: ${customer.id}`);
-    return customer.id;
-  } catch (error) {
-    console.error("Failed to recover polarCustomerId:", error);
-    return null;
-  }
-}
+// ============ Sync with Polar API ============
 
 /**
  * Sync subscription from Polar API.
- * Called when local DB shows no access but user is a Polar customer.
- * This handles cases where webhooks may have failed.
+ * Fetches both subscriptions and orders, picks the higher tier.
+ * Used by daily cron job to keep all users in sync.
  */
-export async function syncSubscriptionFromPolar(
-  userId: string,
-  polarCustomerId: string
-): Promise<SubscriptionStatus> {
-  const polar = new Polar({
-    accessToken: process.env.POLAR_ACCESS_TOKEN!,
-    server: process.env.NODE_ENV === "production" ? "production" : "sandbox",
-  });
-
+export async function syncWithPolar(userId: string): Promise<void> {
   try {
-    // Check for active subscriptions first
-    const { result: subResult } = await polar.subscriptions.list({
-      customerId: polarCustomerId,
-      active: true,
-    });
+    // Look up customer by userId (externalId)
+    const customer = await polarClient.customers.getExternal({ externalId: userId });
 
-    if (subResult.items.length > 0) {
-      const sub = subResult.items[0];
-      const product = sub.product;
+    // Fetch both subscriptions and orders in parallel
+    const [subsResult, ordersResult] = await Promise.all([
+      polarClient.subscriptions.list({ customerId: customer.id, active: true }),
+      polarClient.orders.list({ customerId: customer.id }),
+    ]);
 
-      if (product) {
-        await upsertSubscription({
-          userId,
-          polarCustomerId,
-          polarSubscriptionId: sub.id,
-          polarProductId: product.id,
-          billingType: "recurring",
-          status: mapPolarStatus(sub.status),
-          currentPeriodEnd: sub.currentPeriodEnd
-            ? new Date(sub.currentPeriodEnd)
-            : undefined,
-          cancelAtPeriodEnd: sub.cancelAtPeriodEnd,
-        });
+    const activeSub = subsResult.result.items[0];
+    const paidOrder = ordersResult.result.items.find((o) => o.paid);
 
-        // Update lastSyncedAt
-        await db
-          .update(subscriptions)
-          .set({ lastSyncedAt: new Date() })
-          .where(eq(subscriptions.userId, userId));
+    // Determine best option (higher tier wins)
+    let bestOption: {
+      type: "subscription" | "order" | "none";
+      data?: unknown;
+      plan: Plan;
+    } = {
+      type: "none",
+      plan: "FREE",
+    };
 
-        const hasAccess = sub.status === "active" || sub.status === "trialing";
-        const plan = getPlanFromPolarProduct(product.id);
-        return {
-          hasAccess,
-          status: mapPolarStatus(sub.status),
-          billingType: "recurring",
-          isLifetime: false,
-          polarProductId: product.id,
-          expiresAt: sub.currentPeriodEnd
-            ? new Date(sub.currentPeriodEnd)
-            : null,
-          plan: hasAccess ? plan : "FREE",
-        };
+    if (activeSub?.product) {
+      const subPlan = getPlanFromPolarProduct(activeSub.product.id);
+      if (PLAN_HIERARCHY[subPlan] > PLAN_HIERARCHY[bestOption.plan]) {
+        bestOption = { type: "subscription", data: activeSub, plan: subPlan };
       }
     }
 
-    // Check for one-time purchases (LTD)
-    const { result: orderResult } = await polar.orders.list({
-      customerId: polarCustomerId,
-    });
+    if (paidOrder?.product) {
+      const orderPlan = getPlanFromPolarProduct(paidOrder.product.id);
+      if (PLAN_HIERARCHY[orderPlan] > PLAN_HIERARCHY[bestOption.plan]) {
+        bestOption = { type: "order", data: paidOrder, plan: orderPlan };
+      }
+    }
 
-    const paidOrder = orderResult.items.find((o) => o.paid);
-    if (paidOrder && paidOrder.product) {
+    // Apply the best option
+    if (bestOption.type === "subscription") {
+      const sub = bestOption.data as typeof activeSub;
+      const statusToSave = mapPolarStatus(sub!.status);
+
       await upsertSubscription({
         userId,
-        polarCustomerId,
-        polarOrderId: paidOrder.id,
-        polarProductId: paidOrder.product.id,
+        polarCustomerId: customer.id,
+        polarSubscriptionId: sub!.id,
+        polarProductId: sub!.product!.id,
+        billingType: "recurring",
+        status: statusToSave,
+        currentPeriodEnd: sub!.currentPeriodEnd
+          ? new Date(sub!.currentPeriodEnd)
+          : undefined,
+        cancelAtPeriodEnd: sub!.cancelAtPeriodEnd,
+      });
+    } else if (bestOption.type === "order") {
+      const order = bestOption.data as typeof paidOrder;
+
+      await upsertSubscription({
+        userId,
+        polarCustomerId: customer.id,
+        polarOrderId: order!.id,
+        polarProductId: order!.product!.id,
         billingType: "one_time",
         status: "ACTIVE",
       });
+    } else {
+      // Customer exists but no active subscription/order - mark as free
 
+      await db
+        .update(subscriptions)
+        .set({
+          polarCustomerId: customer.id,
+          status: "ACTIVE",
+          plan: "FREE",
+          billingType: "none",
+          polarSubscriptionId: null,
+          polarOrderId: null,
+          polarProductId: null,
+          lastSyncedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(subscriptions.userId, userId));
+    }
+  } catch (error: unknown) {
+    const apiError = error as { status?: number };
+    if (apiError.status === 404) {
+      // Customer not found in Polar = genuinely free user, mark as synced
       await db
         .update(subscriptions)
         .set({ lastSyncedAt: new Date() })
         .where(eq(subscriptions.userId, userId));
-
-      return {
-        hasAccess: true,
-        status: "ACTIVE",
-        billingType: "one_time",
-        isLifetime: true,
-        polarProductId: paidOrder.product.id,
-        expiresAt: null,
-        plan: getPlanFromPolarProduct(paidOrder.product.id),
-      };
+    } else {
+      // Other errors (500, rate limit, network) - don't mark as synced, will retry
+      console.error(`Polar API error for user ${userId}:`, error);
+      throw error;
     }
-
-    // No active subscription or order found - still update lastSyncedAt
-    await db
-      .update(subscriptions)
-      .set({ lastSyncedAt: new Date() })
-      .where(eq(subscriptions.userId, userId));
-
-    return {
-      hasAccess: false,
-      status: "NONE",
-      billingType: null,
-      isLifetime: false,
-      polarProductId: null,
-      expiresAt: null,
-      plan: "FREE",
-    };
-  } catch (error) {
-    console.error("Failed to sync subscription from Polar:", error);
-    // On error, return no-access but don't update lastSyncedAt
-    // This allows retry on next access check
-    return {
-      hasAccess: false,
-      status: "NONE",
-      billingType: null,
-      isLifetime: false,
-      polarProductId: null,
-      expiresAt: null,
-      plan: "FREE",
-    };
   }
 }
 
 // ============ Access Control ============
 
 /**
- * Get subscription status with smart fallback.
- * - If user has access: trust local DB (webhooks keep it updated)
- * - If user has NO access but is a Polar customer: verify with API (max 1/hour)
+ * Check if user has paid access (not FREE).
+ * Used for paid-only apps where free tier is disabled.
+ */
+export async function hasPaidAccess(userId: string): Promise<boolean> {
+  const status = await getSubscriptionStatus(userId);
+  return status.hasAccess && status.plan !== "FREE";
+}
+
+/**
+ * Get subscription status from database.
+ * Simple read - no sync logic here. Sync is handled by:
+ * 1. Webhooks (primary)
+ * 2. Daily cron job (fallback)
  */
 export async function getSubscriptionStatus(
   userId: string
 ): Promise<SubscriptionStatus> {
-  const subscription = await db.query.subscriptions.findFirst({
+  let subscription = await db.query.subscriptions.findFirst({
     where: eq(subscriptions.userId, userId),
-    orderBy: desc(subscriptions.createdAt),
   });
 
+  // Create FREE record if missing (handles old users without subscription record)
+  if (!subscription) {
+    await db
+      .insert(subscriptions)
+      .values({
+        userId,
+        plan: "FREE",
+        status: "ACTIVE",
+        billingType: "none",
+      })
+      .onConflictDoNothing();
+
+    subscription = await db.query.subscriptions.findFirst({
+      where: eq(subscriptions.userId, userId),
+    });
+  }
+
+  // Handle edge case where subscription still doesn't exist (race condition)
   if (!subscription) {
     return {
       hasAccess: false,
-      status: "NONE",
+      status: "NONE" as const,
       billingType: null,
       isLifetime: false,
       polarProductId: null,
       expiresAt: null,
-      plan: "FREE",
+      plan: "FREE" as Plan,
     };
   }
 
-  // For recurring subscriptions: check if period ended but status not updated
-  // This handles webhook delays - Polar has the real status (ACTIVE or CANCELED)
-  const periodEnded =
-    subscription.billingType === "recurring" &&
-    subscription.currentPeriodEnd &&
-    subscription.currentPeriodEnd < new Date() &&
-    subscription.status === "TRIALING";
-
-  if (periodEnded && subscription.polarCustomerId) {
-    // Sync with Polar to get real status (converted to ACTIVE or CANCELED)
-    await syncSubscriptionFromPolar(userId, subscription.polarCustomerId);
-
-    // Re-fetch after sync to get updated status
-    const updated = await db.query.subscriptions.findFirst({
-      where: eq(subscriptions.userId, userId),
-      orderBy: desc(subscriptions.createdAt),
-    });
-
-    if (updated) {
-      const isActive =
-        updated.status === "ACTIVE" || updated.status === "TRIALING";
-      return {
-        hasAccess: isActive,
-        status: isActive ? updated.status : "NONE",
-        billingType: updated.billingType as BillingType | null,
-        isLifetime: updated.billingType === "one_time",
-        polarProductId: updated.polarProductId,
-        expiresAt: updated.currentPeriodEnd,
-        plan: isActive ? (updated.plan as Plan) : "FREE",
-      };
-    } else {
-      // Sync completed but no subscription found - user has no access
-      return {
-        hasAccess: false,
-        status: "NONE",
-        billingType: null,
-        isLifetime: false,
-        polarProductId: null,
-        expiresAt: null,
-        plan: "FREE",
-      };
-    }
-  }
-
+  // Just return what's in DB - no sync logic here
   const hasAccess =
     subscription.status === "ACTIVE" || subscription.status === "TRIALING";
-
-  // SMART FALLBACK: If no access but user is a Polar customer, verify with API
-  if (!hasAccess && subscription.polarCustomerId) {
-    const needsSync =
-      !subscription.lastSyncedAt ||
-      Date.now() - subscription.lastSyncedAt.getTime() > SYNC_INTERVAL_MS;
-
-    if (needsSync) {
-      console.log(`Syncing subscription for user ${userId} from Polar API`);
-      return syncSubscriptionFromPolar(userId, subscription.polarCustomerId);
-    }
-  }
-
-  // Trust local DB
-  const isLifetime = subscription.billingType === "one_time";
 
   return {
     hasAccess,
     status: subscription.status as SubscriptionStatusType,
     billingType: subscription.billingType as BillingType | null,
-    isLifetime,
+    isLifetime: subscription.billingType === "one_time",
     polarProductId: subscription.polarProductId,
     expiresAt: subscription.currentPeriodEnd,
     plan: hasAccess ? (subscription.plan as Plan) : "FREE",

@@ -11,7 +11,7 @@ import type { Plan } from "./db/schema";
  */
 export const POLAR_PRODUCT_TO_TIER: Record<string, Plan> = {
   // Monthly subscriptions
-  // "prod_starter_monthly": "STARTER",
+  "64e937b4-4da7-4c09-9bd3-f38f440799e1": "STARTER",
   // "prod_growth_monthly": "GROWTH",
   // "prod_scale_monthly": "SCALE",
   // Annual subscriptions
@@ -25,11 +25,11 @@ export const POLAR_PRODUCT_TO_TIER: Record<string, Plan> = {
 
 /**
  * Get the app tier for a Polar product ID.
- * Defaults to STARTER if product ID is not mapped.
+ * Defaults to FREE if product ID is not mapped.
  */
 export function getPlanFromPolarProduct(
   polarProductId: string | null | undefined
 ): Plan {
-  if (!polarProductId) return "STARTER";
-  return POLAR_PRODUCT_TO_TIER[polarProductId] ?? "STARTER";
+  if (!polarProductId) return "FREE";
+  return POLAR_PRODUCT_TO_TIER[polarProductId] ?? "FREE";
 }

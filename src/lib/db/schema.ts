@@ -22,6 +22,7 @@ export const subscriptionStatusEnum = pgEnum("subscription_status", [
 export const billingTypeEnum = pgEnum("billing_type", [
   "recurring",
   "one_time",
+  "none",
 ]);
 export const roleEnum = pgEnum("role", ["user", "admin"]);
 
@@ -315,4 +316,5 @@ export type NewTierConfig = typeof tierConfigs.$inferInsert;
 export type FeatureRateLimit = typeof featureRateLimits.$inferSelect;
 export type NewFeatureRateLimit = typeof featureRateLimits.$inferInsert;
 export type Plan = "FREE" | "STARTER" | "GROWTH" | "SCALE";
+export type BillingType = "recurring" | "one_time" | "none";
 export type Role = "user" | "admin";

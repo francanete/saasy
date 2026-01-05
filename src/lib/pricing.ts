@@ -1,4 +1,4 @@
-import { Polar } from "@polar-sh/sdk";
+import { polarClient } from "./polar-client";
 
 export type PricingMode = "ltd" | "subscription";
 
@@ -135,16 +135,11 @@ async function fetchPolarPrices(): Promise<Map<string, number>> {
     return priceCache.prices;
   }
 
-  const polar = new Polar({
-    accessToken: process.env.POLAR_ACCESS_TOKEN!,
-    server: process.env.NODE_ENV === "production" ? "production" : "sandbox",
-  });
-
   const productIds = getPolarProducts().map((p) => p.productId);
   const prices = new Map<string, number>();
 
   try {
-    const { result } = await polar.products.list({
+    const { result } = await polarClient.products.list({
       organizationId: process.env.POLAR_ORGANIZATION_ID!,
       id: productIds,
     });
