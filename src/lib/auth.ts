@@ -169,8 +169,10 @@ export const auth = betterAuth({
             }
 
             if (!product) {
-              console.error("Polar webhook: No product on order", order.id);
-              return;
+              // Throw error to trigger Polar webhook retry - user paid but we can't process
+              throw new Error(
+                `Polar webhook: No product on order ${order.id} - cannot grant access`
+              );
             }
 
             // Resolve or create user (handles guest checkout)
@@ -198,11 +200,10 @@ export const auth = betterAuth({
             const product = subscription.product;
 
             if (!product) {
-              console.error(
-                "Polar webhook: No product on subscription",
-                subscription.id
+              // Throw error to trigger Polar webhook retry - user subscribed but we can't process
+              throw new Error(
+                `Polar webhook: No product on subscription ${subscription.id} - cannot grant access`
               );
-              return;
             }
 
             // Resolve or create user (handles guest checkout)

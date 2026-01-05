@@ -5,7 +5,7 @@ import { polarClient } from "@/lib/polar-client";
 
 export async function POST(request: Request) {
   try {
-    const { slug, email, userId } = await request.json();
+    const { slug, email } = await request.json();
 
     if (!slug) {
       return NextResponse.json(
@@ -37,17 +37,14 @@ export async function POST(request: Request) {
     };
 
     if (session?.user) {
-      // Logged-in user (from gate page or dashboard)
+      // Logged-in user - only trust session data, not request body
       checkoutParams.customerEmail = session.user.email;
       checkoutParams.externalCustomerId = session.user.id;
-    } else if (userId && email) {
-      // Pre-filled from gate page (user logged in but checking out in different tab)
-      checkoutParams.customerEmail = email;
-      checkoutParams.externalCustomerId = userId;
     } else if (email) {
       // Guest checkout with email provided
+      // Note: userId from request body is intentionally ignored for security
+      // The webhook will create/link the user based on email
       checkoutParams.customerEmail = email;
-      // No externalCustomerId - webhook will create user
     }
     // else: Let Polar collect email during checkout (full guest mode)
 

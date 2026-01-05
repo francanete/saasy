@@ -116,7 +116,12 @@ export function mapPolarStatus(polarStatus: string): SubscriptionStatusType {
     case "trialing":
       return "TRIALING";
     default:
-      return "ACTIVE";
+      // Unknown status - log and default to CANCELED for safety
+      // This prevents granting access for unknown/failed payment states
+      console.error(
+        `Unknown Polar subscription status: "${polarStatus}" - defaulting to CANCELED`
+      );
+      return "CANCELED";
   }
 }
 
@@ -268,17 +273,30 @@ export async function getSubscriptionStatus(
     });
   }
 
+  // Handle edge case where subscription still doesn't exist (race condition)
+  if (!subscription) {
+    return {
+      hasAccess: false,
+      status: "NONE" as const,
+      billingType: null,
+      isLifetime: false,
+      polarProductId: null,
+      expiresAt: null,
+      plan: "FREE" as Plan,
+    };
+  }
+
   // Just return what's in DB - no sync logic here
   const hasAccess =
-    subscription!.status === "ACTIVE" || subscription!.status === "TRIALING";
+    subscription.status === "ACTIVE" || subscription.status === "TRIALING";
 
   return {
     hasAccess,
-    status: subscription!.status as SubscriptionStatusType,
-    billingType: subscription!.billingType as BillingType | null,
-    isLifetime: subscription!.billingType === "one_time",
-    polarProductId: subscription!.polarProductId,
-    expiresAt: subscription!.currentPeriodEnd,
-    plan: hasAccess ? (subscription!.plan as Plan) : "FREE",
+    status: subscription.status as SubscriptionStatusType,
+    billingType: subscription.billingType as BillingType | null,
+    isLifetime: subscription.billingType === "one_time",
+    polarProductId: subscription.polarProductId,
+    expiresAt: subscription.currentPeriodEnd,
+    plan: hasAccess ? (subscription.plan as Plan) : "FREE",
   };
 }
