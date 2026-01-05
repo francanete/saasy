@@ -1,9 +1,9 @@
 import { polarClient } from "./polar-client";
+import { appConfig } from "./config";
 
 export type PricingMode = "ltd" | "subscription";
 
-export const pricingMode: PricingMode =
-  (process.env.NEXT_PUBLIC_PRICING_MODE as PricingMode) || "subscription";
+export const pricingMode: PricingMode = appConfig.pricing.mode;
 
 // Product configuration for Polar checkout
 export type PolarProduct = {
