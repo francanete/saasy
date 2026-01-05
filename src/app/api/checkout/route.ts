@@ -1,12 +1,7 @@
-import { Polar } from "@polar-sh/sdk";
 import { NextResponse } from "next/server";
 import { getPolarProducts } from "@/lib/pricing";
 import { getCurrentSession } from "@/lib/dal";
-
-const polarClient = new Polar({
-  accessToken: process.env.POLAR_ACCESS_TOKEN!,
-  server: process.env.NODE_ENV === "production" ? "production" : "sandbox",
-});
+import { polarClient } from "@/lib/polar-client";
 
 export async function POST(request: Request) {
   try {

@@ -3,7 +3,7 @@ import { createAuthMiddleware } from "better-auth/api";
 import { magicLink } from "better-auth/plugins/magic-link";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { polar, checkout, portal, webhooks } from "@polar-sh/better-auth";
-import { Polar } from "@polar-sh/sdk";
+import { polarClient } from "./polar-client";
 import { eq } from "drizzle-orm";
 import { db, users, subscriptions } from "./db";
 import * as schema from "./db/schema";
@@ -16,11 +16,6 @@ import {
   mapPolarStatus,
 } from "./subscription";
 import { inngest } from "./inngest/client";
-
-const polarClient = new Polar({
-  accessToken: process.env.POLAR_ACCESS_TOKEN!,
-  server: process.env.NODE_ENV === "production" ? "production" : "sandbox",
-});
 
 /**
  * Update Polar customer with our internal userId as externalId.

@@ -1,4 +1,4 @@
-import { Polar } from "@polar-sh/sdk";
+import { polarClient } from "./polar-client";
 import { db, subscriptions, type Plan, type BillingType } from "./db";
 import { eq } from "drizzle-orm";
 import { getPlanFromPolarProduct } from "./product-tier-mapping";
@@ -128,19 +128,14 @@ export function mapPolarStatus(polarStatus: string): SubscriptionStatusType {
  * Used by daily cron job to keep all users in sync.
  */
 export async function syncWithPolar(userId: string): Promise<void> {
-  const polar = new Polar({
-    accessToken: process.env.POLAR_ACCESS_TOKEN!,
-    server: process.env.NODE_ENV === "production" ? "production" : "sandbox",
-  });
-
   try {
     // Look up customer by userId (externalId)
-    const customer = await polar.customers.getExternal({ externalId: userId });
+    const customer = await polarClient.customers.getExternal({ externalId: userId });
 
     // Fetch both subscriptions and orders in parallel
     const [subsResult, ordersResult] = await Promise.all([
-      polar.subscriptions.list({ customerId: customer.id, active: true }),
-      polar.orders.list({ customerId: customer.id }),
+      polarClient.subscriptions.list({ customerId: customer.id, active: true }),
+      polarClient.orders.list({ customerId: customer.id }),
     ]);
 
     const activeSub = subsResult.result.items[0];
