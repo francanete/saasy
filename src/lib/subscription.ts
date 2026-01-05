@@ -1,7 +1,7 @@
 import { polarClient } from "./polar-client";
 import { db, subscriptions, type Plan, type BillingType } from "./db";
 import { eq } from "drizzle-orm";
-import { getPlanFromPolarProduct } from "./product-tier-mapping";
+import { appConfig, getPlanFromPolarProduct } from "./config";
 
 // ============ Types ============
 
@@ -22,12 +22,7 @@ export type SubscriptionStatus = {
 };
 
 // Plan tier hierarchy for comparison (higher tier wins)
-const PLAN_HIERARCHY: Record<Plan, number> = {
-  FREE: 0,
-  STARTER: 1,
-  GROWTH: 2,
-  SCALE: 3,
-};
+const PLAN_HIERARCHY = appConfig.plans.hierarchy;
 
 // ============ Webhook Helpers ============
 
