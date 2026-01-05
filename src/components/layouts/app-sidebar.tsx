@@ -23,7 +23,12 @@ import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
 import { appConfig } from "@/lib/config";
 
-type SubscriptionStatus = "ACTIVE" | "CANCELED" | "PAST_DUE" | "TRIALING" | "NONE";
+type SubscriptionStatus =
+  | "ACTIVE"
+  | "CANCELED"
+  | "PAST_DUE"
+  | "TRIALING"
+  | "NONE";
 
 interface AppSidebarProps {
   user: {
@@ -63,7 +68,7 @@ export function AppSidebar({
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link
-                href="/dashboard"
+                href="/"
                 className="group-data-[collapsible=icon]:justify-center"
               >
                 <div className="bg-primary text-primary-foreground flex aspect-square size-8 shrink-0 items-center justify-center rounded-lg">

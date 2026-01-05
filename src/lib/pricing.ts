@@ -1,4 +1,3 @@
-import { polarClient } from "./polar-client";
 import { appConfig } from "./config";
 
 export type PricingMode = "ltd" | "subscription";
@@ -102,7 +101,7 @@ const planMarketing: Record<string, PlanMarketing> = {
 
 export type PlanDisplay = {
   name: string;
-  price: string; // From Polar API
+  price: string; // From config
   originalPrice?: string; // Calculated for annual (monthly × 12)
   period?: string;
   description: string;
@@ -114,7 +113,7 @@ export type PlanDisplay = {
   badge?: string;
 };
 
-// ----- FETCH PRICES FROM POLAR -----
+// ----- PRICE UTILITIES -----
 
 function formatPrice(amountInCents: number, currency = "usd"): string {
   return new Intl.NumberFormat("en-US", {
@@ -124,56 +123,17 @@ function formatPrice(amountInCents: number, currency = "usd"): string {
   }).format(amountInCents / 100);
 }
 
-// Cache for server-side price fetching (revalidates every hour)
-let priceCache: { prices: Map<string, number>; fetchedAt: number } | null =
-  null;
-const CACHE_TTL = 60 * 60 * 1000; // 1 hour
-
-async function fetchPolarPrices(): Promise<Map<string, number>> {
-  // Return cached if fresh
-  if (priceCache && Date.now() - priceCache.fetchedAt < CACHE_TTL) {
-    return priceCache.prices;
-  }
-
-  const productIds = getPolarProducts().map((p) => p.productId);
-  const prices = new Map<string, number>();
-
-  try {
-    const { result } = await polarClient.products.list({
-      organizationId: process.env.POLAR_ORGANIZATION_ID!,
-      id: productIds,
-    });
-
-    for (const product of result.items) {
-      const slug = getPolarProducts().find(
-        (p) => p.productId === product.id
-      )?.slug;
-      if (slug && product.prices?.[0]) {
-        const price = product.prices[0];
-        // Handle different price types - priceAmount exists on fixed prices
-        if ("priceAmount" in price && typeof price.priceAmount === "number") {
-          prices.set(slug, price.priceAmount);
-        }
-      }
-    }
-
-    priceCache = { prices, fetchedAt: Date.now() };
-  } catch (error) {
-    console.error("Failed to fetch Polar prices:", error);
-    // Return fallback prices if API fails
-    prices.set("pro-ltd", 19900); // $199
-    prices.set("pro-monthly", 1900); // $19
-    prices.set("pro-annual", 19000); // $190
-  }
-
-  return prices;
+/** Get price from config for a given tier and billing cycle */
+function getPrice(
+  tier: "STARTER" | "GROWTH" | "SCALE",
+  cycle: "ltd" | "monthly" | "annual"
+): number {
+  return appConfig.pricing.plans[tier][cycle];
 }
 
-// ----- MAIN FUNCTION: Get pricing plans with live prices -----
+// ----- MAIN FUNCTION: Get pricing plans from config -----
 
-export async function getPricingPlans(): Promise<PlanDisplay[]> {
-  const prices = await fetchPolarPrices();
-
+export function getPricingPlans(): PlanDisplay[] {
   const freePlan: PlanDisplay = {
     ...freePlanMarketing,
     price: "$0",
@@ -181,14 +141,23 @@ export async function getPricingPlans(): Promise<PlanDisplay[]> {
   };
 
   const products = getPolarProducts();
+  // Map product slugs to tier/cycle for config lookup
+  // Currently all "pro-*" products map to STARTER tier
+  const slugToConfig: Record<string, { tier: "STARTER" | "GROWTH" | "SCALE"; cycle: "ltd" | "monthly" | "annual" }> = {
+    "pro-ltd": { tier: "STARTER", cycle: "ltd" },
+    "pro-monthly": { tier: "STARTER", cycle: "monthly" },
+    "pro-annual": { tier: "STARTER", cycle: "annual" },
+  };
+
   const paidPlans: PlanDisplay[] = products.map((product) => {
     const marketing = planMarketing[product.slug];
-    const priceAmount = prices.get(product.slug) || 0;
+    const config = slugToConfig[product.slug];
+    const priceAmount = config ? getPrice(config.tier, config.cycle) : 0;
 
     // Calculate "original price" for annual (show monthly × 12)
     let originalPrice: string | undefined;
     if (product.slug === "pro-annual") {
-      const monthlyPrice = prices.get("pro-monthly") || 1900;
+      const monthlyPrice = getPrice("STARTER", "monthly");
       originalPrice = formatPrice(monthlyPrice * 12);
     }
 

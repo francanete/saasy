@@ -7,6 +7,12 @@ export const appConfig = {
   },
   pricing: {
     mode: "subscription" as const, // "subscription" | "ltd"
+    /** Prices in cents per tier and billing cycle */
+    plans: {
+      STARTER: { ltd: 0, monthly: 0, annual: 0 },
+      GROWTH: { ltd: 0, monthly: 0, annual: 0 },
+      SCALE: { ltd: 0, monthly: 0, annual: 0 },
+    },
   },
   plans: {
     hierarchy: {
