@@ -27,15 +27,15 @@ export const appConfig = {
      * 3. Copy the product ID from the URL or details
      */
     productToTier: {
-      // Monthly subscriptions
+      /* 🗓️ Monthly subscriptions */
       "64e937b4-4da7-4c09-9bd3-f38f440799e1": "STARTER",
       // "prod_growth_monthly": "GROWTH",
       // "prod_scale_monthly": "SCALE",
-      // Annual subscriptions
+      /* 🗓️ Annual subscriptions */
       // "prod_starter_annual": "STARTER",
       // "prod_growth_annual": "GROWTH",
       // "prod_scale_annual": "SCALE",
-      // Lifetime deals
+      /* 💸 Lifetime deals */
       // "prod_starter_ltd": "STARTER",
       // "prod_growth_ltd": "GROWTH",
     } as Record<string, Plan>,
