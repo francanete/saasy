@@ -20,7 +20,12 @@ import {
 } from "@/components/ui/sidebar";
 import { signOut } from "@/lib/auth-client";
 
-type SubscriptionStatus = "ACTIVE" | "CANCELED" | "PAST_DUE" | "TRIALING" | "NONE";
+type SubscriptionStatus =
+  | "ACTIVE"
+  | "CANCELED"
+  | "PAST_DUE"
+  | "TRIALING"
+  | "NONE";
 
 interface NavUserProps {
   user: {

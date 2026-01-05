@@ -25,11 +25,11 @@ export const POLAR_PRODUCT_TO_TIER: Record<string, Plan> = {
 
 /**
  * Get the app tier for a Polar product ID.
- * Defaults to STARTER if product ID is not mapped.
+ * Defaults to FREE if product ID is not mapped.
  */
 export function getPlanFromPolarProduct(
   polarProductId: string | null | undefined
 ): Plan {
-  if (!polarProductId) return "STARTER";
-  return POLAR_PRODUCT_TO_TIER[polarProductId] ?? "STARTER";
+  if (!polarProductId) return "FREE";
+  return POLAR_PRODUCT_TO_TIER[polarProductId] ?? "FREE";
 }
