@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import { ChevronsUpDown, CreditCard, LogOut, Settings } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -53,6 +54,7 @@ export function NavUser({
   subscriptionStatus,
   expiresAt,
 }: NavUserProps) {
+  const router = useRouter();
   const initials = user.name
     ? user.name
         .split(" ")
@@ -147,7 +149,17 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => signOut()}>
+            <DropdownMenuItem
+              onClick={() =>
+                signOut({
+                  fetchOptions: {
+                    onSuccess: () => {
+                      router.push("/");
+                    },
+                  },
+                })
+              }
+            >
               <LogOut className="mr-2 h-4 w-4" />
               Sign out
             </DropdownMenuItem>

@@ -173,13 +173,15 @@ export async function syncWithPolar(userId: string): Promise<void> {
     // Apply the best option
     if (bestOption.type === "subscription") {
       const sub = bestOption.data as typeof activeSub;
+      const statusToSave = mapPolarStatus(sub!.status);
+
       await upsertSubscription({
         userId,
         polarCustomerId: customer.id,
         polarSubscriptionId: sub!.id,
         polarProductId: sub!.product!.id,
         billingType: "recurring",
-        status: mapPolarStatus(sub!.status),
+        status: statusToSave,
         currentPeriodEnd: sub!.currentPeriodEnd
           ? new Date(sub!.currentPeriodEnd)
           : undefined,
@@ -187,6 +189,7 @@ export async function syncWithPolar(userId: string): Promise<void> {
       });
     } else if (bestOption.type === "order") {
       const order = bestOption.data as typeof paidOrder;
+
       await upsertSubscription({
         userId,
         polarCustomerId: customer.id,
@@ -197,6 +200,7 @@ export async function syncWithPolar(userId: string): Promise<void> {
       });
     } else {
       // Customer exists but no active subscription/order - mark as free
+
       await db
         .update(subscriptions)
         .set({
@@ -229,6 +233,15 @@ export async function syncWithPolar(userId: string): Promise<void> {
 }
 
 // ============ Access Control ============
+
+/**
+ * Check if user has paid access (not FREE).
+ * Used for paid-only apps where free tier is disabled.
+ */
+export async function hasPaidAccess(userId: string): Promise<boolean> {
+  const status = await getSubscriptionStatus(userId);
+  return status.hasAccess && status.plan !== "FREE";
+}
 
 /**
  * Get subscription status from database.

@@ -1,7 +1,7 @@
 import { inngest } from "./client";
 import { db, users, subscriptions } from "@/lib/db";
 import { eq } from "drizzle-orm";
-import { sendWelcomeEmail } from "@/lib/email";
+import { sendWelcomeEmail, sendAccountSetupEmail } from "@/lib/email";
 import { syncWithPolar } from "@/lib/subscription";
 
 // ============ Constants ============
@@ -129,4 +129,31 @@ export const syncAllSubscriptions = inngest.createFunction(
   }
 );
 
-export const functions = [welcomeEmailJob, syncAllSubscriptions];
+// Account setup email for users who paid via guest checkout
+export const paidSignupEmailJob = inngest.createFunction(
+  { id: "send-paid-signup-email" },
+  { event: "user/paid-signup" },
+  async ({ event }) => {
+    const { userId, email, name } = event.data;
+
+    // Wait briefly for subscription to be created by webhook
+    await new Promise((r) => setTimeout(r, 1000));
+
+    // Get subscription to know the plan
+    const subscription = await db.query.subscriptions.findFirst({
+      where: eq(subscriptions.userId, userId),
+    });
+
+    const planName = subscription?.plan || "Premium";
+
+    await sendAccountSetupEmail(email, name, planName);
+
+    return { sent: true, plan: planName };
+  }
+);
+
+export const functions = [
+  welcomeEmailJob,
+  syncAllSubscriptions,
+  paidSignupEmailJob,
+];

@@ -5,7 +5,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { polar, checkout, portal, webhooks } from "@polar-sh/better-auth";
 import { Polar } from "@polar-sh/sdk";
 import { eq } from "drizzle-orm";
-import { db, users } from "./db";
+import { db, users, subscriptions } from "./db";
 import * as schema from "./db/schema";
 import { sendEmail } from "./email";
 import { appConfig } from "./config";
@@ -17,29 +17,101 @@ import {
 } from "./subscription";
 import { inngest } from "./inngest/client";
 
-// Helper to resolve user ID from Polar customer
-// Handles race condition where external_id may not be set yet
-async function resolveUserId(customer: {
-  externalId?: string | null;
-  email: string;
-}): Promise<string | null> {
-  if (customer.externalId) {
-    return customer.externalId;
-  }
-
-  // Fallback: look up user by email
-  const user = await db.query.users.findFirst({
-    where: eq(users.email, customer.email),
-    columns: { id: true },
-  });
-
-  return user?.id ?? null;
-}
-
 const polarClient = new Polar({
   accessToken: process.env.POLAR_ACCESS_TOKEN!,
   server: process.env.NODE_ENV === "production" ? "production" : "sandbox",
 });
+
+/**
+ * Update Polar customer with our internal userId as externalId.
+ * This ensures future webhook events have the correct externalId.
+ */
+async function updatePolarCustomerExternalId(
+  polarCustomerId: string,
+  userId: string
+): Promise<void> {
+  try {
+    await polarClient.customers.update({
+      id: polarCustomerId,
+      customerUpdate: { externalId: userId },
+    });
+  } catch (error) {
+    console.error(
+      `Failed to update Polar customer ${polarCustomerId} with externalId:`,
+      error
+    );
+    // Don't throw - the subscription was still created successfully
+  }
+}
+
+/**
+ * Resolve or create user from Polar customer data.
+ * Used by webhooks to handle guest checkout flow.
+ *
+ * Priority:
+ * 1. Use externalId if set (existing user went through our checkout)
+ * 2. Look up by email (user might exist from previous signup)
+ * 3. Create new user (guest checkout - first time purchase)
+ */
+async function resolveOrCreateUser(customer: {
+  id: string; // Polar customer ID
+  externalId?: string | null;
+  email: string;
+  name?: string | null;
+}): Promise<string> {
+  // 1. Use externalId if set (existing user went through our checkout)
+  if (customer.externalId) {
+    return customer.externalId;
+  }
+
+  // 2. Look up by email (user might exist from previous signup)
+  const existingUser = await db.query.users.findFirst({
+    where: eq(users.email, customer.email),
+    columns: { id: true },
+  });
+
+  if (existingUser) {
+    // Update Polar customer with our userId for future syncs
+    await updatePolarCustomerExternalId(customer.id, existingUser.id);
+    return existingUser.id;
+  }
+
+  // 3. Create new user from Polar customer data (guest checkout)
+  const [newUser] = await db
+    .insert(users)
+    .values({
+      email: customer.email,
+      name: customer.name || null,
+      emailVerified: false,
+    })
+    .returning({ id: users.id });
+
+  // Create FREE subscription record (will be upgraded by webhook upsert)
+  await db
+    .insert(subscriptions)
+    .values({
+      userId: newUser.id,
+      plan: "FREE",
+      status: "ACTIVE",
+      billingType: "none",
+    })
+    .onConflictDoNothing();
+
+  // Update Polar customer with our userId for future syncs
+  await updatePolarCustomerExternalId(customer.id, newUser.id);
+
+  // Send event to trigger account setup email
+  await inngest.send({
+    name: "user/paid-signup",
+    data: {
+      userId: newUser.id,
+      email: customer.email,
+      name: customer.name || null,
+    },
+  });
+
+  return newUser.id;
+}
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -92,12 +164,11 @@ export const auth = betterAuth({
             const customer = order.customer;
             const product = order.product;
 
-            const userId = await resolveUserId(customer);
-            if (!userId) {
-              console.error(
-                "Polar webhook: Cannot resolve user for customer",
-                customer.id,
-                customer.email
+            // Skip if this order is part of a subscription (e.g., trial or recurring charge)
+            // Let subscription webhooks handle these instead
+            if (order.subscriptionId) {
+              console.log(
+                `Polar webhook: Skipping order ${order.id} - belongs to subscription ${order.subscriptionId}`
               );
               return;
             }
@@ -106,6 +177,14 @@ export const auth = betterAuth({
               console.error("Polar webhook: No product on order", order.id);
               return;
             }
+
+            // Resolve or create user (handles guest checkout)
+            const userId = await resolveOrCreateUser({
+              id: customer.id,
+              externalId: customer.externalId,
+              email: customer.email,
+              name: customer.name,
+            });
 
             await upsertSubscription({
               userId,
@@ -123,16 +202,6 @@ export const auth = betterAuth({
             const customer = subscription.customer;
             const product = subscription.product;
 
-            const userId = await resolveUserId(customer);
-            if (!userId) {
-              console.error(
-                "Polar webhook: Cannot resolve user for customer",
-                customer.id,
-                customer.email
-              );
-              return;
-            }
-
             if (!product) {
               console.error(
                 "Polar webhook: No product on subscription",
@@ -140,6 +209,14 @@ export const auth = betterAuth({
               );
               return;
             }
+
+            // Resolve or create user (handles guest checkout)
+            const userId = await resolveOrCreateUser({
+              id: customer.id,
+              externalId: customer.externalId,
+              email: customer.email,
+              name: customer.name,
+            });
 
             await upsertSubscription({
               userId,

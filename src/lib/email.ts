@@ -37,11 +37,44 @@ export async function sendEmail({ to, subject, html, from }: SendEmailOptions) {
 export async function sendWelcomeEmail(email: string, name: string) {
   return sendEmail({
     to: email,
-    subject: "Welcome to Saasy!",
+    subject: `Welcome to ${appConfig.name}!`,
     html: `
       <h1>Welcome, ${name}!</h1>
       <p>Thanks for signing up. We're excited to have you!</p>
       <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard">Go to Dashboard</a></p>
+    `,
+  });
+}
+
+/**
+ * Send account setup email to users who purchased via guest checkout.
+ * Provides a login link to access their newly created account.
+ */
+export async function sendAccountSetupEmail(
+  email: string,
+  name: string | null,
+  planName: string
+) {
+  const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL}/login?email=${encodeURIComponent(email)}&from=purchase`;
+
+  return sendEmail({
+    to: email,
+    subject: `Your ${appConfig.name} account is ready!`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1>Welcome${name ? `, ${name}` : ""}!</h1>
+        <p>Thank you for purchasing the <strong>${planName}</strong> plan.</p>
+        <p>Your account has been created with this email address.</p>
+        <p>Click below to sign in and access your dashboard:</p>
+        <p style="margin: 24px 0;">
+          <a href="${loginUrl}" style="display: inline-block; padding: 12px 24px; background: #000; color: #fff; text-decoration: none; border-radius: 6px;">
+            Access My Account
+          </a>
+        </p>
+        <p style="color: #666; font-size: 14px;">
+          You can sign in with Google or request a magic link using this email.
+        </p>
+      </div>
     `,
   });
 }

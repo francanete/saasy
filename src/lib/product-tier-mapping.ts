@@ -11,7 +11,7 @@ import type { Plan } from "./db/schema";
  */
 export const POLAR_PRODUCT_TO_TIER: Record<string, Plan> = {
   // Monthly subscriptions
-  // "prod_starter_monthly": "STARTER",
+  "64e937b4-4da7-4c09-9bd3-f38f440799e1": "STARTER",
   // "prod_growth_monthly": "GROWTH",
   // "prod_scale_monthly": "SCALE",
   // Annual subscriptions
