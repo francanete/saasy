@@ -1,5 +1,27 @@
 import type { Plan } from "./db/schema";
 
+// Types for tier configuration
+export type BillingCycle = "ltd" | "monthly" | "annual";
+export type PaidTier = Exclude<Plan, "FREE">;
+
+export type TierMarketing = {
+  name: string;
+  description: string;
+  features: string[];
+  cta: string;
+  highlighted: boolean;
+  badge?: string;
+};
+
+export type TierConfig = {
+  enabled: boolean;
+  /** Prices in cents */
+  prices: Record<BillingCycle, number>;
+  /** Polar product IDs - get from Polar dashboard */
+  polarProductIds: Record<BillingCycle, string>;
+  marketing: TierMarketing;
+};
+
 export const appConfig = {
   name: "Saasy",
   email: {
@@ -7,12 +29,92 @@ export const appConfig = {
   },
   pricing: {
     mode: "subscription" as const, // "subscription" | "ltd"
-    /** Prices in cents per tier and billing cycle */
-    plans: {
-      STARTER: { ltd: 0, monthly: 0, annual: 0 },
-      GROWTH: { ltd: 0, monthly: 0, annual: 0 },
-      SCALE: { ltd: 0, monthly: 0, annual: 0 },
-    },
+    allowFreePlan: true, // Show free plan on pricing page & allow FREE users in dashboard
+
+    tiers: {
+      STARTER: {
+        enabled: true,
+        prices: { ltd: 0, monthly: 0, annual: 0 },
+        polarProductIds: {
+          ltd: "64e937b4-4da7-4c09-9bd3-f38f440799e1",
+          monthly: "64e937b4-4da7-4c09-9bd3-f38f440799e1",
+          annual: "64e937b4-4da7-4c09-9bd3-f38f440799e1",
+        },
+        marketing: {
+          name: "Starter",
+          description: "For professionals and small teams",
+          features: [
+            "Unlimited projects",
+            "Advanced analytics",
+            "Priority support",
+            "API access",
+            "Custom integrations",
+            "Team collaboration",
+          ],
+          cta: "Start Free Trial",
+          highlighted: false,
+        },
+      },
+      GROWTH: {
+        enabled: false,
+        prices: { ltd: 0, monthly: 0, annual: 0 },
+        polarProductIds: {
+          ltd: "64e937b4-4da7-4c09-9bd3-f38f440799e1",
+          monthly: "64e937b4-4da7-4c09-9bd3-f38f440799e1",
+          annual: "64e937b4-4da7-4c09-9bd3-f38f440799e1",
+        },
+        marketing: {
+          name: "Growth",
+          description: "For growing businesses",
+          features: [
+            "Everything in Starter",
+            "Advanced team management",
+            "Custom workflows",
+            "Priority support",
+            "API access",
+            "Dedicated account manager",
+          ],
+          cta: "Start Free Trial",
+          highlighted: true,
+          badge: "Popular",
+        },
+      },
+      SCALE: {
+        enabled: false,
+        prices: { ltd: 0, monthly: 0, annual: 0 },
+        polarProductIds: { ltd: "", monthly: "", annual: "" },
+        marketing: {
+          name: "Scale",
+          description: "For enterprises",
+          features: [
+            "Everything in Growth",
+            "SSO & SAML",
+            "Custom SLAs",
+            "Dedicated support",
+            "On-premise deployment",
+            "Custom contracts",
+          ],
+          cta: "Contact Sales",
+          highlighted: false,
+        },
+      },
+    } satisfies Record<PaidTier, TierConfig>,
+
+    freeMarketing: {
+      name: "Free",
+      description: "For individuals getting started",
+      features: [
+        "Up to 3 projects",
+        "Basic analytics",
+        "Community support",
+        "API access",
+      ],
+      cta: "Get Started",
+      highlighted: false,
+    } satisfies TierMarketing,
+
+    /** Extra features for LTD plans (appended to tier features) */
+    ltdExtraFeatures: ["Lifetime updates", "No recurring fees"],
   },
   plans: {
     hierarchy: {
@@ -22,31 +124,28 @@ export const appConfig = {
       SCALE: 3,
     } as const satisfies Record<Plan, number>,
   },
-  polar: {
-    /**
-     * Map Polar product IDs to app tiers.
-     * Update these when you create products in Polar.
-     *
-     * To find your product IDs:
-     * 1. Go to Polar dashboard > Products
-     * 2. Click on a product
-     * 3. Copy the product ID from the URL or details
-     */
-    productToTier: {
-      /* 🗓️ Monthly subscriptions */
-      "64e937b4-4da7-4c09-9bd3-f38f440799e1": "STARTER",
-      // "prod_growth_monthly": "GROWTH",
-      // "prod_scale_monthly": "SCALE",
-      /* 🗓️ Annual subscriptions */
-      // "prod_starter_annual": "STARTER",
-      // "prod_growth_annual": "GROWTH",
-      // "prod_scale_annual": "SCALE",
-      /* 💸 Lifetime deals */
-      // "prod_starter_ltd": "STARTER",
-      // "prod_growth_ltd": "GROWTH",
-    } as Record<string, Plan>,
-  },
 } as const;
+
+/**
+ * Build product-to-tier mapping from tiers config.
+ * Called once and cached.
+ */
+function buildProductToTierMap(): Record<string, Plan> {
+  const map: Record<string, Plan> = {};
+  const tiers = appConfig.pricing.tiers;
+
+  for (const [tier, config] of Object.entries(tiers)) {
+    const { polarProductIds } = config;
+    if (polarProductIds.ltd) map[polarProductIds.ltd] = tier as Plan;
+    if (polarProductIds.monthly) map[polarProductIds.monthly] = tier as Plan;
+    if (polarProductIds.annual) map[polarProductIds.annual] = tier as Plan;
+  }
+
+  return map;
+}
+
+// Cached product-to-tier map
+let productToTierMap: Record<string, Plan> | null = null;
 
 /**
  * Get the app tier for a Polar product ID.
@@ -56,5 +155,10 @@ export function getPlanFromPolarProduct(
   polarProductId: string | null | undefined
 ): Plan {
   if (!polarProductId) return "FREE";
-  return appConfig.polar.productToTier[polarProductId] ?? "FREE";
+
+  if (!productToTierMap) {
+    productToTierMap = buildProductToTierMap();
+  }
+
+  return productToTierMap[polarProductId] ?? "FREE";
 }

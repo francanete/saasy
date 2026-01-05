@@ -11,8 +11,7 @@ export const metadata: Metadata = {
   description: "Choose a plan to access your dashboard",
 };
 
-const REQUIRE_PAID_ACCESS =
-  process.env.NEXT_PUBLIC_REQUIRE_PAID_ACCESS === "true";
+const REQUIRE_PAID_ACCESS = !appConfig.pricing.allowFreePlan;
 
 export default async function GatePage() {
   // If paid access not required, redirect to dashboard

@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getSubscriptionStatus } from "@/lib/subscription";
 import { isUserAdmin } from "@/lib/dal";
+import { appConfig } from "@/lib/config";
 import { TrialBanner } from "@/components/trial-banner";
 import { AppSidebar } from "@/components/layouts/app-sidebar";
 import { CheckoutSuccessToast } from "@/components/checkout-success-toast";
@@ -13,8 +14,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 
-const REQUIRE_PAID_ACCESS =
-  process.env.NEXT_PUBLIC_REQUIRE_PAID_ACCESS === "true";
+const REQUIRE_PAID_ACCESS = !appConfig.pricing.allowFreePlan;
 
 export default async function DashboardLayout({
   children,

@@ -1,108 +1,127 @@
-import { appConfig } from "./config";
+import {
+  appConfig,
+  type BillingCycle,
+  type PaidTier,
+  type TierMarketing,
+} from "./config";
 
 export type PricingMode = "ltd" | "subscription";
 
 export const pricingMode: PricingMode = appConfig.pricing.mode;
 
-// Product configuration for Polar checkout
+// ----- SLUG UTILITIES -----
+
+/**
+ * Generate a product slug from tier and billing cycle.
+ * Format: {tier}-{billing} (e.g., "starter-monthly", "growth-annual")
+ */
+export function generateSlug(tier: PaidTier, billing: BillingCycle): string {
+  return `${tier.toLowerCase()}-${billing}`;
+}
+
+/**
+ * Parse a slug back to tier and billing cycle.
+ * Supports both new format and legacy "pro-*" slugs.
+ */
+export function parseSlug(
+  slug: string
+): { tier: PaidTier; billing: BillingCycle } | null {
+  // Legacy slug support: "pro-*" maps to STARTER
+  const legacyMap: Record<string, { tier: PaidTier; billing: BillingCycle }> = {
+    "pro-ltd": { tier: "STARTER", billing: "ltd" },
+    "pro-monthly": { tier: "STARTER", billing: "monthly" },
+    "pro-annual": { tier: "STARTER", billing: "annual" },
+  };
+
+  if (legacyMap[slug]) {
+    return legacyMap[slug];
+  }
+
+  // New format: {tier}-{billing}
+  const match = slug.match(/^(starter|growth|scale)-(ltd|monthly|annual)$/);
+  if (!match) return null;
+
+  return {
+    tier: match[1].toUpperCase() as PaidTier,
+    billing: match[2] as BillingCycle,
+  };
+}
+
+// ----- TIER UTILITIES -----
+
+/**
+ * Get all enabled tiers from config.
+ */
+export function getEnabledTiers(): PaidTier[] {
+  return (
+    Object.entries(appConfig.pricing.tiers) as [PaidTier, { enabled: boolean }][]
+  )
+    .filter(([, config]) => config.enabled)
+    .map(([tier]) => tier);
+}
+
+// ----- POLAR PRODUCTS -----
+
 export type PolarProduct = {
   productId: string;
   slug: string;
+  tier: PaidTier;
+  billing: BillingCycle;
 };
 
-// Get products based on pricing mode (for Better Auth checkout config)
+/**
+ * Get Polar products based on pricing mode and enabled tiers.
+ * - LTD mode: one lifetime product per enabled tier
+ * - Subscription mode: monthly + annual per enabled tier
+ */
 export function getPolarProducts(): PolarProduct[] {
-  if (pricingMode === "ltd") {
-    return [
-      {
-        productId: process.env.POLAR_PRO_LTD_PRODUCT_ID!,
-        slug: "pro-ltd",
-      },
-    ];
+  const enabledTiers = getEnabledTiers();
+  const products: PolarProduct[] = [];
+
+  for (const tier of enabledTiers) {
+    const config = appConfig.pricing.tiers[tier];
+    const { polarProductIds } = config;
+
+    if (pricingMode === "ltd") {
+      // LTD mode: only lifetime product
+      if (polarProductIds.ltd) {
+        products.push({
+          productId: polarProductIds.ltd,
+          slug: generateSlug(tier, "ltd"),
+          tier,
+          billing: "ltd",
+        });
+      }
+    } else {
+      // Subscription mode: monthly and annual
+      if (polarProductIds.monthly) {
+        products.push({
+          productId: polarProductIds.monthly,
+          slug: generateSlug(tier, "monthly"),
+          tier,
+          billing: "monthly",
+        });
+      }
+      if (polarProductIds.annual) {
+        products.push({
+          productId: polarProductIds.annual,
+          slug: generateSlug(tier, "annual"),
+          tier,
+          billing: "annual",
+        });
+      }
+    }
   }
 
-  // Subscription mode
-  return [
-    {
-      productId: process.env.POLAR_PRO_MONTHLY_PRODUCT_ID!,
-      slug: "pro-monthly",
-    },
-    {
-      productId: process.env.POLAR_PRO_ANNUAL_PRODUCT_ID!,
-      slug: "pro-annual",
-    },
-  ];
+  return products;
 }
 
-// ----- MARKETING COPY (stored in config) -----
-
-type PlanMarketing = {
-  name: string;
-  description: string;
-  features: string[];
-  cta: string;
-  highlighted: boolean;
-  badge?: string;
-  period?: string;
-};
-
-const freePlanMarketing: PlanMarketing = {
-  name: "Free",
-  description: "For individuals getting started",
-  features: [
-    "Up to 3 projects",
-    "Basic analytics",
-    "Community support",
-    "API access",
-  ],
-  cta: "Get Started",
-  highlighted: false,
-};
-
-const proFeatures = [
-  "Unlimited projects",
-  "Advanced analytics",
-  "Priority support",
-  "API access",
-  "Custom integrations",
-  "Team collaboration",
-];
-
-// Marketing copy keyed by product slug
-const planMarketing: Record<string, PlanMarketing> = {
-  "pro-ltd": {
-    name: "Pro Lifetime",
-    description: "Pay once, use forever",
-    features: [...proFeatures, "Lifetime updates", "No recurring fees"],
-    cta: "Get Lifetime Access",
-    highlighted: true,
-    badge: "Limited Offer",
-  },
-  "pro-monthly": {
-    name: "Pro Monthly",
-    description: "For professionals and small teams",
-    features: proFeatures,
-    cta: "Start Free Trial",
-    highlighted: false,
-    period: "/month",
-  },
-  "pro-annual": {
-    name: "Pro Annual",
-    description: "Best value - save 17%",
-    features: proFeatures,
-    cta: "Start Free Trial",
-    highlighted: true,
-    badge: "Best Value",
-    period: "/year",
-  },
-};
-
-// ----- PRICING DISPLAY TYPE -----
+// ----- PRICING DISPLAY -----
 
 export type PlanDisplay = {
   name: string;
-  price: string; // From config
-  originalPrice?: string; // Calculated for annual (monthly × 12)
+  price: string;
+  originalPrice?: string;
   period?: string;
   description: string;
   features: string[];
@@ -113,8 +132,9 @@ export type PlanDisplay = {
   badge?: string;
 };
 
-// ----- PRICE UTILITIES -----
-
+/**
+ * Format price in cents to display string.
+ */
 function formatPrice(amountInCents: number, currency = "usd"): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -123,53 +143,80 @@ function formatPrice(amountInCents: number, currency = "usd"): string {
   }).format(amountInCents / 100);
 }
 
-/** Get price from config for a given tier and billing cycle */
-function getPrice(
-  tier: "STARTER" | "GROWTH" | "SCALE",
-  cycle: "ltd" | "monthly" | "annual"
-): number {
-  return appConfig.pricing.plans[tier][cycle];
-}
-
-// ----- MAIN FUNCTION: Get pricing plans from config -----
-
+/**
+ * Get pricing plans for display on the pricing page.
+ * Returns FREE plan + paid plans based on mode and enabled tiers.
+ */
 export function getPricingPlans(): PlanDisplay[] {
+  const freeMarketing = appConfig.pricing.freeMarketing;
   const freePlan: PlanDisplay = {
-    ...freePlanMarketing,
+    name: freeMarketing.name,
     price: "$0",
+    description: freeMarketing.description,
+    features: freeMarketing.features,
+    cta: freeMarketing.cta,
+    highlighted: freeMarketing.highlighted,
     href: "/login",
   };
 
   const products = getPolarProducts();
-  // Map product slugs to tier/cycle for config lookup
-  // Currently all "pro-*" products map to STARTER tier
-  const slugToConfig: Record<string, { tier: "STARTER" | "GROWTH" | "SCALE"; cycle: "ltd" | "monthly" | "annual" }> = {
-    "pro-ltd": { tier: "STARTER", cycle: "ltd" },
-    "pro-monthly": { tier: "STARTER", cycle: "monthly" },
-    "pro-annual": { tier: "STARTER", cycle: "annual" },
-  };
 
   const paidPlans: PlanDisplay[] = products.map((product) => {
-    const marketing = planMarketing[product.slug];
-    const config = slugToConfig[product.slug];
-    const priceAmount = config ? getPrice(config.tier, config.cycle) : 0;
+    const tierConfig = appConfig.pricing.tiers[product.tier];
+    const marketing = tierConfig.marketing as TierMarketing;
+    const priceAmount = tierConfig.prices[product.billing];
 
-    // Calculate "original price" for annual (show monthly × 12)
+    // Build display name and enhance marketing based on billing type
+    let name = marketing.name;
+    let description = marketing.description;
+    let features = [...marketing.features];
+    let period: string | undefined;
+    let badge: string | undefined = marketing.badge;
+    let highlighted = marketing.highlighted;
     let originalPrice: string | undefined;
-    if (product.slug === "pro-annual") {
-      const monthlyPrice = getPrice("STARTER", "monthly");
-      originalPrice = formatPrice(monthlyPrice * 12);
+
+    if (product.billing === "monthly") {
+      name = `${marketing.name} Monthly`;
+      period = "/month";
+    } else if (product.billing === "annual") {
+      name = `${marketing.name} Annual`;
+      period = "/year";
+      description = `${marketing.description} - best value`;
+      badge = badge || "Save 17%";
+      highlighted = true;
+      // Show monthly × 12 as strikethrough
+      const monthlyPrice = tierConfig.prices.monthly;
+      if (monthlyPrice > 0) {
+        originalPrice = formatPrice(monthlyPrice * 12);
+      }
+    } else if (product.billing === "ltd") {
+      name = `${marketing.name} Lifetime`;
+      description = "Pay once, use forever";
+      features = [...features, ...appConfig.pricing.ltdExtraFeatures];
+      badge = badge || "Lifetime";
+      highlighted = true;
     }
 
     return {
-      ...marketing,
+      name,
       price: formatPrice(priceAmount),
       originalPrice,
+      period,
+      description,
+      features,
+      cta: marketing.cta,
       slug: product.slug,
+      highlighted,
+      badge,
     };
   });
 
-  return [freePlan, ...paidPlans];
+  // Only include free plan if allowed
+  if (appConfig.pricing.allowFreePlan) {
+    return [freePlan, ...paidPlans];
+  }
+
+  return paidPlans;
 }
 
 // ----- SYNC VERSION (for client components using server-fetched data) -----
