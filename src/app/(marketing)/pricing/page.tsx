@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { getTierPricing, pricingMode } from "@/lib/pricing";
-import { PricingCards } from "./pricing-cards";
+import { PricingSection } from "@/components/pricing/pricing-section";
 
 export const metadata: Metadata = {
   title: "Pricing | Saasy",
@@ -15,7 +14,6 @@ export default async function PricingPage({
 }: {
   searchParams: Promise<{ reason?: string }>;
 }) {
-  const tiers = getTierPricing();
   const params = await searchParams;
   const showSubscriptionMessage = params.reason === "no_subscription";
 
@@ -30,7 +28,7 @@ export default async function PricingPage({
           </div>
         )}
 
-        <PricingCards tiers={tiers} mode={pricingMode} />
+        <PricingSection />
       </div>
     </div>
   );
