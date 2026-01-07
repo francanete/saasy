@@ -1,6 +1,5 @@
 import type { Plan } from "./db/schema";
 
-// Types for tier configuration
 export type BillingCycle = "ltd" | "monthly" | "annual";
 export type PaidTier = Exclude<Plan, "FREE">;
 
