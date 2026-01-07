@@ -158,5 +158,16 @@ export function getPlanFromPolarProduct(
     productToTierMap = buildProductToTierMap();
   }
 
-  return productToTierMap[polarProductId] ?? "FREE";
+  const plan = productToTierMap[polarProductId];
+
+  if (!plan) {
+    console.error(
+      `[CRITICAL] Unknown Polar product ID: "${polarProductId}" - defaulting to FREE. ` +
+        `Check appConfig.pricing.tiers.polarProductIds. ` +
+        `Known IDs: ${JSON.stringify(Object.keys(productToTierMap))}`
+    );
+    return "FREE";
+  }
+
+  return plan;
 }

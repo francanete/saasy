@@ -212,9 +212,11 @@ export function PricingCards({ tiers, mode }: PricingCardsProps) {
         throw new Error(data.error || "Checkout failed");
       }
 
-      if (data.url) {
-        window.location.href = data.url;
+      if (!data.url) {
+        throw new Error("No checkout URL received");
       }
+
+      window.location.href = data.url;
     } catch (err) {
       console.error("Checkout error:", err);
       setError("Failed to start checkout. Please try again.");

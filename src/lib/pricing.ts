@@ -73,9 +73,11 @@ export type PolarProduct = {
 };
 
 /**
- * Get Polar products based on pricing mode and enabled tiers. - LTD mode: one
- * lifetime product per enabled tier - Subscription mode: monthly + annual per
- * enabled tier
+ Get Polar products based on pricing mode and enabled tiers. -
+ * LTD mode: lifetime product for enabled tiers with configured ltd productId -
+ * Subscription mode: monthly/annual products for enabled tiers with configured
+ * productIds Note: Tiers with empty polarProductIds for the current billing
+ * cycle are skipped.
  */
 export function getPolarProducts(): PolarProduct[] {
   const enabledTiers = getEnabledTiers();
