@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentSession } from "@/lib/dal";
 import { hasPaidAccess } from "@/lib/subscription";
-import { GateContent } from "@/components/gate-content";
-import { getPricingPlans } from "@/lib/pricing";
+import { PricingSection } from "@/components/pricing/pricing-section";
 import { appConfig } from "@/lib/config";
 
 export const metadata: Metadata = {
@@ -11,8 +10,7 @@ export const metadata: Metadata = {
   description: "Choose a plan to access your dashboard",
 };
 
-const REQUIRE_PAID_ACCESS =
-  process.env.NEXT_PUBLIC_REQUIRE_PAID_ACCESS === "true";
+const REQUIRE_PAID_ACCESS = !appConfig.pricing.allowFreePlan;
 
 export default async function GatePage() {
   // If paid access not required, redirect to dashboard
@@ -33,16 +31,5 @@ export default async function GatePage() {
     redirect("/dashboard");
   }
 
-  // Get pricing plans (excluding free plan for gate page)
-  const allPlans = await getPricingPlans();
-  const paidPlans = allPlans.filter((plan) => plan.slug); // Only plans with checkout slug
-
-  return (
-    <GateContent
-      email={session.user.email}
-      userId={session.user.id}
-      userName={session.user.name}
-      plans={paidPlans}
-    />
-  );
+  return <PricingSection />;
 }

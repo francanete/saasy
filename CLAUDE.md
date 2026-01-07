@@ -81,7 +81,7 @@ src/
 ### Key Integrations
 
 - **Authentication**: Better Auth with magic link + Google OAuth, configured in `src/lib/auth.ts`
-- **Payments**: Polar.sh for subscriptions (recurring) or lifetime deals (LTD), toggle via `NEXT_PUBLIC_PRICING_MODE` env var
+- **Payments**: Polar.sh for subscriptions (recurring) or lifetime deals (LTD), configured via `appConfig.pricing.mode` in `src/lib/config.ts`
 - **AI**: Google Gemini via Vercel AI SDK (`@ai-sdk/google`), models in `src/lib/ai.ts`
 - **Background Jobs**: Inngest for async tasks, functions in `src/lib/inngest/functions.ts`:
   - `send-welcome-email` - Welcome email after user signup
@@ -127,4 +127,3 @@ Key environment variables needed:
 - `GOOGLE_AI_API_KEY` - Google AI (Gemini) API key
 - `POLAR_ACCESS_TOKEN`, `POLAR_WEBHOOK_SECRET` - Polar.sh integration
 - `RESEND_API_KEY` - Resend email service
-- `NEXT_PUBLIC_PRICING_MODE` - "recurring" or "ltd" for pricing mode
