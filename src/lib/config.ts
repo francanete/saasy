@@ -17,6 +17,8 @@ export type TierConfig = {
   enabled: boolean;
   /** Prices in cents */
   prices: Record<BillingCycle, number>;
+  /** Original prices in cents (for strikethrough when discount active) */
+  originalPrices?: Record<BillingCycle, number>;
   /** Polar product IDs - get from Polar dashboard */
   polarProductIds: Record<BillingCycle, string>;
   marketing: TierMarketing;
@@ -29,12 +31,12 @@ export const appConfig = {
   },
   pricing: {
     mode: "subscription" as const, // "subscription" | "ltd"
-    allowFreePlan: true, // Show free plan on pricing page & allow FREE users in dashboard
-
+    allowFreePlan: false, // Show free plan on pricing page & allow FREE users in dashboard
     tiers: {
       STARTER: {
         enabled: true,
-        prices: { ltd: 0, monthly: 0, annual: 0 },
+        prices: { ltd: 4900, monthly: 900, annual: 9000 },
+        originalPrices: { ltd: 9900, monthly: 900, annual: 19900 },
         polarProductIds: {
           ltd: "64e937b4-4da7-4c09-9bd3-f38f440799e1",
           monthly: "64e937b4-4da7-4c09-9bd3-f38f440799e1",
@@ -44,14 +46,11 @@ export const appConfig = {
           name: "Starter",
           description: "For professionals and small teams",
           features: [
-            "Unlimited projects",
             "Advanced analytics",
-            "Priority support",
-            "API access",
             "Custom integrations",
             "Team collaboration",
           ],
-          cta: "Start Free Trial",
+          cta: "START FREE",
           highlighted: false,
         },
       },
@@ -59,9 +58,9 @@ export const appConfig = {
         enabled: false,
         prices: { ltd: 0, monthly: 0, annual: 0 },
         polarProductIds: {
-          ltd: "64e937b4-4da7-4c09-9bd3-f38f440799e1",
-          monthly: "64e937b4-4da7-4c09-9bd3-f38f440799e1",
-          annual: "64e937b4-4da7-4c09-9bd3-f38f440799e1",
+          ltd: "",
+          monthly: "",
+          annual: "",
         },
         marketing: {
           name: "Growth",

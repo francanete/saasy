@@ -12,16 +12,16 @@ export const pricingMode: PricingMode = appConfig.pricing.mode;
 // ----- SLUG UTILITIES -----
 
 /**
- * Generate a product slug from tier and billing cycle.
- * Format: {tier}-{billing} (e.g., "starter-monthly", "growth-annual")
+ * Generate a product slug from tier and billing cycle. Format: {tier}-{billing}
+ * (e.g., "starter-monthly", "growth-annual")
  */
 export function generateSlug(tier: PaidTier, billing: BillingCycle): string {
   return `${tier.toLowerCase()}-${billing}`;
 }
 
 /**
- * Parse a slug back to tier and billing cycle.
- * Supports both new format and legacy "pro-*" slugs.
+ * Parse a slug back to tier and billing cycle. Supports both new format and
+ * legacy "pro-*" slugs.
  */
 export function parseSlug(
   slug: string
@@ -54,7 +54,10 @@ export function parseSlug(
  */
 export function getEnabledTiers(): PaidTier[] {
   return (
-    Object.entries(appConfig.pricing.tiers) as [PaidTier, { enabled: boolean }][]
+    Object.entries(appConfig.pricing.tiers) as [
+      PaidTier,
+      { enabled: boolean },
+    ][]
   )
     .filter(([, config]) => config.enabled)
     .map(([tier]) => tier);
@@ -70,9 +73,9 @@ export type PolarProduct = {
 };
 
 /**
- * Get Polar products based on pricing mode and enabled tiers.
- * - LTD mode: one lifetime product per enabled tier
- * - Subscription mode: monthly + annual per enabled tier
+ * Get Polar products based on pricing mode and enabled tiers. - LTD mode: one
+ * lifetime product per enabled tier - Subscription mode: monthly + annual per
+ * enabled tier
  */
 export function getPolarProducts(): PolarProduct[] {
   const enabledTiers = getEnabledTiers();
@@ -144,8 +147,8 @@ function formatPrice(amountInCents: number, currency = "usd"): string {
 }
 
 /**
- * Get pricing plans for display on the pricing page.
- * Returns FREE plan + paid plans based on mode and enabled tiers.
+ * Get pricing plans for display on the pricing page. Returns FREE plan + paid
+ * plans based on mode and enabled tiers.
  */
 export function getPricingPlans(): PlanDisplay[] {
   const freeMarketing = appConfig.pricing.freeMarketing;
@@ -225,3 +228,85 @@ export type SerializedPricingData = {
   plans: PlanDisplay[];
   mode: PricingMode;
 };
+
+// ----- TIER PRICING FOR TOGGLE UI -----
+
+export type TierPricingDisplay = {
+  tier: PaidTier;
+  name: string;
+  description: string;
+  features: string[];
+  cta: string;
+  // Prices in formatted strings
+  monthlyPrice: string;
+  annualPrice: string;
+  ltdPrice: string;
+  // Original prices (for strikethrough when discount active)
+  originalMonthlyPrice: string | null;
+  originalAnnualPrice: string | null;
+  originalLtdPrice: string | null;
+  // Savings calculation
+  annualSavings: string | null;
+  // Slugs for checkout
+  monthlySlug: string;
+  annualSlug: string;
+  ltdSlug: string;
+};
+
+/**
+ * Get tier pricing data for toggle UI. Returns all price options per tier so
+ * client can toggle without refetch.
+ */
+export function getTierPricing(): TierPricingDisplay[] {
+  const enabledTiers = getEnabledTiers();
+
+  return enabledTiers.map((tier) => {
+    const config = appConfig.pricing.tiers[tier];
+    const marketing = config.marketing as TierMarketing;
+    const prices = config.prices;
+    const originalPrices =
+      "originalPrices" in config ? config.originalPrices : undefined;
+
+    // Calculate annual savings (monthly × 12 - annual)
+    const annualSavings =
+      prices.monthly > 0 ? prices.monthly * 12 - prices.annual : 0;
+
+    // Get features - add LTD extras if in LTD mode
+    const features =
+      pricingMode === "ltd"
+        ? [...marketing.features, ...appConfig.pricing.ltdExtraFeatures]
+        : [...marketing.features];
+
+    // Calculate original prices for strikethrough (only if discount active)
+    const originalMonthlyPrice =
+      originalPrices && originalPrices.monthly > prices.monthly
+        ? formatPrice(originalPrices.monthly)
+        : null;
+    const originalAnnualPrice =
+      originalPrices && originalPrices.annual > prices.annual
+        ? formatPrice(originalPrices.annual)
+        : null;
+    const originalLtdPrice =
+      originalPrices && originalPrices.ltd > prices.ltd
+        ? formatPrice(originalPrices.ltd)
+        : null;
+
+    return {
+      tier,
+      name: marketing.name,
+      description: marketing.description,
+      features,
+      cta: marketing.cta,
+      monthlyPrice: formatPrice(prices.monthly),
+      annualPrice: formatPrice(prices.annual),
+      ltdPrice: formatPrice(prices.ltd),
+      originalMonthlyPrice,
+      originalAnnualPrice,
+      originalLtdPrice,
+      annualSavings: annualSavings > 0 ? formatPrice(annualSavings) : null,
+      monthlySlug: generateSlug(tier, "monthly"),
+      annualSlug: generateSlug(tier, "annual"),
+      ltdSlug: generateSlug(tier, "ltd"),
+    };
+  });
+}
