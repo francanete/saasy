@@ -1,11 +1,11 @@
-import { handleApiError } from "./api-utils";
+import { handleApiError } from "@/lib/api-utils";
 import {
   BadRequestError,
   UnauthorizedError,
   ForbiddenError,
   NotFoundError,
   RateLimitError,
-} from "./errors";
+} from "@/lib/errors";
 import { ZodError, z } from "zod";
 
 describe("handleApiError", () => {

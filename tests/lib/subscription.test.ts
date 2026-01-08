@@ -1,21 +1,21 @@
 import { vi } from "vitest";
 
 // Mock database and external dependencies before importing subscription
-vi.mock("./db", () => ({
+vi.mock("@/lib/db", () => ({
   db: {},
   subscriptions: {},
 }));
 
-vi.mock("./polar-client", () => ({
+vi.mock("@/lib/polar-client", () => ({
   polarClient: {},
 }));
 
-vi.mock("./config", () => ({
+vi.mock("@/lib/config", () => ({
   appConfig: { plans: { hierarchy: {} } },
   getPlanFromPolarProduct: vi.fn(),
 }));
 
-import { mapPolarStatus } from "./subscription";
+import { mapPolarStatus } from "@/lib/subscription";
 
 describe("mapPolarStatus", () => {
   it("maps 'active' to ACTIVE", () => {
