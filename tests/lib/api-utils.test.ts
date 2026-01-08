@@ -7,8 +7,17 @@ import {
   RateLimitError,
 } from "@/lib/errors";
 import { ZodError, z } from "zod";
+import { vi } from "vitest";
 
 describe("handleApiError", () => {
+  // Suppress console.error for these tests since handleApiError logs errors
+  beforeEach(() => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
   it("handles ZodError with field errors", async () => {
     const schema = z.object({ email: z.string().email() });
     let zodError: ZodError | null = null;
