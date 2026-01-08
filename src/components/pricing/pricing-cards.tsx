@@ -15,10 +15,10 @@ interface PricingCardsProps {
 function FeatureItem({ text }: { text: string }) {
   return (
     <li className="group flex items-start gap-3">
-      <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-muted bg-muted/50 transition-colors duration-200 group-hover:border-primary/20 group-hover:bg-primary/5">
-        <Check className="h-3 w-3 text-foreground" strokeWidth={3} />
+      <div className="border-muted bg-muted/50 group-hover:border-primary/20 group-hover:bg-primary/5 mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-colors duration-200">
+        <Check className="text-foreground h-3 w-3" strokeWidth={3} />
       </div>
-      <span className="text-[15px] font-medium leading-tight text-muted-foreground transition-colors duration-200 group-hover:text-foreground">
+      <span className="text-muted-foreground group-hover:text-foreground text-[15px] leading-tight font-medium transition-colors duration-200">
         {text}
       </span>
     </li>
@@ -33,28 +33,26 @@ interface LtdCardProps {
 
 function LtdCard({ tier, isLoading, onCheckout }: LtdCardProps) {
   return (
-    <div className="relative w-full max-w-[440px] overflow-visible rounded-2xl border border-border bg-card shadow-lg transition-all duration-300 hover:shadow-xl">
+    <div className="border-border bg-card relative w-full max-w-[440px] overflow-visible rounded-2xl border shadow-lg transition-all duration-300 hover:shadow-xl">
       {/* Badge - upper right */}
       <span className="absolute -top-3 right-4 inline-flex items-center rounded-full border border-emerald-100/50 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 shadow-sm dark:border-emerald-900/50 dark:bg-emerald-950 dark:text-emerald-400">
         One-time payment
       </span>
 
       {/* Header / Pricing Section */}
-      <div className="border-b border-border/50 px-8 py-6 text-center">
+      <div className="border-border/50 border-b px-8 py-6 text-center">
         <div className="mb-3 flex items-center justify-center gap-3">
           {tier.originalLtdPrice && (
-            <span className="text-2xl font-medium text-muted-foreground/60 line-through">
+            <span className="text-muted-foreground/60 text-2xl font-medium line-through">
               {tier.originalLtdPrice}
             </span>
           )}
-          <span className="text-5xl font-bold tracking-tight text-foreground">
+          <span className="text-foreground text-5xl font-bold tracking-tight">
             {tier.ltdPrice}
           </span>
         </div>
 
-        <p className="text-sm text-muted-foreground">
-          {tier.description}
-        </p>
+        <p className="text-muted-foreground text-sm">{tier.description}</p>
       </div>
 
       {/* Features List */}
@@ -68,7 +66,7 @@ function LtdCard({ tier, isLoading, onCheckout }: LtdCardProps) {
         {/* CTA Button */}
         <div className="mt-10">
           <button
-            className="group relative flex w-full items-center justify-center overflow-hidden rounded-xl bg-primary px-6 py-4 font-semibold text-primary-foreground shadow-lg shadow-primary/10 transition-all duration-200 hover:scale-[1.02] hover:bg-primary/90 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
+            className="group bg-primary text-primary-foreground shadow-primary/10 hover:bg-primary/90 focus:ring-ring relative flex w-full items-center justify-center overflow-hidden rounded-xl px-6 py-4 font-semibold shadow-lg transition-all duration-200 hover:scale-[1.02] focus:ring-2 focus:ring-offset-2 focus:outline-none active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
             onClick={() => onCheckout(tier.ltdSlug)}
             disabled={isLoading}
             aria-label={`${tier.cta} for ${tier.ltdPrice}`}
@@ -78,7 +76,7 @@ function LtdCard({ tier, isLoading, onCheckout }: LtdCardProps) {
             </span>
             <div className="absolute inset-0 translate-y-full bg-white/10 transition-transform duration-300 ease-out group-hover:translate-y-0" />
           </button>
-          <p className="mt-4 text-center text-xs font-medium text-muted-foreground">
+          <p className="text-muted-foreground mt-4 text-center text-xs font-medium">
             30-day money-back guarantee
           </p>
         </div>
@@ -113,10 +111,10 @@ function SubscriptionCard({
   return (
     <div
       className={cn(
-        "relative w-full overflow-visible rounded-2xl border bg-card transition-all duration-300 sm:w-80",
+        "bg-card relative w-full overflow-visible rounded-2xl border transition-all duration-300 sm:w-80",
         isHighlighted
           ? "border-border shadow-lg hover:shadow-xl"
-          : "border-border shadow-sm hover:border-border hover:shadow-md"
+          : "border-border hover:border-border shadow-sm hover:shadow-md"
       )}
     >
       {/* Badge - upper right */}
@@ -127,10 +125,10 @@ function SubscriptionCard({
       )}
 
       {/* Header / Pricing Section */}
-      <div className="border-b border-border/50 px-6 py-5 text-center">
+      <div className="border-border/50 border-b px-6 py-5 text-center">
         <div className="flex items-center justify-center gap-2">
           {originalPrice && (
-            <span className="text-lg font-medium text-muted-foreground/60 line-through">
+            <span className="text-muted-foreground/60 text-lg font-medium line-through">
               {originalPrice}
             </span>
           )}
@@ -138,13 +136,13 @@ function SubscriptionCard({
             className={cn(
               "font-bold tracking-tight",
               isHighlighted
-                ? "text-4xl text-foreground"
-                : "text-3xl text-muted-foreground"
+                ? "text-foreground text-4xl"
+                : "text-muted-foreground text-3xl"
             )}
           >
             {price}
           </span>
-          <span className="text-sm text-muted-foreground">{period}</span>
+          <span className="text-muted-foreground text-sm">{period}</span>
         </div>
       </div>
 
@@ -160,7 +158,7 @@ function SubscriptionCard({
         <div className="mt-8">
           {isHighlighted ? (
             <button
-              className="group relative flex w-full items-center justify-center overflow-hidden rounded-xl bg-primary px-6 py-3.5 font-semibold text-primary-foreground shadow-lg shadow-primary/10 transition-all duration-200 hover:scale-[1.02] hover:bg-primary/90 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
+              className="group bg-primary text-primary-foreground shadow-primary/10 hover:bg-primary/90 focus:ring-ring relative flex w-full items-center justify-center overflow-hidden rounded-xl px-6 py-3.5 font-semibold shadow-lg transition-all duration-200 hover:scale-[1.02] focus:ring-2 focus:ring-offset-2 focus:outline-none active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
               onClick={() => onCheckout(slug)}
               disabled={isLoading}
             >
@@ -171,7 +169,7 @@ function SubscriptionCard({
             </button>
           ) : (
             <button
-              className="w-full rounded-xl border border-border bg-card px-6 py-3.5 font-semibold text-muted-foreground transition-all duration-200 hover:border-border hover:bg-muted focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:opacity-50"
+              className="border-border bg-card text-muted-foreground hover:border-border hover:bg-muted focus:ring-ring w-full rounded-xl border px-6 py-3.5 font-semibold transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
               onClick={() => onCheckout(slug)}
               disabled={isLoading}
             >
@@ -232,11 +230,9 @@ export function PricingCards({ tiers, mode }: PricingCardsProps) {
         {/* Header */}
         <div className="flex flex-col items-center gap-4 text-center">
           <h2 className="text-2xl font-semibold sm:text-3xl lg:text-4xl">
-            {isLtdMode
-              ? "Get Lifetime Access"
-              : "Select the Best Plan for You"}
+            {isLtdMode ? "Get Lifetime Access" : "Select the Best Plan for You"}
           </h2>
-          <p className="text-lg text-muted-foreground sm:text-xl">
+          <p className="text-muted-foreground text-lg sm:text-xl">
             {isLtdMode
               ? "Pay once, use forever. No recurring fees."
               : "Choose monthly flexibility or save with annual billing."}
@@ -245,7 +241,7 @@ export function PricingCards({ tiers, mode }: PricingCardsProps) {
 
         {/* Error message */}
         {error && (
-          <div className="rounded-lg bg-destructive/10 p-4 text-center text-destructive">
+          <div className="bg-destructive/10 text-destructive rounded-lg p-4 text-center">
             {error}
           </div>
         )}
@@ -259,7 +255,7 @@ export function PricingCards({ tiers, mode }: PricingCardsProps) {
                 <h3 className="text-xl font-semibold sm:text-2xl">
                   {tier.name}
                 </h3>
-                <p className="mt-1 text-sm text-muted-foreground sm:text-base">
+                <p className="text-muted-foreground mt-1 text-sm sm:text-base">
                   {tier.description}
                 </p>
               </div>

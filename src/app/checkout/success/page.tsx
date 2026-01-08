@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function CheckoutSuccessPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
+    <div className="bg-background flex min-h-screen items-center justify-center">
       <div className="max-w-md px-4">
         <CheckoutSuccessContent />
       </div>

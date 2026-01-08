@@ -130,7 +130,9 @@ export function mapPolarStatus(polarStatus: string): SubscriptionStatusType {
 export async function syncWithPolar(userId: string): Promise<void> {
   try {
     // Look up customer by userId (externalId)
-    const customer = await polarClient.customers.getExternal({ externalId: userId });
+    const customer = await polarClient.customers.getExternal({
+      externalId: userId,
+    });
 
     // Fetch both subscriptions and orders in parallel
     const [subsResult, ordersResult] = await Promise.all([
