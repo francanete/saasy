@@ -33,7 +33,7 @@ export async function updateProfile(formData: FormData) {
   try {
     await db
       .update(users)
-      .set({ name: result.data.name })
+      .set({ name: result.data.name, updatedAt: new Date() })
       .where(eq(users.id, session.user.id));
 
     revalidatePath("/dashboard/settings");

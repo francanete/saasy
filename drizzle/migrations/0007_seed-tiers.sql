@@ -1,4 +1,6 @@
 -- Custom SQL migration file, put your code below! --
+-- Note: Using static IDs (seed-frl-*) for reference data instead of CUID2
+-- to ensure consistency across environments and support ON CONFLICT upserts
 
 -- Seed tier_configs
 INSERT INTO "tier_configs" ("plan", "display_name", "description", "sort_order", "is_active", "created_at", "updated_at")

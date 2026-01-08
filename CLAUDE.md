@@ -103,9 +103,10 @@ Main tables in `src/lib/db/schema.ts`:
 
 Enums:
 
-- `plan`: FREE, PRO, ENTERPRISE
+- `plan`: FREE, STARTER, GROWTH, SCALE
 - `subscription_status`: ACTIVE, CANCELED, PAST_DUE, TRIALING
-- `billing_type`: recurring, one_time
+- `billing_type`: recurring, one_time, none
+- `role`: user, admin
 
 ### Path Alias
 
