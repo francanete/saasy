@@ -217,7 +217,7 @@ export async function syncWithPolar(userId: string): Promise<void> {
       // Customer not found in Polar = genuinely free user, mark as synced
       await db
         .update(subscriptions)
-        .set({ lastSyncedAt: new Date() })
+        .set({ lastSyncedAt: new Date(), updatedAt: new Date() })
         .where(eq(subscriptions.userId, userId));
     } else {
       // Other errors (500, rate limit, network) - don't mark as synced, will retry

@@ -7,7 +7,7 @@
     "dev:ngrok": "ngrok http --domain=peevish-uncontoured-joi.ngrok-free.dev 3000",
     "dev:next": "next dev",
     "dev:inngest": "npx inngest-cli@latest dev -u http://localhost:3000/api/inngest",
-    "build": "next build",
+    "build": "npm run db:migrate:deploy && next build",
     "start": "next start",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
@@ -16,7 +16,8 @@
     "db:generate": "dotenv -e .env.local -- drizzle-kit generate",
     "db:migrate": "dotenv -e .env.local -- drizzle-kit migrate",
     "db:push": "dotenv -e .env.local -- drizzle-kit push",
-    "db:studio": "dotenv -e .env.local -- drizzle-kit studio"
+    "db:studio": "dotenv -e .env.local -- drizzle-kit studio",
+    "db:migrate:deploy": "drizzle-kit migrate"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.2",
@@ -43,6 +44,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dayjs": "^1.11.19",
+    "dotenv": "^17.2.3",
     "drizzle-orm": "^0.45.1",
     "inngest": "^3.48.1",
     "lucide-react": "^0.562.0",
