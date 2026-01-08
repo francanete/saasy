@@ -25,7 +25,7 @@ export function CheckoutSuccessContent() {
   if (state === "loading") {
     return (
       <div className="text-center">
-        <Loader2 className="mx-auto mb-4 h-12 w-12 animate-spin text-primary" />
+        <Loader2 className="text-primary mx-auto mb-4 h-12 w-12 animate-spin" />
         <p className="text-muted-foreground">Updating your access...</p>
       </div>
     );
@@ -37,7 +37,7 @@ export function CheckoutSuccessContent() {
         <CheckCircle className="h-16 w-16 text-green-500" />
       </div>
       <h1 className="text-2xl font-bold">Payment Successful!</h1>
-      <p className="mt-2 text-muted-foreground">Thank you for your purchase.</p>
+      <p className="text-muted-foreground mt-2">Thank you for your purchase.</p>
 
       {canAccessDashboard ? (
         <div className="mt-8">
@@ -47,12 +47,12 @@ export function CheckoutSuccessContent() {
         </div>
       ) : (
         <div className="mt-8 space-y-4">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Check your email for a link to access your account.
           </p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Already have an account?{" "}
-            <Link href="/login" className="underline hover:text-foreground">
+            <Link href="/login" className="hover:text-foreground underline">
               Sign in here
             </Link>
           </p>
