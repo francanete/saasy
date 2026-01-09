@@ -19,6 +19,7 @@ import { useSession, signOut } from "@/lib/auth-client";
 const navigation = [
   { name: "Features", href: "/#features" },
   { name: "Pricing", href: "/pricing" },
+  { name: "Blog", href: "/blog" },
 ];
 
 function getInitials(name?: string | null, email?: string | null): string {

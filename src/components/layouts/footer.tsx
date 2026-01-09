@@ -4,6 +4,7 @@ import { appConfig } from "@/lib/config";
 const footerLinks = [
   { name: "Features", href: "/#features" },
   { name: "Pricing", href: "/pricing" },
+  { name: "Blog", href: "/blog" },
   { name: "Privacy", href: "/privacy" },
   { name: "Terms", href: "/terms" },
 ];

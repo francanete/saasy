@@ -6,7 +6,10 @@
       "mcp__plugin_database-expert_context7__query-docs",
       "mcp__plugin_database-expert_context7__resolve-library-id",
       "Bash(grep:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "mcp__shadcn__search_items_in_registries",
+      "mcp__shadcn__view_items_in_registries",
+      "mcp__shadcn__get_add_command_for_items"
     ]
   },
   "enableAllProjectMcpServers": true,
