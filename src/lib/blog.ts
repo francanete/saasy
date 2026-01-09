@@ -26,7 +26,9 @@ function ensureBlogDir() {
 export function getAllPosts(): PostMeta[] {
   ensureBlogDir();
 
-  const files = fs.readdirSync(BLOG_DIR).filter((file) => file.endsWith(".mdx"));
+  const files = fs
+    .readdirSync(BLOG_DIR)
+    .filter((file) => file.endsWith(".mdx"));
 
   const posts = files.map((file) => {
     const slug = file.replace(/\.mdx$/, "");
