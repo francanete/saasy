@@ -1,41 +1,104 @@
 import Link from "next/link";
 import { appConfig } from "@/lib/config";
+import { Twitter, Github, Linkedin, Hexagon } from "lucide-react";
 
-const footerLinks = [
-  { name: "Features", href: "/#features" },
-  { name: "Pricing", href: "/pricing" },
-  { name: "Blog", href: "/blog" },
-  { name: "Privacy", href: "/privacy" },
-  { name: "Terms", href: "/terms" },
+const footerSections = [
+  {
+    title: "Product",
+    links: [
+      { name: "Features", href: "/#features" },
+      { name: "Pricing", href: "/pricing" },
+      { name: "Blog", href: "/blog" },
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      { name: "Privacy Policy", href: "/privacy" },
+      { name: "Terms of Service", href: "/terms" },
+    ],
+  },
 ];
 
 export function Footer() {
   return (
-    <footer className="border-t">
-      <div className="container mx-auto px-4 py-6 md:px-6">
-        <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-          <Link href="/" className="text-foreground font-semibold">
-            {appConfig.name}
-          </Link>
-
-          <nav className="text-muted-foreground flex items-center gap-1 text-sm">
-            {footerLinks.map((link, index) => (
-              <span key={link.name} className="flex items-center">
-                <Link
-                  href={link.href}
-                  className="hover:text-foreground px-2 transition-colors"
-                >
-                  {link.name}
-                </Link>
-                {index < footerLinks.length - 1 && (
-                  <span className="text-muted-foreground/50">·</span>
-                )}
+    <footer className="border-t border-gray-100 bg-white">
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+        <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4 lg:gap-8">
+          {/* Brand Column - Takes up 2 columns on large screens */}
+          <div className="space-y-8 lg:col-span-2">
+            <div className="flex items-center space-x-2">
+              <div className="rounded-lg bg-blue-600 p-1.5">
+                <Hexagon className="h-6 w-6 fill-current text-white" />
+              </div>
+              <span className="text-xl font-bold tracking-tight text-gray-900">
+                {appConfig.name}
               </span>
-            ))}
-          </nav>
+            </div>
+            <p className="max-w-xs text-sm leading-relaxed text-gray-500">
+              {appConfig.description}
+              <br />
+              Building the future of digital experiences with confidence and
+              security.
+            </p>
+            <div className="flex space-x-5">
+              <a
+                href={appConfig.socials.twitter}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-400 transition-colors hover:text-gray-600"
+              >
+                <span className="sr-only">Twitter</span>
+                <Twitter className="h-5 w-5" />
+              </a>
+              <a
+                href={appConfig.socials.github}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-400 transition-colors hover:text-gray-600"
+              >
+                <span className="sr-only">GitHub</span>
+                <Github className="h-5 w-5" />
+              </a>
+              <a
+                href={appConfig.socials.linkedin}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-400 transition-colors hover:text-gray-600"
+              >
+                <span className="sr-only">LinkedIn</span>
+                <Linkedin className="h-5 w-5" />
+              </a>
+            </div>
+          </div>
 
-          <p className="text-muted-foreground text-sm">
-            © {new Date().getFullYear()} {appConfig.name}
+          {/* Links Columns */}
+          {footerSections.map((section) => (
+            <div key={section.title}>
+              <h3 className="mb-4 text-sm font-semibold tracking-wider text-gray-900 uppercase">
+                {section.title}
+              </h3>
+              <ul className="space-y-3">
+                {section.links.map((link) => (
+                  <li key={link.name}>
+                    <Link
+                      href={link.href}
+                      className="text-sm text-gray-500 transition-colors duration-200 hover:text-blue-600"
+                    >
+                      {link.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        {/* Bottom Bar */}
+        <div className="mt-12 border-t border-gray-100 pt-8">
+          <p className="text-center text-sm text-gray-400 md:text-left">
+            &copy; {new Date().getFullYear()} {appConfig.name}. All rights
+            reserved.
           </p>
         </div>
       </div>
