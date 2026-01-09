@@ -2,7 +2,6 @@ import { Metadata } from "next";
 import { getAllPosts } from "@/lib/blog";
 import { BlogCard } from "@/components/blog/blog-card";
 import { appConfig } from "@/lib/config";
-import { Button } from "@/components/ui/button";
 import { Newspaper } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -13,16 +12,10 @@ export const metadata: Metadata = {
 export default function BlogPage() {
   const posts = getAllPosts();
 
-  // Get unique categories
-  const categories = [
-    "All Posts",
-    ...new Set(posts.map((post) => post.category).filter(Boolean)),
-  ];
-
   return (
     <div className="bg-background min-h-screen font-sans antialiased">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-slate-50/50 to-white py-12 md:py-16">
+      <section className="relative overflow-hidden bg-linear-to-b from-slate-50/50 to-white py-12 md:py-16">
         {/* Subtle Background Pattern */}
         <div
           className="absolute inset-0 -z-10 opacity-[0.03]"
@@ -35,7 +28,7 @@ export default function BlogPage() {
           <div className="mx-auto max-w-4xl text-center">
             <h1 className="mb-4 text-4xl font-extrabold tracking-tight text-slate-900 md:text-5xl lg:text-6xl">
               Insights, updates, <br className="hidden md:block" />
-              <span className="from-primary to-primary/60 bg-gradient-to-r bg-clip-text text-transparent">
+              <span className="from-primary to-primary/60 bg-linear-to-r bg-clip-text text-transparent">
                 and stories.
               </span>
             </h1>
@@ -45,12 +38,13 @@ export default function BlogPage() {
               from our team. Stay ahead of the curve with expert insights.
             </p>
 
-            {/* Category Navigation */}
+            {/* TODO: Implement category filtering
             {categories.length > 0 && (
               <div className="flex flex-wrap justify-center gap-2">
                 {categories.map((category, index) => (
                   <button
                     key={category}
+                    onClick={() => setSelectedCategory(category)}
                     className={
                       index === 0
                         ? "rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-md transition-all duration-200"
@@ -62,6 +56,7 @@ export default function BlogPage() {
                 ))}
               </div>
             )}
+            */}
           </div>
         </div>
       </section>
@@ -90,17 +85,19 @@ export default function BlogPage() {
                 ))}
               </div>
 
+              {/* TODO: Implement pagination
               <div className="mt-16 flex justify-center">
                 <Button variant="outline" size="lg" className="min-w-[200px]">
                   Load More Articles
                 </Button>
               </div>
+              */}
             </div>
           )}
         </div>
       </section>
 
-      {/* Newsletter Section */}
+      {/* TODO: Implement newsletter subscription with Resend
       <section className="border-t bg-slate-50 py-20">
         <div className="container mx-auto px-4 text-center">
           <div className="mx-auto max-w-2xl">
@@ -123,6 +120,7 @@ export default function BlogPage() {
           </div>
         </div>
       </section>
+      */}
     </div>
   );
 }
