@@ -44,6 +44,8 @@ export function Footer() {
             <div className="flex space-x-5">
               <a
                 href={appConfig.socials.twitter}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-gray-400 transition-colors hover:text-gray-600"
               >
                 <span className="sr-only">Twitter</span>
@@ -51,6 +53,8 @@ export function Footer() {
               </a>
               <a
                 href={appConfig.socials.github}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-gray-400 transition-colors hover:text-gray-600"
               >
                 <span className="sr-only">GitHub</span>
@@ -58,6 +62,8 @@ export function Footer() {
               </a>
               <a
                 href={appConfig.socials.linkedin}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-gray-400 transition-colors hover:text-gray-600"
               >
                 <span className="sr-only">LinkedIn</span>
