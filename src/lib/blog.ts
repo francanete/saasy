@@ -5,12 +5,23 @@ import readingTime from "reading-time";
 
 const BLOG_DIR = path.join(process.cwd(), "content/blog");
 
+export interface Author {
+  name: string;
+  avatar?: string;
+  role?: string;
+}
+
 export interface PostMeta {
   slug: string;
   title: string;
   description: string;
   date: string;
   readingTime: string;
+  category?: string;
+  image?: string;
+  author?: Author;
+  featured?: boolean;
+  tags?: string[];
 }
 
 export interface Post extends PostMeta {
@@ -42,6 +53,11 @@ export function getAllPosts(): PostMeta[] {
       description: data.description || "",
       date: data.date || new Date().toISOString(),
       readingTime: readingTime(content).text,
+      category: data.category || undefined,
+      image: data.image || undefined,
+      author: data.author || { name: "Saasy Team" },
+      featured: data.featured || false,
+      tags: data.tags || [],
     };
   });
 
@@ -68,6 +84,11 @@ export function getPostBySlug(slug: string): Post | null {
     description: data.description || "",
     date: data.date || new Date().toISOString(),
     readingTime: readingTime(content).text,
+    category: data.category || undefined,
+    image: data.image || undefined,
+    author: data.author || { name: "Saasy Team" },
+    featured: data.featured || false,
+    tags: data.tags || [],
     content,
   };
 }
@@ -79,4 +100,20 @@ export function getAllSlugs(): string[] {
     .readdirSync(BLOG_DIR)
     .filter((file) => file.endsWith(".mdx"))
     .map((file) => file.replace(/\.mdx$/, ""));
+}
+
+export function getRelatedPosts(currentSlug: string, limit = 3): PostMeta[] {
+  const allPosts = getAllPosts();
+  const currentPost = allPosts.find((p) => p.slug === currentSlug);
+
+  if (!currentPost) return [];
+
+  return allPosts
+    .filter((p) => p.slug !== currentSlug)
+    .filter(
+      (p) =>
+        p.category === currentPost.category ||
+        p.tags?.some((tag) => currentPost.tags?.includes(tag))
+    )
+    .slice(0, limit);
 }
