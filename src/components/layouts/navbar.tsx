@@ -60,7 +60,7 @@ export function Navbar() {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out ${
+        className={`fixed top-0 right-0 left-0 z-50 transition-all duration-300 ease-in-out ${
           isScrolled || isMobileMenuOpen
             ? "border-b border-slate-200/60 bg-white/90 py-3 shadow-sm backdrop-blur-md"
             : "bg-transparent py-5"
@@ -100,7 +100,7 @@ export function Navbar() {
                 {isPending ? null : session ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className="flex items-center gap-2 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-3 transition-all hover:border-slate-300 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none">
+                      <button className="flex items-center gap-2 rounded-full border border-slate-200 bg-white py-1 pr-3 pl-1 transition-all hover:border-slate-300 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none">
                         <Avatar className="h-8 w-8">
                           <AvatarImage
                             src={session.user.image || undefined}
