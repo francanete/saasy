@@ -1,8 +1,18 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Zap, Shield, Sparkles } from "lucide-react";
 import { appConfig } from "@/lib/config";
+import { seo } from "@/lib/seo";
+import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/seo/json-ld";
+
+export const metadata: Metadata = seo.page({
+  title: "Build Your SaaS Faster Than Ever",
+  description:
+    "A modern, production-ready SaaS boilerplate with authentication, payments, AI integration, and everything you need to launch.",
+  path: "/",
+});
 
 const features = [
   {
@@ -27,7 +37,10 @@ const features = [
 
 export default function HomePage() {
   return (
-    <div className="flex flex-col">
+    <>
+      <OrganizationJsonLd />
+      <WebSiteJsonLd />
+      <div className="flex flex-col">
       {/* Hero */}
       <section className="py-24 text-center">
         <div className="container mx-auto px-4 md:px-6">
@@ -85,6 +98,7 @@ export default function HomePage() {
           </Button>
         </div>
       </section>
-    </div>
+      </div>
+    </>
   );
 }

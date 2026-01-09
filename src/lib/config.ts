@@ -128,6 +128,61 @@ export const appConfig = {
       SCALE: 3,
     } as const satisfies Record<Plan, number>,
   },
+  seo: {
+    siteUrl: process.env.NEXT_PUBLIC_SITE_URL || "https://yourdomain.com",
+    title: {
+      default: "Saasy - Build Your SaaS Faster",
+      template: "%s | Saasy",
+    },
+    description:
+      "A modern, production-ready SaaS boilerplate with authentication, payments, AI integration, and everything you need to launch.",
+    keywords: [
+      "SaaS boilerplate",
+      "Next.js template",
+      "React SaaS",
+      "authentication",
+      "payments",
+      "AI integration",
+    ],
+    openGraph: {
+      type: "website" as const,
+      locale: "en_US",
+      siteName: "Saasy",
+    },
+    twitter: {
+      card: "summary_large_image" as const,
+      site: "@saasyapp",
+      creator: "@saasyapp",
+    },
+    organization: {
+      name: "Saasy",
+      logo: "/logo.png",
+      sameAs: [
+        "https://twitter.com/saasyapp",
+        "https://github.com/saasyapp",
+        "https://linkedin.com/company/saasyapp",
+      ],
+    },
+    product: {
+      name: "Saasy",
+      applicationCategory: "BusinessApplication",
+      operatingSystem: "Web",
+    },
+    verification: {
+      google: process.env.GOOGLE_SITE_VERIFICATION || null,
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-video-preview": -1,
+        "max-image-preview": "large" as const,
+        "max-snippet": -1,
+      },
+    },
+  },
 } as const;
 
 /**

@@ -1,4 +1,4 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { BlogCard } from "@/components/blog/blog-card";
 import { ShareButtons } from "@/components/blog/share-buttons";
+import { getBaseUrl, getCanonicalUrl } from "@/lib/seo";
+import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
@@ -21,16 +23,6 @@ interface BlogPostPageProps {
 export async function generateStaticParams() {
   const slugs = getAllSlugs();
   return slugs.map((slug) => ({ slug }));
-}
-
-function getBaseUrl() {
-  if (process.env.NEXT_PUBLIC_SITE_URL) {
-    return process.env.NEXT_PUBLIC_SITE_URL;
-  }
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
-  }
-  return "http://localhost:3000";
 }
 
 export async function generateMetadata({
@@ -155,9 +147,26 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       .toUpperCase() || "ST";
 
   const relatedPosts = getRelatedPosts(slug, 3);
+  const postUrl = getCanonicalUrl(`/blog/${slug}`);
 
   return (
-    <div className="min-h-screen bg-white font-sans text-slate-900">
+    <>
+      <ArticleJsonLd
+        title={post.title}
+        description={post.description}
+        url={postUrl}
+        image={post.image}
+        datePublished={post.date}
+        author={{ name: post.author?.name || "Saasy Team" }}
+      />
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Home", url: getCanonicalUrl("/") },
+          { name: "Blog", url: getCanonicalUrl("/blog") },
+          { name: post.title, url: postUrl },
+        ]}
+      />
+      <div className="min-h-screen bg-white font-sans text-slate-900">
       {/* Article Header */}
       <header className="pt-16 pb-12 md:pt-24 md:pb-16">
         <div className="container mx-auto max-w-3xl px-4">
@@ -361,6 +370,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           </div>
         </div>
       </section>
-    </div>
+      </div>
+    </>
   );
 }

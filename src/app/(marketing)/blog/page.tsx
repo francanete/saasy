@@ -1,13 +1,15 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import { getAllPosts } from "@/lib/blog";
 import { BlogCard } from "@/components/blog/blog-card";
 import { appConfig } from "@/lib/config";
 import { Newspaper } from "lucide-react";
+import { seo } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: `Blog | ${appConfig.name}`,
+export const metadata: Metadata = seo.page({
+  title: "Blog",
   description: `Latest news, tutorials, and updates from ${appConfig.name}.`,
-};
+  path: "/blog",
+});
 
 export default function BlogPage() {
   const posts = getAllPosts();
