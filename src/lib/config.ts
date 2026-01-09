@@ -129,7 +129,7 @@ export const appConfig = {
     } as const satisfies Record<Plan, number>,
   },
   seo: {
-    siteUrl: process.env.NEXT_PUBLIC_SITE_URL || "https://yourdomain.com",
+    siteUrl: process.env.NEXT_PUBLIC_APP_URL || "https://yourdomain.com",
     title: {
       default: "Saasy - Build Your SaaS Faster",
       template: "%s | Saasy",
