@@ -2,10 +2,14 @@ import { appConfig } from "@/lib/config";
 import { getBaseUrl } from "@/lib/seo";
 
 function JsonLd({ data }: { data: Record<string, unknown> }) {
+  // Escape < to prevent XSS via </script> injection
+  // \u003c is valid JSON and renders correctly for search engines
+  const safeJson = JSON.stringify(data).replace(/</g, "\\u003c");
+
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+      dangerouslySetInnerHTML={{ __html: safeJson }}
     />
   );
 }
