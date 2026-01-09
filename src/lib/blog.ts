@@ -34,6 +34,16 @@ function ensureBlogDir() {
   }
 }
 
+/**
+ * Validates that a slug contains only safe characters to prevent path traversal
+ */
+function isValidSlug(slug: string): boolean {
+  if (!slug || typeof slug !== "string") return false;
+  // Allow only alphanumeric characters, hyphens, and underscores
+  const slugRegex = /^[a-zA-Z0-9_-]+$/;
+  return slugRegex.test(slug) && slug.length > 0 && slug.length <= 200;
+}
+
 export function getAllPosts(): PostMeta[] {
   ensureBlogDir();
 
@@ -69,7 +79,21 @@ export function getAllPosts(): PostMeta[] {
 export function getPostBySlug(slug: string): Post | null {
   ensureBlogDir();
 
+  // Validate slug to prevent path traversal attacks
+  if (!isValidSlug(slug)) {
+    console.warn(`Invalid slug attempted: ${slug}`);
+    return null;
+  }
+
   const filePath = path.join(BLOG_DIR, `${slug}.mdx`);
+
+  // Additional safety check: ensure resolved path is within BLOG_DIR
+  const resolvedPath = path.resolve(filePath);
+  const resolvedBlogDir = path.resolve(BLOG_DIR);
+  if (!resolvedPath.startsWith(resolvedBlogDir)) {
+    console.warn(`Path traversal attempt detected: ${slug}`);
+    return null;
+  }
 
   if (!fs.existsSync(filePath)) {
     return null;
