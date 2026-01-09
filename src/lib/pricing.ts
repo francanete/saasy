@@ -187,7 +187,6 @@ export function getPricingPlans(): PlanDisplay[] {
       name = `${marketing.name} Annual`;
       period = "/year";
       description = `${marketing.description} - best value`;
-      badge = badge || "Save 17%";
       highlighted = true;
       // Show monthly × 12 as strikethrough
       const monthlyPrice = tierConfig.prices.monthly;

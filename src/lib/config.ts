@@ -29,7 +29,7 @@ export const appConfig = {
     from: "noreply@simplesubscriber.com",
   },
   pricing: {
-    mode: "ltd" as const, // "subscription" | "ltd"
+    mode: "subscription" as const, // "subscription" | "ltd"
     allowFreePlan: false, // Show free plan on pricing page & allow FREE users in dashboard
     tiers: {
       STARTER: {
