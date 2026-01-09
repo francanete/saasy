@@ -45,15 +45,72 @@ function isValidSlug(slug: string): boolean {
 }
 
 export function getAllPosts(): PostMeta[] {
-  ensureBlogDir();
+  try {
+    ensureBlogDir();
 
-  const files = fs
-    .readdirSync(BLOG_DIR)
-    .filter((file) => file.endsWith(".mdx"));
+    const files = fs
+      .readdirSync(BLOG_DIR)
+      .filter((file) => file.endsWith(".mdx"));
 
-  const posts = files.map((file) => {
-    const slug = file.replace(/\.mdx$/, "");
-    const filePath = path.join(BLOG_DIR, file);
+    const posts: PostMeta[] = [];
+
+    for (const file of files) {
+      try {
+        const slug = file.replace(/\.mdx$/, "");
+        const filePath = path.join(BLOG_DIR, file);
+        const fileContent = fs.readFileSync(filePath, "utf-8");
+        const { data, content } = matter(fileContent);
+
+        posts.push({
+          slug,
+          title: data.title || slug,
+          description: data.description || "",
+          date: data.date || new Date().toISOString(),
+          readingTime: readingTime(content).text,
+          category: data.category,
+          image: data.image,
+          author: data.author || { name: "Saasy Team" },
+          featured: data.featured || false,
+          tags: data.tags || [],
+        });
+      } catch (error) {
+        console.error(`Error reading blog post ${file}:`, error);
+      }
+    }
+
+    return posts.sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+  } catch (error) {
+    console.error("Error reading blog directory:", error);
+    return [];
+  }
+}
+
+export function getPostBySlug(slug: string): Post | null {
+  try {
+    ensureBlogDir();
+
+    // Validate slug to prevent path traversal attacks
+    if (!isValidSlug(slug)) {
+      console.warn(`Invalid slug attempted: ${slug}`);
+      return null;
+    }
+
+    const filePath = path.join(BLOG_DIR, `${slug}.mdx`);
+
+    // Additional safety check: ensure resolved path is within BLOG_DIR
+    const resolvedPath = path.resolve(filePath);
+    const resolvedBlogDir = path.resolve(BLOG_DIR);
+    if (!resolvedPath.startsWith(resolvedBlogDir)) {
+      console.warn(`Path traversal attempt detected: ${slug}`);
+      return null;
+    }
+
+    if (!fs.existsSync(filePath)) {
+      return null;
+    }
+
     const fileContent = fs.readFileSync(filePath, "utf-8");
     const { data, content } = matter(fileContent);
 
@@ -68,76 +125,45 @@ export function getAllPosts(): PostMeta[] {
       author: data.author || { name: "Saasy Team" },
       featured: data.featured || false,
       tags: data.tags || [],
+      content,
     };
-  });
-
-  return posts.sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
-}
-
-export function getPostBySlug(slug: string): Post | null {
-  ensureBlogDir();
-
-  // Validate slug to prevent path traversal attacks
-  if (!isValidSlug(slug)) {
-    console.warn(`Invalid slug attempted: ${slug}`);
+  } catch (error) {
+    console.error(`Error reading blog post ${slug}:`, error);
     return null;
   }
-
-  const filePath = path.join(BLOG_DIR, `${slug}.mdx`);
-
-  // Additional safety check: ensure resolved path is within BLOG_DIR
-  const resolvedPath = path.resolve(filePath);
-  const resolvedBlogDir = path.resolve(BLOG_DIR);
-  if (!resolvedPath.startsWith(resolvedBlogDir)) {
-    console.warn(`Path traversal attempt detected: ${slug}`);
-    return null;
-  }
-
-  if (!fs.existsSync(filePath)) {
-    return null;
-  }
-
-  const fileContent = fs.readFileSync(filePath, "utf-8");
-  const { data, content } = matter(fileContent);
-
-  return {
-    slug,
-    title: data.title || slug,
-    description: data.description || "",
-    date: data.date || new Date().toISOString(),
-    readingTime: readingTime(content).text,
-    category: data.category || undefined,
-    image: data.image || undefined,
-    author: data.author || { name: "Saasy Team" },
-    featured: data.featured || false,
-    tags: data.tags || [],
-    content,
-  };
 }
 
 export function getAllSlugs(): string[] {
-  ensureBlogDir();
+  try {
+    ensureBlogDir();
 
-  return fs
-    .readdirSync(BLOG_DIR)
-    .filter((file) => file.endsWith(".mdx"))
-    .map((file) => file.replace(/\.mdx$/, ""));
+    return fs
+      .readdirSync(BLOG_DIR)
+      .filter((file) => file.endsWith(".mdx"))
+      .map((file) => file.replace(/\.mdx$/, ""));
+  } catch (error) {
+    console.error("Error reading blog directory for slugs:", error);
+    return [];
+  }
 }
 
 export function getRelatedPosts(currentSlug: string, limit = 3): PostMeta[] {
-  const allPosts = getAllPosts();
-  const currentPost = allPosts.find((p) => p.slug === currentSlug);
+  try {
+    const allPosts = getAllPosts();
+    const currentPost = allPosts.find((p) => p.slug === currentSlug);
 
-  if (!currentPost) return [];
+    if (!currentPost) return [];
 
-  return allPosts
-    .filter((p) => p.slug !== currentSlug)
-    .filter(
-      (p) =>
-        p.category === currentPost.category ||
-        p.tags?.some((tag) => currentPost.tags?.includes(tag))
-    )
-    .slice(0, limit);
+    return allPosts
+      .filter((p) => p.slug !== currentSlug)
+      .filter(
+        (p) =>
+          p.category === currentPost.category ||
+          p.tags?.some((tag) => currentPost.tags?.includes(tag))
+      )
+      .slice(0, limit);
+  } catch (error) {
+    console.error(`Error getting related posts for ${currentSlug}:`, error);
+    return [];
+  }
 }
