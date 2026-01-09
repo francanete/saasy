@@ -25,8 +25,14 @@ export type TierConfig = {
 
 export const appConfig = {
   name: "Saasy",
+  description: "The complete platform for building modern applications.",
   email: {
     from: "noreply@simplesubscriber.com",
+  },
+  socials: {
+    twitter: "https://twitter.com",
+    github: "https://github.com",
+    linkedin: "https://linkedin.com",
   },
   pricing: {
     mode: "subscription" as const, // "subscription" | "ltd"
