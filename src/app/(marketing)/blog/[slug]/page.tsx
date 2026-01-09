@@ -118,7 +118,7 @@ function MarkdownContent({ content }: { content: string }) {
           a: ({ href, children }) => (
             <a
               href={href}
-              className="text-indigo-600 hover:text-indigo-800 underline"
+              className="text-indigo-600 underline hover:text-indigo-800"
               target="_blank"
               rel="noopener noreferrer"
             >

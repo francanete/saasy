@@ -32,7 +32,9 @@ export default function BlogError({
         </p>
 
         {error.digest && (
-          <p className="mb-8 text-xs text-slate-400">Error ID: {error.digest}</p>
+          <p className="mb-8 text-xs text-slate-400">
+            Error ID: {error.digest}
+          </p>
         )}
 
         <div className="flex flex-col gap-3 sm:flex-row">
