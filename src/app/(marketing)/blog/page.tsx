@@ -22,7 +22,7 @@ export default function BlogPage() {
   return (
     <div className="bg-background min-h-screen font-sans antialiased">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-linear-to-b from-slate-50/50 to-white py-12 md:py-16">
+      <section className="relative overflow-hidden bg-gradient-to-b from-slate-50/50 to-white py-12 md:py-16">
         {/* Subtle Background Pattern */}
         <div
           className="absolute inset-0 -z-10 opacity-[0.03]"
@@ -35,7 +35,7 @@ export default function BlogPage() {
           <div className="mx-auto max-w-4xl text-center">
             <h1 className="mb-4 text-4xl font-extrabold tracking-tight text-slate-900 md:text-5xl lg:text-6xl">
               Insights, updates, <br className="hidden md:block" />
-              <span className="from-primary to-primary/60 bg-linear-to-r bg-clip-text text-transparent">
+              <span className="from-primary to-primary/60 bg-gradient-to-r bg-clip-text text-transparent">
                 and stories.
               </span>
             </h1>
@@ -91,7 +91,7 @@ export default function BlogPage() {
               </div>
 
               <div className="mt-16 flex justify-center">
-                <Button variant="outline" size="lg" className="`min-w-50">
+                <Button variant="outline" size="lg" className="min-w-[200px]">
                   Load More Articles
                 </Button>
               </div>
