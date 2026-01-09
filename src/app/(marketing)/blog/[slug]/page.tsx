@@ -3,6 +3,9 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, Calendar, Clock, ChevronRight } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import rehypeSanitize from "rehype-sanitize";
+import remarkGfm from "remark-gfm";
 import { getAllSlugs, getPostBySlug, getRelatedPosts } from "@/lib/blog";
 import { appConfig } from "@/lib/config";
 import { Badge } from "@/components/ui/badge";
@@ -85,58 +88,47 @@ export async function generateMetadata({
 }
 
 function MarkdownContent({ content }: { content: string }) {
-  const lines = content.split("\n");
-
   return (
     <div className="prose prose-slate prose-headings:font-semibold prose-headings:tracking-tight prose-h2:mb-6 prose-h2:mt-12 prose-h2:text-2xl prose-h3:text-xl prose-p:mb-6 prose-p:leading-8 prose-p:text-slate-600 prose-blockquote:border-l-4 prose-blockquote:border-slate-200 prose-blockquote:pl-6 prose-blockquote:italic prose-blockquote:text-slate-700 prose-strong:text-slate-900 prose-li:text-slate-600 max-w-none">
-      {lines.map((line, index) => {
-        const trimmed = line.trim();
-        if (!trimmed) return null;
-
-        if (trimmed.startsWith("## ")) {
-          return (
-            <h2
-              key={index}
-              className="mt-12 mb-6 text-2xl font-bold text-slate-900"
-            >
-              {trimmed.slice(3)}
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeSanitize]}
+        components={{
+          h2: ({ children }) => (
+            <h2 className="mt-12 mb-6 text-2xl font-bold text-slate-900">
+              {children}
             </h2>
-          );
-        }
-        if (trimmed.startsWith("### ")) {
-          return (
-            <h3
-              key={index}
-              className="mt-8 mb-4 text-xl font-bold text-slate-900"
-            >
-              {trimmed.slice(4)}
+          ),
+          h3: ({ children }) => (
+            <h3 className="mt-8 mb-4 text-xl font-bold text-slate-900">
+              {children}
             </h3>
-          );
-        }
-        if (trimmed.startsWith("> ")) {
-          return (
-            <blockquote
-              key={index}
-              className="my-8 rounded-r-lg border-l-4 border-indigo-500 bg-slate-50 py-2 pl-6 text-xl text-slate-700 italic"
-            >
-              &ldquo;{trimmed.slice(2).replace(/"/g, "")}&rdquo;
+          ),
+          p: ({ children }) => (
+            <p className="mb-6 text-lg leading-8 text-slate-600">{children}</p>
+          ),
+          blockquote: ({ children }) => (
+            <blockquote className="my-8 rounded-r-lg border-l-4 border-indigo-500 bg-slate-50 py-2 pl-6 text-xl text-slate-700 italic">
+              {children}
             </blockquote>
-          );
-        }
-        if (trimmed.startsWith("- ")) {
-          return (
-            <li key={index} className="mb-2 ml-6 list-disc text-slate-600">
-              {trimmed.slice(2)}
-            </li>
-          );
-        }
-
-        return (
-          <p key={index} className="mb-6 text-lg leading-8 text-slate-600">
-            {trimmed}
-          </p>
-        );
-      })}
+          ),
+          li: ({ children }) => (
+            <li className="mb-2 ml-6 list-disc text-slate-600">{children}</li>
+          ),
+          a: ({ href, children }) => (
+            <a
+              href={href}
+              className="text-indigo-600 hover:text-indigo-800 underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {children}
+            </a>
+          ),
+        }}
+      >
+        {content}
+      </ReactMarkdown>
     </div>
   );
 }
