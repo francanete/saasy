@@ -153,9 +153,19 @@ export default function PrivacyPage() {
               <h2 className="mb-4 text-xl font-semibold text-slate-900">
                 Cookies
               </h2>
-              <p className="text-slate-600">
-                We use essential cookies for authentication and session management.
-                These are necessary for the service to function.
+              <p className="mb-3 text-slate-600">
+                We use the following cookies, all necessary for the service to function:
+              </p>
+              <ul className="list-disc space-y-1 pl-6 text-slate-600">
+                <li>
+                  <strong className="font-medium">Authentication cookies</strong> - Keep you signed in
+                </li>
+                <li>
+                  <strong className="font-medium">Preference cookies</strong> - Remember your settings (e.g., sidebar state)
+                </li>
+              </ul>
+              <p className="mt-3 text-slate-600">
+                We use privacy-friendly analytics that do not use cookies or track you across sites.
               </p>
             </section>
 
