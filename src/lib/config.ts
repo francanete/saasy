@@ -128,6 +128,32 @@ export const appConfig = {
       SCALE: 3,
     } as const satisfies Record<Plan, number>,
   },
+  /**
+   * Legal configuration - REQUIRED for UK compliance
+   * Update these fields before launching
+   */
+  legal: {
+    company: {
+      name: "Acme Software Ltd",
+      registrationNumber: "12345678",
+      registeredAddress: "71-75 Shelton Street, London, WC2H 9JQ",
+      contactEmail: "hello@acme.com",
+    },
+    dataHandling: {
+      subProcessors: [
+        "Neon - Database (US)",
+        "Polar - Payments (EU)",
+        "Resend - Email (US)",
+        "Google Cloud - AI (US)",
+        "Vercel - Hosting (US)",
+      ],
+    },
+    terms: {
+      minimumAge: 18,
+      jurisdiction: "England and Wales",
+    },
+    lastUpdated: "January 2025",
+  },
   seo: {
     siteUrl: process.env.NEXT_PUBLIC_APP_URL || "https://yourdomain.com",
     title: {
