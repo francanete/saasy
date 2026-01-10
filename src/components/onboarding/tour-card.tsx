@@ -38,10 +38,32 @@ export function TourCard({
     const cardHeight = 180;
     const padding = 16;
 
+    // Calculate available space in each direction
+    const spaceTop = targetRect.top - padding;
+    const spaceBottom = window.innerHeight - targetRect.bottom - padding;
+    const spaceLeft = targetRect.left - padding;
+    const spaceRight = window.innerWidth - targetRect.right - padding;
+
+    // Determine best position (prefer configured, fallback if no space)
+    let actualPosition = step.position;
+
+    if (step.position === "top" && spaceTop < cardHeight + padding) {
+      actualPosition = spaceBottom >= cardHeight + padding ? "bottom" : "right";
+    } else if (
+      step.position === "bottom" &&
+      spaceBottom < cardHeight + padding
+    ) {
+      actualPosition = spaceTop >= cardHeight + padding ? "top" : "right";
+    } else if (step.position === "left" && spaceLeft < cardWidth + padding) {
+      actualPosition = spaceRight >= cardWidth + padding ? "right" : "bottom";
+    } else if (step.position === "right" && spaceRight < cardWidth + padding) {
+      actualPosition = spaceLeft >= cardWidth + padding ? "left" : "bottom";
+    }
+
     let top = 0;
     let left = 0;
 
-    switch (step.position) {
+    switch (actualPosition) {
       case "bottom":
         top = targetRect.bottom + padding;
         left = targetRect.left + targetRect.width / 2 - cardWidth / 2;
@@ -60,11 +82,12 @@ export function TourCard({
         break;
     }
 
-    // Keep card within viewport
+    // Keep card within viewport (horizontal)
     left = Math.max(
       padding,
       Math.min(left, window.innerWidth - cardWidth - padding)
     );
+    // Keep card within viewport (vertical)
     top = Math.max(
       padding,
       Math.min(top, window.innerHeight - cardHeight - padding)
@@ -75,7 +98,8 @@ export function TourCard({
 
   return (
     <Card
-      className="fixed z-50 w-[320px] shadow-xl"
+      key={currentStep}
+      className="fixed z-50 w-[320px] shadow-xl animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2 duration-200"
       style={{ top: position.top, left: position.left }}
     >
       <CardHeader className="pb-2">
