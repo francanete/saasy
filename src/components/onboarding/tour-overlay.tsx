@@ -15,7 +15,7 @@ export function TourOverlay({
   if (!targetRect) {
     return (
       <div
-        className="fixed inset-0 z-40 bg-black/70 animate-in fade-in-0 duration-300"
+        className="animate-in fade-in-0 fixed inset-0 z-40 bg-black/70 duration-300"
         aria-hidden="true"
       />
     );
@@ -29,7 +29,7 @@ export function TourOverlay({
 
   return (
     <svg
-      className="fixed inset-0 z-40 h-full w-full animate-in fade-in-0 duration-300"
+      className="animate-in fade-in-0 fixed inset-0 z-40 h-full w-full duration-300"
       aria-hidden="true"
     >
       <defs>

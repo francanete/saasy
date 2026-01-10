@@ -122,7 +122,7 @@ export function TourCard({
   return (
     <Card
       key={currentStep}
-      className="fixed z-50 w-[320px] max-w-[calc(100vw-32px)] shadow-xl animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2 duration-200"
+      className="animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2 fixed z-50 w-[320px] max-w-[calc(100vw-32px)] shadow-xl duration-200"
       style={{ top: position.top, left: position.left }}
     >
       <CardHeader className="pb-2">
