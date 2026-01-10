@@ -182,6 +182,7 @@ export default function PrivacyPage() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary hover:underline"
+                  aria-label="ico.org.uk (opens in new tab)"
                 >
                   ico.org.uk
                 </a>{" "}
