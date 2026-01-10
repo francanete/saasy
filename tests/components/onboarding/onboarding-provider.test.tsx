@@ -15,7 +15,11 @@ const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
 // Helper component to access context
-function TestConsumer({ onContext }: { onContext?: (ctx: ReturnType<typeof useOnboardingContext>) => void }) {
+function TestConsumer({
+  onContext,
+}: {
+  onContext?: (ctx: ReturnType<typeof useOnboardingContext>) => void;
+}) {
   const context = useOnboardingContext();
   onContext?.(context);
   return (
@@ -62,7 +66,9 @@ describe("OnboardingProvider", () => {
   describe("context", () => {
     it("throws when useOnboardingContext is used outside provider", () => {
       // Suppress console.error for this test
-      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
 
       expect(() => {
         render(<TestConsumer />);
