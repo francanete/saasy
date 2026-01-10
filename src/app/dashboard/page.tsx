@@ -22,12 +22,14 @@ export default async function DashboardPage() {
       value: "3",
       description: "Active projects",
       icon: LayoutDashboard,
+      tourId: "stat-projects",
     },
     {
       title: "Messages",
       value: "127",
       description: "AI conversations",
       icon: MessageSquare,
+      tourId: "stat-messages",
     },
     {
       title: "Plan",
@@ -35,12 +37,14 @@ export default async function DashboardPage() {
       description:
         subscription?.status === "TRIALING" ? "Trial active" : "Current plan",
       icon: CreditCard,
+      tourId: "stat-plan",
     },
     {
       title: "API Calls",
       value: "1,234",
       description: "This month",
       icon: Zap,
+      tourId: "stat-api",
     },
   ];
 
@@ -57,7 +61,7 @@ export default async function DashboardPage() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
-          <Card key={stat.title}>
+          <Card key={stat.title} id={`tour-${stat.tourId}`}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-muted-foreground text-sm font-medium">
                 {stat.title}
@@ -75,7 +79,7 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <Card>
+        <Card id="tour-quick-actions">
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>

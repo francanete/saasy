@@ -39,6 +39,10 @@ export const users = pgTable("users", {
   name: text("name"),
   image: text("image"),
   role: roleEnum("role").default("user").notNull(),
+  // Onboarding tracking
+  onboardingCompleted: boolean("onboarding_completed").default(false),
+  onboardingCompletedAt: timestamp("onboarding_completed_at"),
+  onboardingSkippedAt: timestamp("onboarding_skipped_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
