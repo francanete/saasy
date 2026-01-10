@@ -4,6 +4,8 @@ export interface TourStep {
   content: string;
   selector: string;
   position: "top" | "bottom" | "left" | "right";
+  /** If true, this step is skipped on mobile devices */
+  desktopOnly?: boolean;
 }
 
 export const tourSteps: TourStep[] = [
@@ -13,6 +15,7 @@ export const tourSteps: TourStep[] = [
     content: "Chat with AI to get help with your projects and tasks.",
     selector: "#tour-nav-chat",
     position: "right",
+    desktopOnly: true,
   },
   {
     id: "projects",
@@ -35,6 +38,6 @@ export const tourSteps: TourStep[] = [
     content:
       "Jump into common tasks right from your dashboard. You're all set!",
     selector: "#tour-quick-actions",
-    position: "top",
+    position: "bottom",
   },
 ];

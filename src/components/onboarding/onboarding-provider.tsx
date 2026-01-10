@@ -6,10 +6,12 @@ import {
   useState,
   useEffect,
   useCallback,
+  useMemo,
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
 import { tourSteps, type TourStep } from "@/lib/onboarding-config";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { TourOverlay } from "./tour-overlay";
 import { TourCard } from "./tour-card";
 
@@ -32,8 +34,17 @@ export function OnboardingProvider({
   const [currentStep, setCurrentStep] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [mounted, setMounted] = useState(false);
+  const isMobile = useIsMobile();
 
-  const currentStepData: TourStep | undefined = tourSteps[currentStep];
+  // Filter out desktop-only steps on mobile
+  const activeSteps = useMemo(() => {
+    if (isMobile) {
+      return tourSteps.filter((step) => !step.desktopOnly);
+    }
+    return tourSteps;
+  }, [isMobile]);
+
+  const currentStepData: TourStep | undefined = activeSteps[currentStep];
 
   // Handle SSR
   useEffect(() => {
@@ -72,13 +83,13 @@ export function OnboardingProvider({
   }, []);
 
   const nextStep = useCallback(async () => {
-    if (currentStep < tourSteps.length - 1) {
+    if (currentStep < activeSteps.length - 1) {
       setCurrentStep((s) => s + 1);
     } else {
       setIsActive(false);
       await fetch("/api/onboarding/complete", { method: "POST" });
     }
-  }, [currentStep]);
+  }, [currentStep, activeSteps.length]);
 
   const prevStep = useCallback(() => {
     if (currentStep > 0) {
@@ -107,7 +118,7 @@ export function OnboardingProvider({
             <TourCard
               step={currentStepData}
               currentStep={currentStep}
-              totalSteps={tourSteps.length}
+              totalSteps={activeSteps.length}
               targetRect={targetRect}
               onNext={nextStep}
               onPrev={prevStep}

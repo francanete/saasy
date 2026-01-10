@@ -44,20 +44,26 @@ export function TourCard({
     const spaceLeft = targetRect.left - padding;
     const spaceRight = window.innerWidth - targetRect.right - padding;
 
-    // Determine best position (prefer configured, fallback if no space)
+    // Find the best position with most space
+    const positions = [
+      { pos: "bottom" as const, space: spaceBottom, needed: cardHeight },
+      { pos: "top" as const, space: spaceTop, needed: cardHeight },
+      { pos: "right" as const, space: spaceRight, needed: cardWidth },
+      { pos: "left" as const, space: spaceLeft, needed: cardWidth },
+    ];
+
+    // Check if preferred position has enough space
+    const preferred = positions.find((p) => p.pos === step.position);
     let actualPosition = step.position;
 
-    if (step.position === "top" && spaceTop < cardHeight + padding) {
-      actualPosition = spaceBottom >= cardHeight + padding ? "bottom" : "right";
-    } else if (
-      step.position === "bottom" &&
-      spaceBottom < cardHeight + padding
-    ) {
-      actualPosition = spaceTop >= cardHeight + padding ? "top" : "right";
-    } else if (step.position === "left" && spaceLeft < cardWidth + padding) {
-      actualPosition = spaceRight >= cardWidth + padding ? "right" : "bottom";
-    } else if (step.position === "right" && spaceRight < cardWidth + padding) {
-      actualPosition = spaceLeft >= cardWidth + padding ? "left" : "bottom";
+    if (!preferred || preferred.space < preferred.needed + padding) {
+      // Find position with most available space that fits
+      const sorted = positions
+        .filter((p) => p.space >= p.needed + padding)
+        .sort((a, b) => b.space - a.space);
+      if (sorted.length > 0) {
+        actualPosition = sorted[0].pos;
+      }
     }
 
     let top = 0;
@@ -82,16 +88,33 @@ export function TourCard({
         break;
     }
 
-    // Keep card within viewport (horizontal)
+    // Keep card within viewport (horizontal only - don't clamp vertical to avoid overlap)
     left = Math.max(
       padding,
       Math.min(left, window.innerWidth - cardWidth - padding)
     );
-    // Keep card within viewport (vertical)
-    top = Math.max(
-      padding,
-      Math.min(top, window.innerHeight - cardHeight - padding)
-    );
+
+    // For vertical, ensure we don't overlap with target
+    const cardBottom = top + cardHeight;
+    const cardRight = left + cardWidth;
+
+    // Check for overlap and adjust
+    const overlapsVertically =
+      cardBottom > targetRect.top && top < targetRect.bottom;
+    const overlapsHorizontally =
+      cardRight > targetRect.left && left < targetRect.right;
+
+    if (overlapsVertically && overlapsHorizontally) {
+      // Force position below or above target without clamping into it
+      if (spaceBottom >= cardHeight) {
+        top = targetRect.bottom + padding;
+      } else if (spaceTop >= cardHeight) {
+        top = targetRect.top - cardHeight - padding;
+      }
+    }
+
+    // Final viewport bounds (but prioritize not overlapping)
+    top = Math.max(padding, top);
 
     setPosition({ top, left });
   }, [targetRect, step.position]);
@@ -99,7 +122,7 @@ export function TourCard({
   return (
     <Card
       key={currentStep}
-      className="fixed z-50 w-[320px] shadow-xl animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2 duration-200"
+      className="fixed z-50 w-[320px] max-w-[calc(100vw-32px)] shadow-xl animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2 duration-200"
       style={{ top: position.top, left: position.left }}
     >
       <CardHeader className="pb-2">
