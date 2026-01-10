@@ -7,6 +7,7 @@ import {
   useEffect,
   useCallback,
   useMemo,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
@@ -23,6 +24,16 @@ interface OnboardingContextValue {
 
 const OnboardingContext = createContext<OnboardingContextValue | null>(null);
 
+// SSR-safe mounted check using useSyncExternalStore
+const emptySubscribe = () => () => {};
+function useIsMounted() {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
+}
+
 export function OnboardingProvider({
   children,
   onboardingCompleted,
@@ -33,7 +44,7 @@ export function OnboardingProvider({
   const [isActive, setIsActive] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useIsMounted();
   const isMobile = useIsMobile();
 
   // Filter out desktop-only steps on mobile
@@ -46,11 +57,6 @@ export function OnboardingProvider({
 
   const currentStepData: TourStep | undefined = activeSteps[currentStep];
 
-  // Handle SSR
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   // Find and track target element position
   useEffect(() => {
     if (!isActive || !currentStepData) return;
@@ -59,6 +65,11 @@ export function OnboardingProvider({
       const target = document.querySelector(currentStepData.selector);
       if (target) {
         setTargetRect(target.getBoundingClientRect());
+      } else {
+        console.warn(
+          `Onboarding tour: Element not found for selector "${currentStepData.selector}" at step ${currentStep}`,
+          { stepTitle: currentStepData.title }
+        );
       }
     };
 
@@ -79,7 +90,17 @@ export function OnboardingProvider({
 
   const closeTour = useCallback(async () => {
     setIsActive(false);
-    await fetch("/api/onboarding/skip", { method: "POST" });
+    try {
+      const response = await fetch("/api/onboarding/skip", { method: "POST" });
+      if (!response.ok) {
+        console.error("Failed to skip onboarding", {
+          status: response.status,
+          statusText: response.statusText,
+        });
+      }
+    } catch (error) {
+      console.error("Network error skipping onboarding", error);
+    }
   }, []);
 
   const nextStep = useCallback(async () => {
@@ -87,7 +108,19 @@ export function OnboardingProvider({
       setCurrentStep((s) => s + 1);
     } else {
       setIsActive(false);
-      await fetch("/api/onboarding/complete", { method: "POST" });
+      try {
+        const response = await fetch("/api/onboarding/complete", {
+          method: "POST",
+        });
+        if (!response.ok) {
+          console.error("Failed to complete onboarding", {
+            status: response.status,
+            statusText: response.statusText,
+          });
+        }
+      } catch (error) {
+        console.error("Network error completing onboarding", error);
+      }
     }
   }, [currentStep, activeSteps.length]);
 

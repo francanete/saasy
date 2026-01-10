@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -22,6 +22,95 @@ interface TourCardProps {
   onClose: () => void;
 }
 
+function calculateCardPosition(
+  targetRect: DOMRect,
+  preferredPosition: TourStep["position"]
+) {
+  const cardWidth = 320;
+  const cardHeight = 180;
+  const padding = 16;
+
+  // Calculate available space in each direction
+  const spaceTop = targetRect.top - padding;
+  const spaceBottom = window.innerHeight - targetRect.bottom - padding;
+  const spaceLeft = targetRect.left - padding;
+  const spaceRight = window.innerWidth - targetRect.right - padding;
+
+  // Find the best position with most space
+  const positions = [
+    { pos: "bottom" as const, space: spaceBottom, needed: cardHeight },
+    { pos: "top" as const, space: spaceTop, needed: cardHeight },
+    { pos: "right" as const, space: spaceRight, needed: cardWidth },
+    { pos: "left" as const, space: spaceLeft, needed: cardWidth },
+  ];
+
+  // Check if preferred position has enough space
+  const preferred = positions.find((p) => p.pos === preferredPosition);
+  let actualPosition = preferredPosition;
+
+  if (!preferred || preferred.space < preferred.needed + padding) {
+    // Find position with most available space that fits
+    const sorted = positions
+      .filter((p) => p.space >= p.needed + padding)
+      .sort((a, b) => b.space - a.space);
+    if (sorted.length > 0) {
+      actualPosition = sorted[0].pos;
+    }
+  }
+
+  let top = 0;
+  let left = 0;
+
+  switch (actualPosition) {
+    case "bottom":
+      top = targetRect.bottom + padding;
+      left = targetRect.left + targetRect.width / 2 - cardWidth / 2;
+      break;
+    case "top":
+      top = targetRect.top - cardHeight - padding;
+      left = targetRect.left + targetRect.width / 2 - cardWidth / 2;
+      break;
+    case "left":
+      top = targetRect.top + targetRect.height / 2 - cardHeight / 2;
+      left = targetRect.left - cardWidth - padding;
+      break;
+    case "right":
+      top = targetRect.top + targetRect.height / 2 - cardHeight / 2;
+      left = targetRect.right + padding;
+      break;
+  }
+
+  // Keep card within viewport (horizontal only - don't clamp vertical to avoid overlap)
+  left = Math.max(
+    padding,
+    Math.min(left, window.innerWidth - cardWidth - padding)
+  );
+
+  // For vertical, ensure we don't overlap with target
+  const cardBottom = top + cardHeight;
+  const cardRight = left + cardWidth;
+
+  // Check for overlap and adjust
+  const overlapsVertically =
+    cardBottom > targetRect.top && top < targetRect.bottom;
+  const overlapsHorizontally =
+    cardRight > targetRect.left && left < targetRect.right;
+
+  if (overlapsVertically && overlapsHorizontally) {
+    // Force position below or above target without clamping into it
+    if (spaceBottom >= cardHeight) {
+      top = targetRect.bottom + padding;
+    } else if (spaceTop >= cardHeight) {
+      top = targetRect.top - cardHeight - padding;
+    }
+  }
+
+  // Final viewport bounds (but prioritize not overlapping)
+  top = Math.max(padding, top);
+
+  return { top, left };
+}
+
 export function TourCard({
   step,
   currentStep,
@@ -31,93 +120,26 @@ export function TourCard({
   onPrev,
   onClose,
 }: TourCardProps) {
-  const [position, setPosition] = useState({ top: 0, left: 0 });
+  // Compute position from props - no effect needed since it's derived data
+  const position = useMemo(
+    () => calculateCardPosition(targetRect, step.position),
+    [targetRect, step.position]
+  );
+
+  // Handle keyboard navigation
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    },
+    [onClose]
+  );
 
   useEffect(() => {
-    const cardWidth = 320;
-    const cardHeight = 180;
-    const padding = 16;
-
-    // Calculate available space in each direction
-    const spaceTop = targetRect.top - padding;
-    const spaceBottom = window.innerHeight - targetRect.bottom - padding;
-    const spaceLeft = targetRect.left - padding;
-    const spaceRight = window.innerWidth - targetRect.right - padding;
-
-    // Find the best position with most space
-    const positions = [
-      { pos: "bottom" as const, space: spaceBottom, needed: cardHeight },
-      { pos: "top" as const, space: spaceTop, needed: cardHeight },
-      { pos: "right" as const, space: spaceRight, needed: cardWidth },
-      { pos: "left" as const, space: spaceLeft, needed: cardWidth },
-    ];
-
-    // Check if preferred position has enough space
-    const preferred = positions.find((p) => p.pos === step.position);
-    let actualPosition = step.position;
-
-    if (!preferred || preferred.space < preferred.needed + padding) {
-      // Find position with most available space that fits
-      const sorted = positions
-        .filter((p) => p.space >= p.needed + padding)
-        .sort((a, b) => b.space - a.space);
-      if (sorted.length > 0) {
-        actualPosition = sorted[0].pos;
-      }
-    }
-
-    let top = 0;
-    let left = 0;
-
-    switch (actualPosition) {
-      case "bottom":
-        top = targetRect.bottom + padding;
-        left = targetRect.left + targetRect.width / 2 - cardWidth / 2;
-        break;
-      case "top":
-        top = targetRect.top - cardHeight - padding;
-        left = targetRect.left + targetRect.width / 2 - cardWidth / 2;
-        break;
-      case "left":
-        top = targetRect.top + targetRect.height / 2 - cardHeight / 2;
-        left = targetRect.left - cardWidth - padding;
-        break;
-      case "right":
-        top = targetRect.top + targetRect.height / 2 - cardHeight / 2;
-        left = targetRect.right + padding;
-        break;
-    }
-
-    // Keep card within viewport (horizontal only - don't clamp vertical to avoid overlap)
-    left = Math.max(
-      padding,
-      Math.min(left, window.innerWidth - cardWidth - padding)
-    );
-
-    // For vertical, ensure we don't overlap with target
-    const cardBottom = top + cardHeight;
-    const cardRight = left + cardWidth;
-
-    // Check for overlap and adjust
-    const overlapsVertically =
-      cardBottom > targetRect.top && top < targetRect.bottom;
-    const overlapsHorizontally =
-      cardRight > targetRect.left && left < targetRect.right;
-
-    if (overlapsVertically && overlapsHorizontally) {
-      // Force position below or above target without clamping into it
-      if (spaceBottom >= cardHeight) {
-        top = targetRect.bottom + padding;
-      } else if (spaceTop >= cardHeight) {
-        top = targetRect.top - cardHeight - padding;
-      }
-    }
-
-    // Final viewport bounds (but prioritize not overlapping)
-    top = Math.max(padding, top);
-
-    setPosition({ top, left });
-  }, [targetRect, step.position]);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleKeyDown]);
 
   return (
     <Card
