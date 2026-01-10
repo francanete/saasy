@@ -42,6 +42,7 @@ legal: {
 ## Key UK Legal Requirements
 
 The Limitation of Liability section includes:
+
 - Cap at 12 months fees or £100
 - Exclusion of indirect/consequential losses
 - **Required exceptions**: death/injury from negligence, fraud, non-excludable liability

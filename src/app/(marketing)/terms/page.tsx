@@ -34,16 +34,21 @@ export default function TermsPage() {
         </header>
 
         <article className="py-12 md:py-16">
-          <div className="container mx-auto max-w-3xl px-4 space-y-10">
+          <div className="container mx-auto max-w-3xl space-y-10 px-4">
             {/* Provider */}
             <section>
               <h2 className="mb-4 text-xl font-semibold text-slate-900">
                 Service Provider
               </h2>
               <p className="text-slate-600">
-                {legal.company.name} (Company No. {legal.company.registrationNumber})<br />
-                {legal.company.registeredAddress}<br />
-                <a href={`mailto:${legal.company.contactEmail}`} className="text-primary hover:underline">
+                {legal.company.name} (Company No.{" "}
+                {legal.company.registrationNumber})<br />
+                {legal.company.registeredAddress}
+                <br />
+                <a
+                  href={`mailto:${legal.company.contactEmail}`}
+                  className="text-primary hover:underline"
+                >
                   {legal.company.contactEmail}
                 </a>
               </p>
@@ -55,8 +60,9 @@ export default function TermsPage() {
                 Agreement
               </h2>
               <p className="text-slate-600">
-                By using {name}, you agree to these terms. If you don&apos;t agree, please don&apos;t use the service.
-                You must be at least {legal.terms.minimumAge} years old to use {name}.
+                By using {name}, you agree to these terms. If you don&apos;t
+                agree, please don&apos;t use the service. You must be at least{" "}
+                {legal.terms.minimumAge} years old to use {name}.
               </p>
             </section>
 
@@ -66,9 +72,9 @@ export default function TermsPage() {
                 The Service
               </h2>
               <p className="text-slate-600">
-                {name} provides software-as-a-service functionality including user accounts,
-                AI-powered features, and subscription management. We may modify or discontinue
-                features with reasonable notice.
+                {name} provides software-as-a-service functionality including
+                user accounts, AI-powered features, and subscription management.
+                We may modify or discontinue features with reasonable notice.
               </p>
             </section>
 
@@ -78,8 +84,9 @@ export default function TermsPage() {
                 Your Account
               </h2>
               <p className="text-slate-600">
-                You&apos;re responsible for keeping your account secure and for all activity under your account.
-                Notify us immediately if you suspect unauthorised access.
+                You&apos;re responsible for keeping your account secure and for
+                all activity under your account. Notify us immediately if you
+                suspect unauthorised access.
               </p>
             </section>
 
@@ -89,8 +96,9 @@ export default function TermsPage() {
                 Payments
               </h2>
               <p className="text-slate-600">
-                Paid plans are billed in advance. You can cancel anytime and retain access until the end of your
-                billing period. Refunds are handled on a case-by-case basis.
+                Paid plans are billed in advance. You can cancel anytime and
+                retain access until the end of your billing period. Refunds are
+                handled on a case-by-case basis.
               </p>
             </section>
 
@@ -127,8 +135,8 @@ export default function TermsPage() {
               </h2>
               <p className="text-slate-600">
                 AI outputs are generated automatically and may contain errors.
-                Don&apos;t rely on them for critical decisions without verification.
-                Usage is subject to your plan limits.
+                Don&apos;t rely on them for critical decisions without
+                verification. Usage is subject to your plan limits.
               </p>
             </section>
 
@@ -138,16 +146,20 @@ export default function TermsPage() {
                 Limitation of Liability
               </h2>
               <p className="mb-3 text-slate-600">
-                To the maximum extent permitted by law, our total liability is limited to the fees you&apos;ve
-                paid us in the 12 months before the claim, or £100, whichever is greater.
+                To the maximum extent permitted by law, our total liability is
+                limited to the fees you&apos;ve paid us in the 12 months before
+                the claim, or £100, whichever is greater.
               </p>
               <p className="mb-3 text-slate-600">
-                We are not liable for indirect losses, loss of profits, or loss of data
-                (except where required by data protection law).
+                We are not liable for indirect losses, loss of profits, or loss
+                of data (except where required by data protection law).
               </p>
               <p className="text-slate-600">
-                <strong className="font-medium">Nothing limits our liability for:</strong> death or injury from
-                our negligence, fraud, or anything that cannot be excluded by law.
+                <strong className="font-medium">
+                  Nothing limits our liability for:
+                </strong>{" "}
+                death or injury from our negligence, fraud, or anything that
+                cannot be excluded by law.
               </p>
             </section>
 
@@ -157,8 +169,9 @@ export default function TermsPage() {
                 Termination
               </h2>
               <p className="text-slate-600">
-                You can close your account anytime. We may suspend or terminate accounts that violate
-                these terms. On termination, your right to use the service ends immediately.
+                You can close your account anytime. We may suspend or terminate
+                accounts that violate these terms. On termination, your right to
+                use the service ends immediately.
               </p>
             </section>
 
@@ -168,8 +181,10 @@ export default function TermsPage() {
                 Governing Law
               </h2>
               <p className="text-slate-600">
-                These terms are governed by the laws of {legal.terms.jurisdiction}.
-                Disputes are subject to the exclusive jurisdiction of the courts of {legal.terms.jurisdiction}.
+                These terms are governed by the laws of{" "}
+                {legal.terms.jurisdiction}. Disputes are subject to the
+                exclusive jurisdiction of the courts of{" "}
+                {legal.terms.jurisdiction}.
               </p>
             </section>
 
@@ -179,8 +194,9 @@ export default function TermsPage() {
                 Changes
               </h2>
               <p className="text-slate-600">
-                We may update these terms. Continued use after changes constitutes acceptance.
-                For significant changes, we&apos;ll notify you by email.
+                We may update these terms. Continued use after changes
+                constitutes acceptance. For significant changes, we&apos;ll
+                notify you by email.
               </p>
             </section>
 
@@ -193,7 +209,8 @@ export default function TermsPage() {
                 Your use of {name} is also governed by our{" "}
                 <Link href="/privacy" className="text-primary hover:underline">
                   Privacy Policy
-                </Link>.
+                </Link>
+                .
               </p>
             </section>
 
@@ -203,8 +220,8 @@ export default function TermsPage() {
                 Severability
               </h2>
               <p className="text-slate-600">
-                If any part of these terms is found to be unenforceable, the remaining
-                provisions will continue in full force and effect.
+                If any part of these terms is found to be unenforceable, the
+                remaining provisions will continue in full force and effect.
               </p>
             </section>
 
@@ -214,8 +231,8 @@ export default function TermsPage() {
                 Entire Agreement
               </h2>
               <p className="text-slate-600">
-                These terms, together with our Privacy Policy, constitute the entire
-                agreement between you and us regarding {name}.
+                These terms, together with our Privacy Policy, constitute the
+                entire agreement between you and us regarding {name}.
               </p>
             </section>
 
@@ -226,7 +243,10 @@ export default function TermsPage() {
               </h2>
               <p className="text-slate-600">
                 Questions? Email us at{" "}
-                <a href={`mailto:${legal.company.contactEmail}`} className="text-primary hover:underline">
+                <a
+                  href={`mailto:${legal.company.contactEmail}`}
+                  className="text-primary hover:underline"
+                >
                   {legal.company.contactEmail}
                 </a>
               </p>
