@@ -107,7 +107,10 @@ export async function sendSequenceEmail({
 }: SendSequenceEmailParams): Promise<SendResult> {
   // 1. Check if already sent (idempotency)
   const existing = await db.query.emailsSent.findFirst({
-    where: and(eq(emailsSent.userId, userId), eq(emailsSent.emailKey, emailKey)),
+    where: and(
+      eq(emailsSent.userId, userId),
+      eq(emailsSent.emailKey, emailKey)
+    ),
   });
 
   if (existing) {
@@ -140,7 +143,10 @@ export async function sendSequenceEmail({
   const { subject, html } = template({ name: name || "there" });
 
   // Replace {{email}} placeholder with actual email for unsubscribe link
-  const htmlWithEmail = html.replace(/\{\{email\}\}/g, encodeURIComponent(email));
+  const htmlWithEmail = html.replace(
+    /\{\{email\}\}/g,
+    encodeURIComponent(email)
+  );
 
   await sendEmail({
     to: email,

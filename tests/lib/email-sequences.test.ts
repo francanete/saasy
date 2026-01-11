@@ -12,11 +12,11 @@ vi.mock("@/lib/db", () => ({
   db: {
     query: {
       emailsSent: {
-        findFirst: (...args: unknown[]) => mockFindFirstEmailsSent(...args),
+        findFirst: () => mockFindFirstEmailsSent(),
       },
-      users: { findFirst: (...args: unknown[]) => mockFindFirstUsers(...args) },
+      users: { findFirst: () => mockFindFirstUsers() },
     },
-    insert: (...args: unknown[]) => mockInsert(...args),
+    insert: () => mockInsert(),
   },
 }));
 
@@ -30,7 +30,7 @@ vi.mock("@/lib/db/schema", () => ({
 }));
 
 vi.mock("@/lib/email", () => ({
-  sendEmail: (...args: unknown[]) => mockSendEmail(...args),
+  sendEmail: (params: unknown) => mockSendEmail(params),
 }));
 
 vi.mock("@/lib/config", () => ({

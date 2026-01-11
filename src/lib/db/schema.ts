@@ -39,7 +39,9 @@ export const users = pgTable("users", {
   name: text("name"),
   image: text("image"),
   role: roleEnum("role").default("user").notNull(),
-  marketingUnsubscribed: boolean("marketing_unsubscribed").default(false).notNull(),
+  marketingUnsubscribed: boolean("marketing_unsubscribed")
+    .default(false)
+    .notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
