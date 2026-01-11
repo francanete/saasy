@@ -64,29 +64,39 @@ export const onboardingFlows: Record<string, OnboardingFlow> = {
       },
     ],
   },
-  // Example: Add more flows as needed
-  // settings: {
-  //   id: "settings",
-  //   name: "Settings Tour",
-  //   description: "Configure your account preferences",
-  //   autoStart: true,
-  //   steps: [
-  //     {
-  //       id: "profile",
-  //       title: "Profile Settings",
-  //       content: "Update your name, avatar, and personal details here.",
-  //       selector: "#tour-settings-profile",
-  //       position: "right",
-  //     },
-  //     {
-  //       id: "billing",
-  //       title: "Billing & Plans",
-  //       content: "Manage your subscription and payment methods.",
-  //       selector: "#tour-settings-billing",
-  //       position: "right",
-  //     },
-  //   ],
-  // },
+  settings: {
+    id: "settings",
+    name: "Settings Tour",
+    description: "Learn how to configure your account",
+    autoStart: true,
+    autoStartDelay: 500,
+    steps: [
+      {
+        id: "tabs",
+        title: "Settings Navigation",
+        content:
+          "Switch between Profile and Billing tabs to manage different aspects of your account.",
+        selector: "#tour-settings-tabs",
+        position: "bottom",
+      },
+      {
+        id: "profile",
+        title: "Profile Settings",
+        content:
+          "Update your name and personal details here. Your avatar syncs from your login provider.",
+        selector: "#tour-settings-profile",
+        position: "top",
+      },
+      {
+        id: "billing",
+        title: "Billing & Subscription",
+        content:
+          "View your current plan, billing cycle, and manage your subscription. You're all set!",
+        selector: "#tour-settings-billing",
+        position: "top",
+      },
+    ],
+  },
 };
 
 /**

@@ -45,13 +45,13 @@ export default async function SettingsPage() {
       </div>
 
       <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList>
+        <TabsList id="tour-settings-tabs">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="billing">Billing</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile" className="space-y-6">
-          <Card>
+          <Card id="tour-settings-profile">
             <CardHeader>
               <CardTitle>Profile</CardTitle>
               <CardDescription>
@@ -97,7 +97,9 @@ export default async function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="billing" className="space-y-6">
-          <BillingSection subscription={subscription} />
+          <div id="tour-settings-billing">
+            <BillingSection subscription={subscription} />
+          </div>
         </TabsContent>
       </Tabs>
     </div>

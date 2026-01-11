@@ -18,6 +18,12 @@ describe("onboarding-config", () => {
       expect(onboardingFlows.dashboard.id).toBe("dashboard");
     });
 
+    it("should have a settings flow", () => {
+      expect(onboardingFlows.settings).toBeDefined();
+      expect(onboardingFlows.settings.id).toBe("settings");
+      expect(onboardingFlows.settings.steps.length).toBeGreaterThan(0);
+    });
+
     it("should have valid flow structure for all flows", () => {
       Object.entries(onboardingFlows).forEach(([key, flow]) => {
         expect(flow.id).toBe(key);
@@ -33,6 +39,13 @@ describe("onboarding-config", () => {
       const flow = getOnboardingFlow("dashboard");
       expect(flow).toBeDefined();
       expect(flow?.id).toBe("dashboard");
+    });
+
+    it("returns the settings flow", () => {
+      const flow = getOnboardingFlow("settings");
+      expect(flow).toBeDefined();
+      expect(flow?.id).toBe("settings");
+      expect(flow?.name).toBe("Settings Tour");
     });
 
     it("returns undefined for invalid flowId", () => {
@@ -80,6 +93,29 @@ describe("onboarding-config", () => {
       tourSteps.forEach((step) => {
         expect(step.selector).toMatch(/^[#.]/);
       });
+    });
+  });
+
+  describe("settings flow", () => {
+    const settingsSteps = onboardingFlows.settings.steps;
+
+    it("should have steps with valid selectors", () => {
+      settingsSteps.forEach((step) => {
+        expect(step.selector).toMatch(/^#tour-settings-/);
+      });
+    });
+
+    it("should have unique step ids", () => {
+      const ids = settingsSteps.map((step) => step.id);
+      const uniqueIds = new Set(ids);
+      expect(uniqueIds.size).toBe(ids.length);
+    });
+
+    it("should include tabs, profile, and billing steps", () => {
+      const stepIds = settingsSteps.map((step) => step.id);
+      expect(stepIds).toContain("tabs");
+      expect(stepIds).toContain("profile");
+      expect(stepIds).toContain("billing");
     });
   });
 
