@@ -15,7 +15,11 @@ type SendSequenceEmailParams = {
 
 type SendResult = {
   sent: boolean;
-  reason?: "already_sent" | "unsubscribed" | "user_not_found" | "unknown_template";
+  reason?:
+    | "already_sent"
+    | "unsubscribed"
+    | "user_not_found"
+    | "unknown_template";
 };
 
 // ============ Email Templates ============
