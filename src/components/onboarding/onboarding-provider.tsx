@@ -11,7 +11,11 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
-import { tourSteps, type TourStep } from "@/lib/onboarding-config";
+import {
+  getOnboardingFlow,
+  type TourStep,
+  type FlowId,
+} from "@/lib/onboarding-config";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { TourOverlay } from "./tour-overlay";
 import { TourCard } from "./tour-card";
@@ -19,7 +23,8 @@ import { TourCard } from "./tour-card";
 interface OnboardingContextValue {
   isActive: boolean;
   currentStep: number;
-  startTour: () => void;
+  flowId: string | null;
+  startTour: (overrideFlowId?: string) => void;
 }
 
 const OnboardingContext = createContext<OnboardingContextValue | null>(null);
@@ -34,26 +39,35 @@ function useIsMounted() {
   );
 }
 
+interface OnboardingProviderProps {
+  children: ReactNode;
+  flowId: FlowId;
+  flowCompleted: boolean;
+}
+
 export function OnboardingProvider({
   children,
-  onboardingCompleted,
-}: {
-  children: ReactNode;
-  onboardingCompleted: boolean;
-}) {
+  flowId,
+  flowCompleted,
+}: OnboardingProviderProps) {
   const [isActive, setIsActive] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [activeFlowId, setActiveFlowId] = useState<string | null>(null);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const mounted = useIsMounted();
   const isMobile = useIsMobile();
 
+  // Get flow configuration
+  const flow = useMemo(() => getOnboardingFlow(flowId), [flowId]);
+
   // Filter out desktop-only steps on mobile
   const activeSteps = useMemo(() => {
+    if (!flow) return [];
     if (isMobile) {
-      return tourSteps.filter((step) => !step.desktopOnly);
+      return flow.steps.filter((step) => !step.desktopOnly);
     }
-    return tourSteps;
-  }, [isMobile]);
+    return flow.steps;
+  }, [flow, isMobile]);
 
   const currentStepData: TourStep | undefined = activeSteps[currentStep];
 
@@ -67,8 +81,8 @@ export function OnboardingProvider({
         setTargetRect(target.getBoundingClientRect());
       } else {
         console.warn(
-          `Onboarding tour: Element not found for selector "${currentStepData.selector}" at step ${currentStep}`,
-          { stepTitle: currentStepData.title }
+          `Onboarding tour: Element not found for selector "${currentStepData.selector}"`,
+          { flowId: activeFlowId, step: currentStep }
         );
       }
     };
@@ -81,19 +95,31 @@ export function OnboardingProvider({
       window.removeEventListener("resize", updateTargetRect);
       window.removeEventListener("scroll", updateTargetRect);
     };
-  }, [isActive, currentStep, currentStepData]);
+  }, [isActive, currentStep, currentStepData, activeFlowId]);
 
-  const startTour = useCallback(() => {
-    setCurrentStep(0);
-    setIsActive(true);
-  }, []);
+  const startTour = useCallback(
+    (overrideFlowId?: string) => {
+      const targetFlowId = overrideFlowId || flowId;
+      setActiveFlowId(targetFlowId);
+      setCurrentStep(0);
+      setIsActive(true);
+    },
+    [flowId]
+  );
 
   const closeTour = useCallback(async () => {
     setIsActive(false);
+    if (!activeFlowId) return;
+
     try {
-      const response = await fetch("/api/onboarding/skip", { method: "POST" });
+      const response = await fetch("/api/onboarding/skip", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ flowId: activeFlowId }),
+      });
       if (!response.ok) {
         console.error("Failed to skip onboarding", {
+          flowId: activeFlowId,
           status: response.status,
           statusText: response.statusText,
         });
@@ -101,19 +127,24 @@ export function OnboardingProvider({
     } catch (error) {
       console.error("Network error skipping onboarding", error);
     }
-  }, []);
+  }, [activeFlowId]);
 
   const nextStep = useCallback(async () => {
     if (currentStep < activeSteps.length - 1) {
       setCurrentStep((s) => s + 1);
     } else {
       setIsActive(false);
+      if (!activeFlowId) return;
+
       try {
         const response = await fetch("/api/onboarding/complete", {
           method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ flowId: activeFlowId }),
         });
         if (!response.ok) {
           console.error("Failed to complete onboarding", {
+            flowId: activeFlowId,
             status: response.status,
             statusText: response.statusText,
           });
@@ -122,7 +153,7 @@ export function OnboardingProvider({
         console.error("Network error completing onboarding", error);
       }
     }
-  }, [currentStep, activeSteps.length]);
+  }, [currentStep, activeSteps.length, activeFlowId]);
 
   const prevStep = useCallback(() => {
     if (currentStep > 0) {
@@ -130,16 +161,19 @@ export function OnboardingProvider({
     }
   }, [currentStep]);
 
-  // Auto-start for new users
+  // Auto-start for new users (only if flow supports it)
   useEffect(() => {
-    if (!onboardingCompleted && mounted) {
-      const timer = setTimeout(startTour, 500);
+    if (!flowCompleted && mounted && flow?.autoStart !== false) {
+      const delay = flow?.autoStartDelay ?? 500;
+      const timer = setTimeout(() => startTour(flowId), delay);
       return () => clearTimeout(timer);
     }
-  }, [onboardingCompleted, startTour, mounted]);
+  }, [flowCompleted, startTour, mounted, flow, flowId]);
 
   return (
-    <OnboardingContext.Provider value={{ isActive, currentStep, startTour }}>
+    <OnboardingContext.Provider
+      value={{ isActive, currentStep, flowId: activeFlowId, startTour }}
+    >
       {children}
       {mounted &&
         isActive &&

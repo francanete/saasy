@@ -8,7 +8,7 @@ export function RestartTourButton() {
   const { startTour } = useOnboardingContext();
 
   return (
-    <Button variant="outline" onClick={startTour}>
+    <Button variant="outline" onClick={() => startTour()}>
       <PlayCircle className="mr-2 h-4 w-4" />
       Restart Tour
     </Button>

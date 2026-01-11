@@ -2,9 +2,9 @@ import { Suspense } from "react";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
+import { onboardingFlows } from "@/lib/db/schema";
 import { getSubscriptionStatus } from "@/lib/subscription";
 import { isUserAdmin } from "@/lib/dal";
 import { appConfig } from "@/lib/config";
@@ -33,15 +33,22 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  // Get subscription status, admin status, and onboarding status
-  const [subscription, isAdmin, user] = await Promise.all([
+  // Get subscription status, admin status, and onboarding flow status
+  const [subscription, isAdmin, dashboardOnboarding] = await Promise.all([
     getSubscriptionStatus(session.user.id),
     isUserAdmin(session.user.id),
-    db.query.users.findFirst({
-      where: eq(users.id, session.user.id),
-      columns: { onboardingCompleted: true },
+    db.query.onboardingFlows.findFirst({
+      where: and(
+        eq(onboardingFlows.userId, session.user.id),
+        eq(onboardingFlows.flowId, "dashboard")
+      ),
     }),
   ]);
+
+  // Flow is completed if completedAt or skippedAt is set
+  const dashboardFlowCompleted = !!(
+    dashboardOnboarding?.completedAt || dashboardOnboarding?.skippedAt
+  );
 
   // If paid access required and user is on FREE plan, redirect to gate
   if (REQUIRE_PAID_ACCESS && subscription.plan === "FREE") {
@@ -49,9 +56,7 @@ export default async function DashboardLayout({
   }
 
   return (
-    <OnboardingProvider
-      onboardingCompleted={user?.onboardingCompleted ?? false}
-    >
+    <OnboardingProvider flowId="dashboard" flowCompleted={dashboardFlowCompleted}>
       <SidebarProvider>
         <Suspense fallback={null}>
           <CheckoutSuccessToast />

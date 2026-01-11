@@ -1,7 +1,51 @@
-import { tourSteps, type TourStep } from "@/lib/onboarding-config";
+import {
+  onboardingFlows,
+  getOnboardingFlow,
+  tourSteps,
+  type TourStep,
+  type OnboardingFlow,
+} from "@/lib/onboarding-config";
 
 describe("onboarding-config", () => {
-  describe("tourSteps", () => {
+  describe("onboardingFlows", () => {
+    it("should have at least one flow defined", () => {
+      const flowKeys = Object.keys(onboardingFlows);
+      expect(flowKeys.length).toBeGreaterThan(0);
+    });
+
+    it("should have a dashboard flow", () => {
+      expect(onboardingFlows.dashboard).toBeDefined();
+      expect(onboardingFlows.dashboard.id).toBe("dashboard");
+    });
+
+    it("should have valid flow structure for all flows", () => {
+      Object.entries(onboardingFlows).forEach(([key, flow]) => {
+        expect(flow.id).toBe(key);
+        expect(flow.name).toBeTruthy();
+        expect(Array.isArray(flow.steps)).toBe(true);
+        expect(flow.steps.length).toBeGreaterThan(0);
+      });
+    });
+  });
+
+  describe("getOnboardingFlow", () => {
+    it("returns the correct flow for valid flowId", () => {
+      const flow = getOnboardingFlow("dashboard");
+      expect(flow).toBeDefined();
+      expect(flow?.id).toBe("dashboard");
+    });
+
+    it("returns undefined for invalid flowId", () => {
+      const flow = getOnboardingFlow("nonexistent");
+      expect(flow).toBeUndefined();
+    });
+  });
+
+  describe("tourSteps (legacy export)", () => {
+    it("should be the same as dashboard flow steps", () => {
+      expect(tourSteps).toBe(onboardingFlows.dashboard.steps);
+    });
+
     it("should have at least one step", () => {
       expect(tourSteps.length).toBeGreaterThan(0);
     });
@@ -81,6 +125,41 @@ describe("onboarding-config", () => {
       };
 
       expect(desktopStep.desktopOnly).toBe(true);
+    });
+  });
+
+  describe("OnboardingFlow type", () => {
+    it("should correctly type a valid flow", () => {
+      const validFlow: OnboardingFlow = {
+        id: "test-flow",
+        name: "Test Flow",
+        steps: [
+          {
+            id: "step1",
+            title: "Step 1",
+            content: "Content 1",
+            selector: "#step1",
+            position: "bottom",
+          },
+        ],
+      };
+
+      expect(validFlow.id).toBe("test-flow");
+      expect(validFlow.autoStart).toBeUndefined();
+      expect(validFlow.autoStartDelay).toBeUndefined();
+    });
+
+    it("should allow optional autoStart and autoStartDelay properties", () => {
+      const flow: OnboardingFlow = {
+        id: "auto-flow",
+        name: "Auto Flow",
+        autoStart: true,
+        autoStartDelay: 1000,
+        steps: [],
+      };
+
+      expect(flow.autoStart).toBe(true);
+      expect(flow.autoStartDelay).toBe(1000);
     });
   });
 });

@@ -15,5 +15,6 @@
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "shadcn"
-  ]
+  ],
+  "outputStyle": "Learning"
 }
