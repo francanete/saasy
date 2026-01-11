@@ -1,7 +1,8 @@
 import { inngest } from "./client";
 import { db, users, subscriptions } from "@/lib/db";
 import { eq } from "drizzle-orm";
-import { sendWelcomeEmail, sendAccountSetupEmail } from "@/lib/email";
+import { sendAccountSetupEmail } from "@/lib/email";
+import { sendSequenceEmail } from "@/lib/email-sequences";
 import { syncWithPolar } from "@/lib/subscription";
 
 // ============ Constants ============
@@ -13,35 +14,63 @@ const RATE_LIMIT_RETRY_DELAY_MS = 5000; // Wait 5s before retry on rate limit
 
 // ============ Jobs ============
 
-// Welcome email + FREE subscription after signup
-export const welcomeEmailJob = inngest.createFunction(
-  { id: "send-welcome-email" },
+// Welcome sequence: instant email + day 3 follow-up
+export const welcomeSequenceJob = inngest.createFunction(
+  { id: "welcome-sequence" },
   { event: "user/created" },
-  async ({ event }) => {
+  async ({ event, step }) => {
     const { userId, email } = event.data;
 
-    // Create default FREE subscription for new user
-    await db
-      .insert(subscriptions)
-      .values({
+    // Step 1: Create default FREE subscription for new user
+    await step.run("create-subscription", async () => {
+      await db
+        .insert(subscriptions)
+        .values({
+          userId,
+          plan: "FREE",
+          status: "ACTIVE",
+          billingType: "none",
+        })
+        .onConflictDoNothing(); // In case webhook already created one
+    });
+
+    // Step 2: Get user name for emails
+    const user = await step.run("get-user", async () => {
+      const [u] = await db
+        .select({ name: users.name })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+      return u;
+    });
+
+    // Step 3: Send instant welcome email
+    const result1 = await step.run("send-welcome-instant", async () => {
+      return sendSequenceEmail({
         userId,
-        plan: "FREE",
-        status: "ACTIVE",
-        billingType: "none",
-      })
-      .onConflictDoNothing(); // In case webhook already created one
+        email,
+        name: user?.name || null,
+        emailKey: "welcome_instant",
+      });
+    });
 
-    // Get user name for email
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1);
+    // Step 4: Wait 3 days
+    await step.sleep("wait-day-3", "3d");
 
-    // Send welcome email
-    await sendWelcomeEmail(email, user?.name || "there");
+    // Step 5: Send day 3 follow-up email
+    const result2 = await step.run("send-welcome-day3", async () => {
+      return sendSequenceEmail({
+        userId,
+        email,
+        name: user?.name || null,
+        emailKey: "welcome_day3",
+      });
+    });
 
-    return { sent: true, subscriptionCreated: true };
+    return {
+      email1: result1,
+      email2: result2,
+    };
   }
 );
 
@@ -153,7 +182,7 @@ export const paidSignupEmailJob = inngest.createFunction(
 );
 
 export const functions = [
-  welcomeEmailJob,
+  welcomeSequenceJob,
   syncAllSubscriptions,
   paidSignupEmailJob,
 ];

@@ -39,6 +39,7 @@ export const users = pgTable("users", {
   name: text("name"),
   image: text("image"),
   role: roleEnum("role").default("user").notNull(),
+  marketingUnsubscribed: boolean("marketing_unsubscribed").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
@@ -233,6 +234,26 @@ export const onboardingFlows = pgTable(
   ]
 );
 
+// ============ Email Tracking Table ============
+export const emailsSent = pgTable(
+  "emails_sent",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    emailKey: text("email_key").notNull(), // "welcome_instant", "welcome_day3", etc.
+    sentAt: timestamp("sent_at").defaultNow().notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("emails_sent_user_email_idx").on(table.userId, table.emailKey),
+    index("emails_sent_user_id_idx").on(table.userId),
+  ]
+);
+
 // ============ Tier System Tables ============
 export const tierConfigs = pgTable("tier_configs", {
   plan: planEnum("plan").primaryKey(),
@@ -288,6 +309,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   }),
   aiUsage: many(aiUsage),
   onboardingFlows: many(onboardingFlows),
+  emailsSent: many(emailsSent),
 }));
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -328,6 +350,13 @@ export const onboardingFlowsRelations = relations(
   })
 );
 
+export const emailsSentRelations = relations(emailsSent, ({ one }) => ({
+  user: one(users, {
+    fields: [emailsSent.userId],
+    references: [users.id],
+  }),
+}));
+
 export const tierConfigsRelations = relations(tierConfigs, ({ many }) => ({
   rateLimits: many(featureRateLimits),
 }));
@@ -356,6 +385,8 @@ export type FeatureRateLimit = typeof featureRateLimits.$inferSelect;
 export type NewFeatureRateLimit = typeof featureRateLimits.$inferInsert;
 export type OnboardingFlow = typeof onboardingFlows.$inferSelect;
 export type NewOnboardingFlow = typeof onboardingFlows.$inferInsert;
+export type EmailSent = typeof emailsSent.$inferSelect;
+export type NewEmailSent = typeof emailsSent.$inferInsert;
 export type Plan = "FREE" | "STARTER" | "GROWTH" | "SCALE";
 export type BillingType = "recurring" | "one_time" | "none";
 export type Role = "user" | "admin";

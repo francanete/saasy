@@ -33,19 +33,6 @@ export async function sendEmail({ to, subject, html, from }: SendEmailOptions) {
   return data;
 }
 
-// Pre-built templates
-export async function sendWelcomeEmail(email: string, name: string) {
-  return sendEmail({
-    to: email,
-    subject: `Welcome to ${appConfig.name}!`,
-    html: `
-      <h1>Welcome, ${name}!</h1>
-      <p>Thanks for signing up. We're excited to have you!</p>
-      <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard">Go to Dashboard</a></p>
-    `,
-  });
-}
-
 /**
  * Send account setup email to users who purchased via guest checkout.
  * Provides a login link to access their newly created account.
