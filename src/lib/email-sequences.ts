@@ -15,7 +15,7 @@ type SendSequenceEmailParams = {
 
 type SendResult = {
   sent: boolean;
-  reason?: "already_sent" | "unsubscribed" | "user_not_found";
+  reason?: "already_sent" | "unsubscribed" | "user_not_found" | "unknown_template";
 };
 
 // ============ Email Templates ============
@@ -137,7 +137,7 @@ export async function sendSequenceEmail({
 
   if (!template) {
     console.error(`[Email Sequence] Unknown template: ${emailKey}`);
-    return { sent: false, reason: "user_not_found" }; // Generic error
+    return { sent: false, reason: "unknown_template" };
   }
 
   const { subject, html } = template({ name: name || "there" });

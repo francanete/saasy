@@ -12,6 +12,20 @@ const DELAY_BETWEEN_USERS_MS = 200; // ~5 requests/second
 const DELAY_BETWEEN_BATCHES_MS = 5000; // 5 second pause between batches
 const RATE_LIMIT_RETRY_DELAY_MS = 5000; // Wait 5s before retry on rate limit
 
+// ============ Helpers ============
+
+function chunkArray<T>(array: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < array.length; i += size) {
+    chunks.push(array.slice(i, i + size));
+  }
+  return chunks;
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 // ============ Jobs ============
 
 // Welcome sequence: instant email + day 3 follow-up
@@ -85,10 +99,7 @@ export const syncAllSubscriptions = inngest.createFunction(
     });
 
     // Split into batches
-    const batches: { userId: string }[][] = [];
-    for (let i = 0; i < allUsers.length; i += BATCH_SIZE) {
-      batches.push(allUsers.slice(i, i + BATCH_SIZE));
-    }
+    const batches = chunkArray(allUsers, BATCH_SIZE);
 
     let synced = 0;
     let errors = 0;
@@ -113,9 +124,7 @@ export const syncAllSubscriptions = inngest.createFunction(
 
               // Retry once on rate limit (429)
               if (apiError.status === 429) {
-                await new Promise((r) =>
-                  setTimeout(r, RATE_LIMIT_RETRY_DELAY_MS)
-                );
+                await delay(RATE_LIMIT_RETRY_DELAY_MS);
                 try {
                   await syncWithPolar(user.userId);
                   batchSynced++;
@@ -133,7 +142,7 @@ export const syncAllSubscriptions = inngest.createFunction(
             }
 
             // Rate limit: delay between each user
-            await new Promise((r) => setTimeout(r, DELAY_BETWEEN_USERS_MS));
+            await delay(DELAY_BETWEEN_USERS_MS);
           }
 
           return { synced: batchSynced, errors: batchErrors };
