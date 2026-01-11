@@ -19,8 +19,18 @@ export async function POST(request: Request) {
     );
   }
 
+  // Parse JSON body separately to return 400 on malformed JSON
+  let body: unknown;
   try {
-    const body = await request.json();
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: "Invalid JSON body", code: "BAD_REQUEST" },
+      { status: 400 }
+    );
+  }
+
+  try {
     const { flowId } = requestSchema.parse(body);
 
     // Upsert: insert if not exists, update if exists
@@ -44,6 +54,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Failed to skip onboarding", {
       userId: session.user.id,
+      flowId: (body as { flowId?: string })?.flowId ?? "unknown",
       error,
     });
     return handleApiError(error);

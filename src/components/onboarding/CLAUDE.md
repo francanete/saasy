@@ -25,12 +25,17 @@ src/
 
 Flows are tracked per-user in the `onboardingFlows` table:
 
-| Column | Type | Description |
-|--------|------|-------------|
-| userId | string | User ID |
-| flowId | string | Flow identifier (e.g., "dashboard", "settings") |
-| completedAt | timestamp | When user finished the tour |
-| skippedAt | timestamp | When user skipped the tour |
+| Column      | Type           | Description                                     |
+| ----------- | -------------- | ----------------------------------------------- |
+| id          | string (cuid2) | Primary key                                     |
+| userId      | string         | User ID (foreign key)                           |
+| flowId      | string         | Flow identifier (e.g., "dashboard", "settings") |
+| completedAt | timestamp      | When user finished the tour                     |
+| skippedAt   | timestamp      | When user skipped the tour                      |
+| createdAt   | timestamp      | Record creation time                            |
+| updatedAt   | timestamp      | Last update time                                |
+
+**Unique constraint:** `(userId, flowId)` - ensures one record per user per flow.
 
 ## Adding a New Onboarding Flow
 
@@ -53,9 +58,9 @@ export const onboardingFlows: Record<string, OnboardingFlow> = {
         id: "step1",
         title: "Step Title",
         content: "Explanation of what this element does.",
-        selector: "#tour-myNewFlow-step1",  // Follow naming convention!
-        position: "bottom",  // top | bottom | left | right
-        desktopOnly: false,  // Optional: skip on mobile
+        selector: "#tour-myNewFlow-step1", // Follow naming convention!
+        position: "bottom", // top | bottom | left | right
+        desktopOnly: false, // Optional: skip on mobile
       },
       // ... more steps
     ],
@@ -69,12 +74,14 @@ Add `id` attributes to the elements you want to highlight:
 
 ```tsx
 // In your page/component
-<Card id="tour-myNewFlow-step1">
-  ...
-</Card>
+<Card id="tour-myNewFlow-step1">...</Card>
 ```
 
-**Naming Convention:** `#tour-{flowId}-{stepId}`
+**Naming Convention:**
+
+- For new flows: `#tour-{flowId}-{stepId}` (recommended)
+- Dashboard uses: `#tour-{section}-{element}` (e.g., `#tour-nav-chat`, `#tour-stat-projects`)
+- Settings uses: `#tour-settings-{stepId}` (e.g., `#tour-settings-tabs`)
 
 ### Step 3: Create a Layout with OnboardingProvider
 
@@ -106,7 +113,7 @@ export default async function MyPageLayout({
   const flowOnboarding = await db.query.onboardingFlows.findFirst({
     where: and(
       eq(onboardingFlows.userId, session.user.id),
-      eq(onboardingFlows.flowId, "myNewFlow")  // Must match config id
+      eq(onboardingFlows.flowId, "myNewFlow") // Must match config id
     ),
   });
 
@@ -151,18 +158,23 @@ describe("myNewFlow flow", () => {
 ## Common Gotchas
 
 ### 1. Hidden Elements
+
 If a step targets an element that's not visible (e.g., in a hidden tab), the tour will fail to find it. Solutions:
+
 - Only target initially visible elements
 - Reorder steps to match user flow
 - Add logic to switch tabs/expand sections before highlighting
 
 ### 2. Element Not Found on Mount
+
 The tour waits 500ms before auto-starting (`autoStartDelay`). If your element renders later (lazy loading, data fetching), increase this delay or ensure the element exists before the tour starts.
 
 ### 3. Mobile Responsiveness
+
 Use `desktopOnly: true` for steps that target sidebar elements or other desktop-only UI. The tour automatically filters these on mobile.
 
 ### 4. Nested Providers
+
 Layouts compose hierarchically. A settings page inside dashboard has TWO providers (dashboard → settings). The innermost provider's flow takes precedence.
 
 ## API Routes

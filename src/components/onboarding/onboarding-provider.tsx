@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
+import { toast } from "sonner";
 import {
   getOnboardingFlow,
   type TourStep,
@@ -148,9 +149,13 @@ export function OnboardingProvider({
             status: response.status,
             statusText: response.statusText,
           });
+          toast.error(
+            "Failed to save tour completion. The tour may appear again."
+          );
         }
       } catch (error) {
         console.error("Network error completing onboarding", error);
+        toast.error("Network error. The tour may appear again.");
       }
     }
   }, [currentStep, activeSteps.length, activeFlowId]);

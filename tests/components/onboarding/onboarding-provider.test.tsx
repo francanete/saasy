@@ -4,6 +4,7 @@ import {
   useOnboardingContext,
 } from "@/components/onboarding/onboarding-provider";
 import { onboardingFlows } from "@/lib/onboarding-config";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Get dashboard flow steps for testing
 const dashboardSteps = onboardingFlows.dashboard.steps;
@@ -11,6 +12,14 @@ const dashboardSteps = onboardingFlows.dashboard.steps;
 // Mock useIsMobile hook
 vi.mock("@/hooks/use-mobile", () => ({
   useIsMobile: vi.fn(() => false),
+}));
+
+// Mock sonner toast
+vi.mock("sonner", () => ({
+  toast: {
+    error: vi.fn(),
+    success: vi.fn(),
+  },
 }));
 
 // Mock fetch globally
@@ -186,5 +195,311 @@ describe("useOnboardingContext", () => {
     expect(contextValue).toHaveProperty("flowId");
     expect(contextValue).toHaveProperty("startTour");
     expect(typeof contextValue!.startTour).toBe("function");
+  });
+});
+
+describe("step navigation", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockFetch.mockResolvedValue({ ok: true, json: () => Promise.resolve({}) });
+    setupTourTargets();
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    cleanupTourTargets();
+    vi.useRealTimers();
+  });
+
+  it("advances to next step when Next button is clicked", async () => {
+    render(
+      <OnboardingProvider flowId="dashboard" flowCompleted={true}>
+        <TestConsumer />
+      </OnboardingProvider>
+    );
+
+    // Start the tour
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("start-tour"));
+    });
+
+    expect(screen.getByTestId("current-step")).toHaveTextContent("0");
+
+    // Click the Next button in TourCard
+    const nextButton = screen.getByRole("button", { name: /next/i });
+    await act(async () => {
+      fireEvent.click(nextButton);
+    });
+
+    expect(screen.getByTestId("current-step")).toHaveTextContent("1");
+  });
+
+  it("goes back to previous step when Back button is clicked", async () => {
+    render(
+      <OnboardingProvider flowId="dashboard" flowCompleted={true}>
+        <TestConsumer />
+      </OnboardingProvider>
+    );
+
+    // Start the tour
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("start-tour"));
+    });
+
+    // Advance to step 1
+    const nextButton = screen.getByRole("button", { name: /next/i });
+    await act(async () => {
+      fireEvent.click(nextButton);
+    });
+
+    expect(screen.getByTestId("current-step")).toHaveTextContent("1");
+
+    // Go back
+    const backButton = screen.getByRole("button", { name: /back/i });
+    await act(async () => {
+      fireEvent.click(backButton);
+    });
+
+    expect(screen.getByTestId("current-step")).toHaveTextContent("0");
+  });
+
+  it("does not show Back button on first step", async () => {
+    render(
+      <OnboardingProvider flowId="dashboard" flowCompleted={true}>
+        <TestConsumer />
+      </OnboardingProvider>
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("start-tour"));
+    });
+
+    // At step 0, back button should not exist
+    expect(
+      screen.queryByRole("button", { name: /back/i })
+    ).not.toBeInTheDocument();
+  });
+});
+
+describe("API calls", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockFetch.mockResolvedValue({ ok: true, json: () => Promise.resolve({}) });
+    setupTourTargets();
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    cleanupTourTargets();
+    vi.useRealTimers();
+  });
+
+  it("calls /api/onboarding/complete with correct payload when tour finishes", async () => {
+    // Filter steps for desktop (no desktopOnly filtering when useIsMobile returns false)
+    const steps = dashboardSteps;
+
+    render(
+      <OnboardingProvider flowId="dashboard" flowCompleted={true}>
+        <TestConsumer />
+      </OnboardingProvider>
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("start-tour"));
+    });
+
+    // Navigate through all steps
+    for (let i = 0; i < steps.length; i++) {
+      const isLastStep = i === steps.length - 1;
+      const buttonText = isLastStep ? /get started/i : /next/i;
+      const button = screen.getByRole("button", { name: buttonText });
+      await act(async () => {
+        fireEvent.click(button);
+      });
+    }
+
+    expect(mockFetch).toHaveBeenCalledWith("/api/onboarding/complete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ flowId: "dashboard" }),
+    });
+  });
+
+  it("calls /api/onboarding/skip with correct payload when tour is closed", async () => {
+    render(
+      <OnboardingProvider flowId="dashboard" flowCompleted={true}>
+        <TestConsumer />
+      </OnboardingProvider>
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("start-tour"));
+    });
+
+    // Find and click the close button (X icon)
+    const closeButton = screen.getByRole("button", { name: "" });
+    await act(async () => {
+      fireEvent.click(closeButton);
+    });
+
+    expect(mockFetch).toHaveBeenCalledWith("/api/onboarding/skip", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ flowId: "dashboard" }),
+    });
+  });
+});
+
+describe("mobile step filtering", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockFetch.mockResolvedValue({ ok: true, json: () => Promise.resolve({}) });
+    setupTourTargets();
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    cleanupTourTargets();
+    vi.useRealTimers();
+    // Reset mock to default
+    vi.mocked(useIsMobile).mockReturnValue(false);
+  });
+
+  it("filters out desktopOnly steps on mobile", async () => {
+    // Mock mobile
+    vi.mocked(useIsMobile).mockReturnValue(true);
+
+    render(
+      <OnboardingProvider flowId="dashboard" flowCompleted={true}>
+        <TestConsumer />
+      </OnboardingProvider>
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("start-tour"));
+    });
+
+    // The tour card should show total steps excluding desktopOnly
+    const mobileStepCount = dashboardSteps.filter((s) => !s.desktopOnly).length;
+    const stepIndicator = screen.getByText(new RegExp(`of ${mobileStepCount}`));
+    expect(stepIndicator).toBeInTheDocument();
+  });
+
+  it("includes all steps on desktop", async () => {
+    vi.mocked(useIsMobile).mockReturnValue(false);
+
+    render(
+      <OnboardingProvider flowId="dashboard" flowCompleted={true}>
+        <TestConsumer />
+      </OnboardingProvider>
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("start-tour"));
+    });
+
+    const stepIndicator = screen.getByText(
+      new RegExp(`of ${dashboardSteps.length}`)
+    );
+    expect(stepIndicator).toBeInTheDocument();
+  });
+});
+
+describe("error handling", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    setupTourTargets();
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    cleanupTourTargets();
+    vi.useRealTimers();
+  });
+
+  it("shows toast when API returns error on completion", async () => {
+    const { toast } = await import("sonner");
+    mockFetch.mockResolvedValue({ ok: false, status: 500 });
+
+    const steps = dashboardSteps;
+
+    render(
+      <OnboardingProvider flowId="dashboard" flowCompleted={true}>
+        <TestConsumer />
+      </OnboardingProvider>
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("start-tour"));
+    });
+
+    // Navigate through all steps to trigger completion
+    for (let i = 0; i < steps.length; i++) {
+      const isLastStep = i === steps.length - 1;
+      const buttonText = isLastStep ? /get started/i : /next/i;
+      const button = screen.getByRole("button", { name: buttonText });
+      await act(async () => {
+        fireEvent.click(button);
+      });
+    }
+
+    expect(toast.error).toHaveBeenCalledWith(
+      expect.stringContaining("Failed to save tour completion")
+    );
+  });
+
+  it("shows toast when network error occurs on completion", async () => {
+    const { toast } = await import("sonner");
+    mockFetch.mockRejectedValue(new Error("Network error"));
+
+    const steps = dashboardSteps;
+
+    render(
+      <OnboardingProvider flowId="dashboard" flowCompleted={true}>
+        <TestConsumer />
+      </OnboardingProvider>
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("start-tour"));
+    });
+
+    // Navigate through all steps
+    for (let i = 0; i < steps.length; i++) {
+      const isLastStep = i === steps.length - 1;
+      const buttonText = isLastStep ? /get started/i : /next/i;
+      const button = screen.getByRole("button", { name: buttonText });
+      await act(async () => {
+        fireEvent.click(button);
+      });
+    }
+
+    expect(toast.error).toHaveBeenCalledWith(
+      expect.stringContaining("Network error")
+    );
+  });
+
+  it("does not show toast when skip API fails (silent failure)", async () => {
+    const { toast } = await import("sonner");
+    mockFetch.mockResolvedValue({ ok: false, status: 500 });
+
+    render(
+      <OnboardingProvider flowId="dashboard" flowCompleted={true}>
+        <TestConsumer />
+      </OnboardingProvider>
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("start-tour"));
+    });
+
+    // Close the tour (triggers skip API)
+    const closeButton = screen.getByRole("button", { name: "" });
+    await act(async () => {
+      fireEvent.click(closeButton);
+    });
+
+    // Toast should NOT be called for skip failures
+    expect(toast.error).not.toHaveBeenCalled();
   });
 });

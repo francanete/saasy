@@ -56,7 +56,10 @@ export default async function DashboardLayout({
   }
 
   return (
-    <OnboardingProvider flowId="dashboard" flowCompleted={dashboardFlowCompleted}>
+    <OnboardingProvider
+      flowId="dashboard"
+      flowCompleted={dashboardFlowCompleted}
+    >
       <SidebarProvider>
         <Suspense fallback={null}>
           <CheckoutSuccessToast />

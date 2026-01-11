@@ -225,7 +225,10 @@ export const onboardingFlows = pgTable(
       .$onUpdate(() => new Date()),
   },
   (table) => [
-    uniqueIndex("onboarding_flows_user_flow_idx").on(table.userId, table.flowId),
+    uniqueIndex("onboarding_flows_user_flow_idx").on(
+      table.userId,
+      table.flowId
+    ),
     index("onboarding_flows_user_id_idx").on(table.userId),
   ]
 );
@@ -315,12 +318,15 @@ export const aiUsageRelations = relations(aiUsage, ({ one }) => ({
   }),
 }));
 
-export const onboardingFlowsRelations = relations(onboardingFlows, ({ one }) => ({
-  user: one(users, {
-    fields: [onboardingFlows.userId],
-    references: [users.id],
-  }),
-}));
+export const onboardingFlowsRelations = relations(
+  onboardingFlows,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [onboardingFlows.userId],
+      references: [users.id],
+    }),
+  })
+);
 
 export const tierConfigsRelations = relations(tierConfigs, ({ many }) => ({
   rateLimits: many(featureRateLimits),
