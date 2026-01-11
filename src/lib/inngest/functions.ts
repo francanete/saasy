@@ -1,9 +1,13 @@
 import { inngest } from "./client";
 import { db, users, subscriptions } from "@/lib/db";
-import { eq } from "drizzle-orm";
+import { eq, and, gte, lt } from "drizzle-orm";
 import { sendAccountSetupEmail } from "@/lib/email";
-import { sendSequenceEmail } from "@/lib/email-sequences";
+import {
+  sendSequenceEmail,
+  sendTransactionalEmail,
+} from "@/lib/email-sequences";
 import { syncWithPolar } from "@/lib/subscription";
+import { appConfig, type PaidTier } from "@/lib/config";
 
 // ============ Constants ============
 
@@ -190,8 +194,169 @@ export const paidSignupEmailJob = inngest.createFunction(
   }
 );
 
+// ============ Trial Ending Reminder ============
+
+/**
+ * Helper to format price from cents to display string
+ */
+function formatPrice(cents: number, interval: "monthly" | "annual"): string {
+  const dollars = (cents / 100).toFixed(cents % 100 === 0 ? 0 : 2);
+  return interval === "monthly" ? `$${dollars}/month` : `$${dollars}/year`;
+}
+
+/**
+ * Helper to format date for email display
+ */
+function formatDate(date: Date): string {
+  return date.toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
+// Trial ending reminder: sends 24 hours before trial ends
+export const trialEndingReminderJob = inngest.createFunction(
+  { id: "trial-ending-reminder" },
+  { cron: "0 9 * * *" }, // Every day at 9 AM UTC
+  async ({ step }) => {
+    // Step 1: Find trials ending in 24-48 hours
+    const trialsEndingSoon = await step.run("fetch-trials", async () => {
+      const now = new Date();
+      const windowStart = new Date(now.getTime() + 24 * 60 * 60 * 1000); // +24h
+      const windowEnd = new Date(now.getTime() + 48 * 60 * 60 * 1000); // +48h
+
+      return db
+        .select({
+          userId: subscriptions.userId,
+          plan: subscriptions.plan,
+          currentPeriodEnd: subscriptions.currentPeriodEnd,
+        })
+        .from(subscriptions)
+        .where(
+          and(
+            eq(subscriptions.status, "TRIALING"),
+            eq(subscriptions.billingType, "recurring"),
+            gte(subscriptions.currentPeriodEnd, windowStart),
+            lt(subscriptions.currentPeriodEnd, windowEnd)
+          )
+        );
+    });
+
+    if (trialsEndingSoon.length === 0) {
+      return {
+        sent: 0,
+        skipped: 0,
+        errors: 0,
+        message: "No trials ending soon",
+      };
+    }
+
+    // Step 2: Process in batches
+    const batches = chunkArray(trialsEndingSoon, BATCH_SIZE);
+    let sent = 0;
+    let skipped = 0;
+    let errors = 0;
+
+    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+      const batch = batches[batchIndex];
+
+      const batchResult = await step.run(
+        `send-batch-${batchIndex}`,
+        async () => {
+          let batchSent = 0;
+          let batchSkipped = 0;
+          let batchErrors = 0;
+
+          for (const trial of batch) {
+            try {
+              // Get user details
+              const [user] = await db
+                .select({ email: users.email, name: users.name })
+                .from(users)
+                .where(eq(users.id, trial.userId))
+                .limit(1);
+
+              if (!user) {
+                batchSkipped++;
+                continue;
+              }
+
+              // Get plan display name and price
+              const planKey = trial.plan as PaidTier;
+              const tierConfig = appConfig.pricing.tiers[planKey];
+              const planName = tierConfig?.marketing.name || trial.plan;
+              // Default to monthly price for trial notifications
+              const price = tierConfig
+                ? formatPrice(tierConfig.prices.monthly, "monthly")
+                : "your subscription price";
+
+              const endDate = trial.currentPeriodEnd
+                ? formatDate(new Date(trial.currentPeriodEnd))
+                : "soon";
+
+              // Send transactional email
+              const result = await sendTransactionalEmail({
+                userId: trial.userId,
+                email: user.email,
+                name: user.name,
+                emailKey: "trial_ending_24h",
+                templateData: {
+                  planName,
+                  endDate,
+                  price,
+                },
+              });
+
+              if (result.sent) {
+                batchSent++;
+              } else {
+                batchSkipped++;
+              }
+            } catch (error) {
+              console.error(
+                `Failed to send trial ending email for user ${trial.userId}:`,
+                error
+              );
+              batchErrors++;
+            }
+
+            // Rate limit: delay between each user
+            await delay(DELAY_BETWEEN_USERS_MS);
+          }
+
+          return {
+            sent: batchSent,
+            skipped: batchSkipped,
+            errors: batchErrors,
+          };
+        }
+      );
+
+      sent += batchResult.sent;
+      skipped += batchResult.skipped;
+      errors += batchResult.errors;
+
+      // Pause between batches (except after last batch)
+      if (batchIndex < batches.length - 1) {
+        await step.sleep("batch-cooldown", DELAY_BETWEEN_BATCHES_MS);
+      }
+    }
+
+    return {
+      total: trialsEndingSoon.length,
+      sent,
+      skipped,
+      errors,
+      batches: batches.length,
+    };
+  }
+);
+
 export const functions = [
   welcomeSequenceJob,
   syncAllSubscriptions,
   paidSignupEmailJob,
+  trialEndingReminderJob,
 ];

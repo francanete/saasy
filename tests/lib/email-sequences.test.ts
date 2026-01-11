@@ -38,7 +38,10 @@ vi.mock("@/lib/config", () => ({
 }));
 
 // Import after mocks are set up
-import { sendSequenceEmail } from "@/lib/email-sequences";
+import {
+  sendSequenceEmail,
+  sendTransactionalEmail,
+} from "@/lib/email-sequences";
 
 // ============ Test Suite ============
 
@@ -166,6 +169,158 @@ describe("sendSequenceEmail", () => {
       });
 
       expect(result.sent).toBe(false);
+    });
+  });
+});
+
+// ============ Transactional Email Tests ============
+
+describe("sendTransactionalEmail", () => {
+  const defaultParams = {
+    userId: "user-123",
+    email: "test@example.com",
+    name: "Test User",
+    emailKey: "trial_ending_24h",
+    templateData: {
+      planName: "Starter",
+      endDate: "January 15, 2025",
+      price: "$9/month",
+    },
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    process.env.NEXT_PUBLIC_APP_URL = "https://testapp.com";
+  });
+
+  describe("idempotency checks", () => {
+    it("returns already_sent when email was previously sent", async () => {
+      mockFindFirstEmailsSent.mockResolvedValue({
+        id: "email-1",
+        userId: "user-123",
+        emailKey: "trial_ending_24h",
+      });
+
+      const result = await sendTransactionalEmail(defaultParams);
+
+      expect(result).toEqual({ sent: false, reason: "already_sent" });
+      expect(mockSendEmail).not.toHaveBeenCalled();
+    });
+
+    it("proceeds when no previous email exists", async () => {
+      mockFindFirstEmailsSent.mockResolvedValue(null);
+      mockFindFirstUsers.mockResolvedValue({ id: "user-123" });
+
+      await sendTransactionalEmail(defaultParams);
+
+      expect(mockSendEmail).toHaveBeenCalled();
+    });
+  });
+
+  describe("user validation", () => {
+    it("returns user_not_found when user does not exist", async () => {
+      mockFindFirstEmailsSent.mockResolvedValue(null);
+      mockFindFirstUsers.mockResolvedValue(null);
+
+      const result = await sendTransactionalEmail(defaultParams);
+
+      expect(result).toEqual({ sent: false, reason: "user_not_found" });
+      expect(mockSendEmail).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("bypasses marketing unsubscribe", () => {
+    it("sends email even when user has opted out of marketing", async () => {
+      mockFindFirstEmailsSent.mockResolvedValue(null);
+      // Note: For transactional emails, we only check user exists (id)
+      // marketingUnsubscribed is not checked
+      mockFindFirstUsers.mockResolvedValue({ id: "user-123" });
+
+      const result = await sendTransactionalEmail(defaultParams);
+
+      expect(result).toEqual({ sent: true });
+      expect(mockSendEmail).toHaveBeenCalled();
+    });
+  });
+
+  describe("successful email sending", () => {
+    it("sends trial ending email with correct subject", async () => {
+      mockFindFirstEmailsSent.mockResolvedValue(null);
+      mockFindFirstUsers.mockResolvedValue({ id: "user-123" });
+
+      const result = await sendTransactionalEmail(defaultParams);
+
+      expect(result).toEqual({ sent: true });
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: "test@example.com",
+          subject: expect.stringContaining("trial ends tomorrow"),
+        })
+      );
+    });
+
+    it("includes plan name in email body", async () => {
+      mockFindFirstEmailsSent.mockResolvedValue(null);
+      mockFindFirstUsers.mockResolvedValue({ id: "user-123" });
+
+      await sendTransactionalEmail(defaultParams);
+
+      const emailCall = mockSendEmail.mock.calls[0][0];
+      expect(emailCall.html).toContain("Starter");
+    });
+
+    it("includes end date in email body", async () => {
+      mockFindFirstEmailsSent.mockResolvedValue(null);
+      mockFindFirstUsers.mockResolvedValue({ id: "user-123" });
+
+      await sendTransactionalEmail(defaultParams);
+
+      const emailCall = mockSendEmail.mock.calls[0][0];
+      expect(emailCall.html).toContain("January 15, 2025");
+    });
+
+    it("includes price in email body", async () => {
+      mockFindFirstEmailsSent.mockResolvedValue(null);
+      mockFindFirstUsers.mockResolvedValue({ id: "user-123" });
+
+      await sendTransactionalEmail(defaultParams);
+
+      const emailCall = mockSendEmail.mock.calls[0][0];
+      expect(emailCall.html).toContain("$9/month");
+    });
+
+    it("uses fallback name when name is null", async () => {
+      mockFindFirstEmailsSent.mockResolvedValue(null);
+      mockFindFirstUsers.mockResolvedValue({ id: "user-123" });
+
+      await sendTransactionalEmail({ ...defaultParams, name: null });
+
+      const emailCall = mockSendEmail.mock.calls[0][0];
+      expect(emailCall.html).toContain("Hi there");
+    });
+
+    it("records sent email in database", async () => {
+      mockFindFirstEmailsSent.mockResolvedValue(null);
+      mockFindFirstUsers.mockResolvedValue({ id: "user-123" });
+
+      await sendTransactionalEmail(defaultParams);
+
+      expect(mockInsert).toHaveBeenCalled();
+    });
+  });
+
+  describe("template selection", () => {
+    it("returns error for unknown transactional template", async () => {
+      mockFindFirstEmailsSent.mockResolvedValue(null);
+      mockFindFirstUsers.mockResolvedValue({ id: "user-123" });
+      vi.spyOn(console, "error").mockImplementation(() => {});
+
+      const result = await sendTransactionalEmail({
+        ...defaultParams,
+        emailKey: "unknown_transactional_template",
+      });
+
+      expect(result).toEqual({ sent: false, reason: "unknown_template" });
     });
   });
 });
