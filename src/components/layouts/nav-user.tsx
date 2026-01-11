@@ -85,6 +85,7 @@ export function NavUser({
             <SidebarMenuButton
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground group-data-[collapsible=icon]:justify-center"
+              id="tour-nav-user"
             >
               <Avatar className="h-8 w-8 shrink-0 rounded-full">
                 <AvatarImage

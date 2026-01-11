@@ -205,6 +205,34 @@ export const aiUsage = pgTable(
   ]
 );
 
+// ============ Onboarding Flows Table ============
+export const onboardingFlows = pgTable(
+  "onboarding_flows",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    flowId: text("flow_id").notNull(), // "dashboard", "settings", etc.
+    completedAt: timestamp("completed_at"),
+    skippedAt: timestamp("skipped_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    uniqueIndex("onboarding_flows_user_flow_idx").on(
+      table.userId,
+      table.flowId
+    ),
+    index("onboarding_flows_user_id_idx").on(table.userId),
+  ]
+);
+
 // ============ Tier System Tables ============
 export const tierConfigs = pgTable("tier_configs", {
   plan: planEnum("plan").primaryKey(),
@@ -259,6 +287,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
     references: [subscriptions.userId],
   }),
   aiUsage: many(aiUsage),
+  onboardingFlows: many(onboardingFlows),
 }));
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -289,6 +318,16 @@ export const aiUsageRelations = relations(aiUsage, ({ one }) => ({
   }),
 }));
 
+export const onboardingFlowsRelations = relations(
+  onboardingFlows,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [onboardingFlows.userId],
+      references: [users.id],
+    }),
+  })
+);
+
 export const tierConfigsRelations = relations(tierConfigs, ({ many }) => ({
   rateLimits: many(featureRateLimits),
 }));
@@ -315,6 +354,8 @@ export type TierConfig = typeof tierConfigs.$inferSelect;
 export type NewTierConfig = typeof tierConfigs.$inferInsert;
 export type FeatureRateLimit = typeof featureRateLimits.$inferSelect;
 export type NewFeatureRateLimit = typeof featureRateLimits.$inferInsert;
+export type OnboardingFlow = typeof onboardingFlows.$inferSelect;
+export type NewOnboardingFlow = typeof onboardingFlows.$inferInsert;
 export type Plan = "FREE" | "STARTER" | "GROWTH" | "SCALE";
 export type BillingType = "recurring" | "one_time" | "none";
 export type Role = "user" | "admin";

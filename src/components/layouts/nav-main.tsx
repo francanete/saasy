@@ -39,6 +39,7 @@ export function NavMain({ items, label }: NavMainProps) {
                   asChild
                   isActive={isActive}
                   tooltip={item.name}
+                  id={`tour-nav-${item.name.toLowerCase()}`}
                 >
                   <Link href={item.href}>
                     <item.icon />

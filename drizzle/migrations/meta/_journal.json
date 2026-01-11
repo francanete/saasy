@@ -57,6 +57,13 @@
       "when": 1767872858801,
       "tag": "0007_seed-tiers",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1768131584024,
+      "tag": "0008_yummy_viper",
+      "breakpoints": true
     }
   ]
 }
