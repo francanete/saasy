@@ -29,7 +29,8 @@ type SendResult = {
     | "already_sent"
     | "unsubscribed"
     | "user_not_found"
-    | "unknown_template";
+    | "unknown_template"
+    | "missing_template_data";
 };
 
 // ============ Email Templates ============
@@ -318,7 +319,7 @@ export async function sendTransactionalEmail({
     console.error(
       `[Transactional Email] Missing required fields for ${emailKey}: ${missingFields.join(", ")}`
     );
-    return { sent: false, reason: "unknown_template" };
+    return { sent: false, reason: "missing_template_data" };
   }
 
   const { subject, html } = template({

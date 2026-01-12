@@ -75,8 +75,13 @@ export function verifyUnsubscribeToken(token: string): string | null {
 
     return email;
   } catch (error) {
+    // Token parsing errors (malformed base64, etc.) are expected for invalid tokens
+    if (error instanceof TypeError || error instanceof RangeError) {
+      return null;
+    }
+    // Unexpected errors should propagate - don't silently mask system failures
     console.error("[Unsubscribe Token] Unexpected verification error:", error);
-    return null;
+    throw error;
   }
 }
 

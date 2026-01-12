@@ -346,7 +346,7 @@ describe("sendTransactionalEmail", () => {
         templateData: { planName: "Starter" }, // Missing endDate and price
       });
 
-      expect(result).toEqual({ sent: false, reason: "unknown_template" });
+      expect(result).toEqual({ sent: false, reason: "missing_template_data" });
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining("Missing required fields")
       );
