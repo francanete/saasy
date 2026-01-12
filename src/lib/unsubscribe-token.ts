@@ -74,7 +74,8 @@ export function verifyUnsubscribeToken(token: string): string | null {
     }
 
     return email;
-  } catch {
+  } catch (error) {
+    console.error("[Unsubscribe Token] Unexpected verification error:", error);
     return null;
   }
 }

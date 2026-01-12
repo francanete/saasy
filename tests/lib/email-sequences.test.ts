@@ -330,5 +330,29 @@ describe("sendTransactionalEmail", () => {
 
       expect(result).toEqual({ sent: false, reason: "unknown_template" });
     });
+
+    it("returns error when required template fields are missing", async () => {
+      mockFindFirstEmailsSent.mockResolvedValue(null);
+      mockFindFirstUsers.mockResolvedValue({ id: "user-123" });
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+      const result = await sendTransactionalEmail({
+        userId: "user-123",
+        email: "test@example.com",
+        name: "Test User",
+        emailKey: "trial_ending_24h",
+        templateData: { planName: "Starter" }, // Missing endDate and price
+      });
+
+      expect(result).toEqual({ sent: false, reason: "unknown_template" });
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Missing required fields")
+      );
+      expect(mockSendEmail).not.toHaveBeenCalled();
+
+      consoleSpy.mockRestore();
+    });
   });
 });

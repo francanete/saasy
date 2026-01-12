@@ -163,6 +163,14 @@ const transactionalTemplates = {
   }),
 };
 
+// Required fields for each transactional template
+const transactionalTemplateRequiredFields: Record<
+  keyof typeof transactionalTemplates,
+  string[]
+> = {
+  trial_ending_24h: ["planName", "endDate", "price"],
+};
+
 // ============ Helper Function ============
 
 /**
@@ -299,6 +307,17 @@ export async function sendTransactionalEmail({
 
   if (!template) {
     console.error(`[Transactional Email] Unknown template: ${emailKey}`);
+    return { sent: false, reason: "unknown_template" };
+  }
+
+  // Validate required template fields before sending
+  const requiredFields = transactionalTemplateRequiredFields[templateKey];
+  const missingFields = requiredFields.filter((field) => !templateData[field]);
+
+  if (missingFields.length > 0) {
+    console.error(
+      `[Transactional Email] Missing required fields for ${emailKey}: ${missingFields.join(", ")}`
+    );
     return { sent: false, reason: "unknown_template" };
   }
 
