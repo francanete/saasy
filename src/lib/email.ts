@@ -8,9 +8,18 @@ interface SendEmailOptions {
 }
 
 export async function sendEmail({ to, subject, html, from }: SendEmailOptions) {
-  // Skip sending if no API key (development without Resend)
+  // Check for missing API key with environment-aware handling
   if (!process.env.RESEND_API_KEY) {
-    console.log("[Email] Skipping send (no RESEND_API_KEY):", { to, subject });
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "[Email] RESEND_API_KEY is not configured. Cannot send emails in production."
+      );
+    }
+    // Development: log and return fake ID
+    console.log("[Email] Skipping send (no RESEND_API_KEY - dev mode):", {
+      to,
+      subject,
+    });
     return { id: "dev-mode" };
   }
 
@@ -31,19 +40,6 @@ export async function sendEmail({ to, subject, html, from }: SendEmailOptions) {
   }
 
   return data;
-}
-
-// Pre-built templates
-export async function sendWelcomeEmail(email: string, name: string) {
-  return sendEmail({
-    to: email,
-    subject: `Welcome to ${appConfig.name}!`,
-    html: `
-      <h1>Welcome, ${name}!</h1>
-      <p>Thanks for signing up. We're excited to have you!</p>
-      <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard">Go to Dashboard</a></p>
-    `,
-  });
 }
 
 /**

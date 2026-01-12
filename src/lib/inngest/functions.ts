@@ -1,8 +1,27 @@
 import { inngest } from "./client";
 import { db, users, subscriptions } from "@/lib/db";
-import { eq } from "drizzle-orm";
-import { sendWelcomeEmail, sendAccountSetupEmail } from "@/lib/email";
+import { eq, and, gte, lt } from "drizzle-orm";
+import { sendAccountSetupEmail } from "@/lib/email";
+import {
+  sendSequenceEmail,
+  sendTransactionalEmail,
+} from "@/lib/email-sequences";
 import { syncWithPolar } from "@/lib/subscription";
+import { appConfig, type PaidTier } from "@/lib/config";
+import { z } from "zod";
+
+// ============ Event Schemas ============
+
+const userCreatedEventSchema = z.object({
+  userId: z.string().min(1, "userId is required"),
+  email: z.string().email("Invalid email format"),
+});
+
+const paidSignupEventSchema = z.object({
+  userId: z.string().min(1, "userId is required"),
+  email: z.string().email("Invalid email format"),
+  name: z.string().nullable(),
+});
 
 // ============ Constants ============
 
@@ -11,37 +30,90 @@ const DELAY_BETWEEN_USERS_MS = 200; // ~5 requests/second
 const DELAY_BETWEEN_BATCHES_MS = 5000; // 5 second pause between batches
 const RATE_LIMIT_RETRY_DELAY_MS = 5000; // Wait 5s before retry on rate limit
 
+// ============ Helpers ============
+
+function chunkArray<T>(array: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < array.length; i += size) {
+    chunks.push(array.slice(i, i + size));
+  }
+  return chunks;
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 // ============ Jobs ============
 
-// Welcome email + FREE subscription after signup
-export const welcomeEmailJob = inngest.createFunction(
-  { id: "send-welcome-email" },
+// Welcome sequence: instant email + day 3 follow-up
+export const welcomeSequenceJob = inngest.createFunction(
+  { id: "welcome-sequence" },
   { event: "user/created" },
-  async ({ event }) => {
-    const { userId, email } = event.data;
+  async ({ event, step }) => {
+    // Validate event data
+    const parseResult = userCreatedEventSchema.safeParse(event.data);
+    if (!parseResult.success) {
+      console.error(
+        "[welcome-sequence] Invalid event data:",
+        parseResult.error.flatten()
+      );
+      throw new Error(
+        `Invalid event data: ${parseResult.error.issues.map((i) => i.message).join(", ")}`
+      );
+    }
+    const { userId, email } = parseResult.data;
 
-    // Create default FREE subscription for new user
-    await db
-      .insert(subscriptions)
-      .values({
+    // Step 1: Create default FREE subscription for new user
+    await step.run("create-subscription", async () => {
+      await db
+        .insert(subscriptions)
+        .values({
+          userId,
+          plan: "FREE",
+          status: "ACTIVE",
+          billingType: "none",
+        })
+        .onConflictDoNothing(); // In case webhook already created one
+    });
+
+    // Step 2: Get user name for emails
+    const user = await step.run("get-user", async () => {
+      const [u] = await db
+        .select({ name: users.name })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+      return u;
+    });
+
+    // Step 3: Send instant welcome email
+    const result1 = await step.run("send-welcome-instant", async () => {
+      return sendSequenceEmail({
         userId,
-        plan: "FREE",
-        status: "ACTIVE",
-        billingType: "none",
-      })
-      .onConflictDoNothing(); // In case webhook already created one
+        email,
+        name: user?.name || null,
+        emailKey: "welcome_instant",
+      });
+    });
 
-    // Get user name for email
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1);
+    // Step 4: Wait 3 days
+    await step.sleep("wait-day-3", "3d");
 
-    // Send welcome email
-    await sendWelcomeEmail(email, user?.name || "there");
+    // Step 5: Send day 3 follow-up email
+    const result2 = await step.run("send-welcome-day3", async () => {
+      return sendSequenceEmail({
+        userId,
+        email,
+        name: user?.name || null,
+        emailKey: "welcome_day3",
+      });
+    });
 
-    return { sent: true, subscriptionCreated: true };
+    return {
+      email1: result1,
+      email2: result2,
+    };
   }
 );
 
@@ -56,10 +128,7 @@ export const syncAllSubscriptions = inngest.createFunction(
     });
 
     // Split into batches
-    const batches: { userId: string }[][] = [];
-    for (let i = 0; i < allUsers.length; i += BATCH_SIZE) {
-      batches.push(allUsers.slice(i, i + BATCH_SIZE));
-    }
+    const batches = chunkArray(allUsers, BATCH_SIZE);
 
     let synced = 0;
     let errors = 0;
@@ -84,9 +153,7 @@ export const syncAllSubscriptions = inngest.createFunction(
 
               // Retry once on rate limit (429)
               if (apiError.status === 429) {
-                await new Promise((r) =>
-                  setTimeout(r, RATE_LIMIT_RETRY_DELAY_MS)
-                );
+                await delay(RATE_LIMIT_RETRY_DELAY_MS);
                 try {
                   await syncWithPolar(user.userId);
                   batchSynced++;
@@ -104,7 +171,7 @@ export const syncAllSubscriptions = inngest.createFunction(
             }
 
             // Rate limit: delay between each user
-            await new Promise((r) => setTimeout(r, DELAY_BETWEEN_USERS_MS));
+            await delay(DELAY_BETWEEN_USERS_MS);
           }
 
           return { synced: batchSynced, errors: batchErrors };
@@ -134,7 +201,18 @@ export const paidSignupEmailJob = inngest.createFunction(
   { id: "send-paid-signup-email" },
   { event: "user/paid-signup" },
   async ({ event, step }) => {
-    const { userId, email, name } = event.data;
+    // Validate event data
+    const parseResult = paidSignupEventSchema.safeParse(event.data);
+    if (!parseResult.success) {
+      console.error(
+        "[send-paid-signup-email] Invalid event data:",
+        parseResult.error.flatten()
+      );
+      throw new Error(
+        `Invalid event data: ${parseResult.error.issues.map((i) => i.message).join(", ")}`
+      );
+    }
+    const { userId, email, name } = parseResult.data;
 
     // Wait briefly for subscription to be created by webhook
     await step.sleep("wait-for-webhook", "1s");
@@ -152,8 +230,169 @@ export const paidSignupEmailJob = inngest.createFunction(
   }
 );
 
+// ============ Trial Ending Reminder ============
+
+/**
+ * Helper to format price from cents to display string
+ */
+function formatPrice(cents: number, interval: "monthly" | "annual"): string {
+  const dollars = (cents / 100).toFixed(cents % 100 === 0 ? 0 : 2);
+  return interval === "monthly" ? `$${dollars}/month` : `$${dollars}/year`;
+}
+
+/**
+ * Helper to format date for email display
+ */
+function formatDate(date: Date): string {
+  return date.toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
+// Trial ending reminder: sends 24 hours before trial ends
+export const trialEndingReminderJob = inngest.createFunction(
+  { id: "trial-ending-reminder" },
+  { cron: "0 9 * * *" }, // Every day at 9 AM UTC
+  async ({ step }) => {
+    // Step 1: Find trials ending in 24-48 hours
+    const trialsEndingSoon = await step.run("fetch-trials", async () => {
+      const now = new Date();
+      const windowStart = new Date(now.getTime() + 24 * 60 * 60 * 1000); // +24h
+      const windowEnd = new Date(now.getTime() + 48 * 60 * 60 * 1000); // +48h
+
+      return db
+        .select({
+          userId: subscriptions.userId,
+          plan: subscriptions.plan,
+          currentPeriodEnd: subscriptions.currentPeriodEnd,
+        })
+        .from(subscriptions)
+        .where(
+          and(
+            eq(subscriptions.status, "TRIALING"),
+            eq(subscriptions.billingType, "recurring"),
+            gte(subscriptions.currentPeriodEnd, windowStart),
+            lt(subscriptions.currentPeriodEnd, windowEnd)
+          )
+        );
+    });
+
+    if (trialsEndingSoon.length === 0) {
+      return {
+        sent: 0,
+        skipped: 0,
+        errors: 0,
+        message: "No trials ending soon",
+      };
+    }
+
+    // Step 2: Process in batches
+    const batches = chunkArray(trialsEndingSoon, BATCH_SIZE);
+    let sent = 0;
+    let skipped = 0;
+    let errors = 0;
+
+    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+      const batch = batches[batchIndex];
+
+      const batchResult = await step.run(
+        `send-batch-${batchIndex}`,
+        async () => {
+          let batchSent = 0;
+          let batchSkipped = 0;
+          let batchErrors = 0;
+
+          for (const trial of batch) {
+            try {
+              // Get user details
+              const [user] = await db
+                .select({ email: users.email, name: users.name })
+                .from(users)
+                .where(eq(users.id, trial.userId))
+                .limit(1);
+
+              if (!user) {
+                batchSkipped++;
+                continue;
+              }
+
+              // Get plan display name and price
+              const planKey = trial.plan as PaidTier;
+              const tierConfig = appConfig.pricing.tiers[planKey];
+              const planName = tierConfig?.marketing.name || trial.plan;
+              // Default to monthly price for trial notifications
+              const price = tierConfig
+                ? formatPrice(tierConfig.prices.monthly, "monthly")
+                : "your subscription price";
+
+              const endDate = trial.currentPeriodEnd
+                ? formatDate(new Date(trial.currentPeriodEnd))
+                : "soon";
+
+              // Send transactional email
+              const result = await sendTransactionalEmail({
+                userId: trial.userId,
+                email: user.email,
+                name: user.name,
+                emailKey: "trial_ending_24h",
+                templateData: {
+                  planName,
+                  endDate,
+                  price,
+                },
+              });
+
+              if (result.sent) {
+                batchSent++;
+              } else {
+                batchSkipped++;
+              }
+            } catch (error) {
+              console.error(
+                `Failed to send trial ending email for user ${trial.userId}:`,
+                error
+              );
+              batchErrors++;
+            }
+
+            // Rate limit: delay between each user
+            await delay(DELAY_BETWEEN_USERS_MS);
+          }
+
+          return {
+            sent: batchSent,
+            skipped: batchSkipped,
+            errors: batchErrors,
+          };
+        }
+      );
+
+      sent += batchResult.sent;
+      skipped += batchResult.skipped;
+      errors += batchResult.errors;
+
+      // Pause between batches (except after last batch)
+      if (batchIndex < batches.length - 1) {
+        await step.sleep("batch-cooldown", DELAY_BETWEEN_BATCHES_MS);
+      }
+    }
+
+    return {
+      total: trialsEndingSoon.length,
+      sent,
+      skipped,
+      errors,
+      batches: batches.length,
+    };
+  }
+);
+
 export const functions = [
-  welcomeEmailJob,
+  welcomeSequenceJob,
   syncAllSubscriptions,
   paidSignupEmailJob,
+  trialEndingReminderJob,
 ];
