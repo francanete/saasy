@@ -19,9 +19,8 @@ describe("unsubscribe-token", () => {
 
   describe("generateUnsubscribeToken", () => {
     it("generates a valid base64url token", async () => {
-      const { generateUnsubscribeToken } = await import(
-        "@/lib/unsubscribe-token"
-      );
+      const { generateUnsubscribeToken } =
+        await import("@/lib/unsubscribe-token");
 
       const token = generateUnsubscribeToken("test@example.com");
 
@@ -32,9 +31,8 @@ describe("unsubscribe-token", () => {
     });
 
     it("generates different tokens for different emails", async () => {
-      const { generateUnsubscribeToken } = await import(
-        "@/lib/unsubscribe-token"
-      );
+      const { generateUnsubscribeToken } =
+        await import("@/lib/unsubscribe-token");
 
       const token1 = generateUnsubscribeToken("user1@example.com");
       const token2 = generateUnsubscribeToken("user2@example.com");
@@ -46,9 +44,8 @@ describe("unsubscribe-token", () => {
       delete process.env.BETTER_AUTH_SECRET;
       vi.resetModules();
 
-      const { generateUnsubscribeToken } = await import(
-        "@/lib/unsubscribe-token"
-      );
+      const { generateUnsubscribeToken } =
+        await import("@/lib/unsubscribe-token");
 
       expect(() => generateUnsubscribeToken("test@example.com")).toThrow(
         "BETTER_AUTH_SECRET must be set"
@@ -58,9 +55,8 @@ describe("unsubscribe-token", () => {
 
   describe("verifyUnsubscribeToken", () => {
     it("returns email for valid token", async () => {
-      const { generateUnsubscribeToken, verifyUnsubscribeToken } = await import(
-        "@/lib/unsubscribe-token"
-      );
+      const { generateUnsubscribeToken, verifyUnsubscribeToken } =
+        await import("@/lib/unsubscribe-token");
 
       const email = "test@example.com";
       const token = generateUnsubscribeToken(email);
@@ -70,9 +66,8 @@ describe("unsubscribe-token", () => {
     });
 
     it("returns null for expired token", async () => {
-      const { verifyUnsubscribeToken } = await import(
-        "@/lib/unsubscribe-token"
-      );
+      const { verifyUnsubscribeToken } =
+        await import("@/lib/unsubscribe-token");
 
       // Manually create an expired token (expiry in the past)
       const crypto = await import("crypto");
@@ -93,9 +88,8 @@ describe("unsubscribe-token", () => {
     });
 
     it("returns null for tampered token", async () => {
-      const { generateUnsubscribeToken, verifyUnsubscribeToken } = await import(
-        "@/lib/unsubscribe-token"
-      );
+      const { generateUnsubscribeToken, verifyUnsubscribeToken } =
+        await import("@/lib/unsubscribe-token");
 
       const token = generateUnsubscribeToken("test@example.com");
       // Decode, modify, and re-encode
@@ -110,13 +104,11 @@ describe("unsubscribe-token", () => {
     });
 
     it("returns null for malformed token (wrong format)", async () => {
-      const { verifyUnsubscribeToken } = await import(
-        "@/lib/unsubscribe-token"
-      );
+      const { verifyUnsubscribeToken } =
+        await import("@/lib/unsubscribe-token");
 
-      const malformedToken = Buffer.from("just-some-garbage").toString(
-        "base64url"
-      );
+      const malformedToken =
+        Buffer.from("just-some-garbage").toString("base64url");
 
       const result = verifyUnsubscribeToken(malformedToken);
 
@@ -124,9 +116,8 @@ describe("unsubscribe-token", () => {
     });
 
     it("returns null for invalid base64 token", async () => {
-      const { verifyUnsubscribeToken } = await import(
-        "@/lib/unsubscribe-token"
-      );
+      const { verifyUnsubscribeToken } =
+        await import("@/lib/unsubscribe-token");
 
       const result = verifyUnsubscribeToken("not-base64!!!");
 
@@ -134,9 +125,8 @@ describe("unsubscribe-token", () => {
     });
 
     it("returns null for empty token", async () => {
-      const { verifyUnsubscribeToken } = await import(
-        "@/lib/unsubscribe-token"
-      );
+      const { verifyUnsubscribeToken } =
+        await import("@/lib/unsubscribe-token");
 
       const result = verifyUnsubscribeToken("");
 
@@ -146,9 +136,8 @@ describe("unsubscribe-token", () => {
 
   describe("generateUnsubscribeUrl", () => {
     it("returns full URL with token", async () => {
-      const { generateUnsubscribeUrl, verifyUnsubscribeToken } = await import(
-        "@/lib/unsubscribe-token"
-      );
+      const { generateUnsubscribeUrl, verifyUnsubscribeToken } =
+        await import("@/lib/unsubscribe-token");
 
       const url = generateUnsubscribeUrl("test@example.com");
 
@@ -163,9 +152,8 @@ describe("unsubscribe-token", () => {
 
   describe("security properties", () => {
     it("cannot forge token for different email", async () => {
-      const { generateUnsubscribeToken, verifyUnsubscribeToken } = await import(
-        "@/lib/unsubscribe-token"
-      );
+      const { generateUnsubscribeToken, verifyUnsubscribeToken } =
+        await import("@/lib/unsubscribe-token");
 
       // Generate token for one email
       const token = generateUnsubscribeToken("user@example.com");
@@ -184,9 +172,8 @@ describe("unsubscribe-token", () => {
     });
 
     it("handles special characters in email", async () => {
-      const { generateUnsubscribeToken, verifyUnsubscribeToken } = await import(
-        "@/lib/unsubscribe-token"
-      );
+      const { generateUnsubscribeToken, verifyUnsubscribeToken } =
+        await import("@/lib/unsubscribe-token");
 
       const email = "user+tag@example.com";
       const token = generateUnsubscribeToken(email);
