@@ -8,6 +8,20 @@ import {
 } from "@/lib/email-sequences";
 import { syncWithPolar } from "@/lib/subscription";
 import { appConfig, type PaidTier } from "@/lib/config";
+import { z } from "zod";
+
+// ============ Event Schemas ============
+
+const userCreatedEventSchema = z.object({
+  userId: z.string().min(1, "userId is required"),
+  email: z.string().email("Invalid email format"),
+});
+
+const paidSignupEventSchema = z.object({
+  userId: z.string().min(1, "userId is required"),
+  email: z.string().email("Invalid email format"),
+  name: z.string().nullable(),
+});
 
 // ============ Constants ============
 
@@ -37,7 +51,18 @@ export const welcomeSequenceJob = inngest.createFunction(
   { id: "welcome-sequence" },
   { event: "user/created" },
   async ({ event, step }) => {
-    const { userId, email } = event.data;
+    // Validate event data
+    const parseResult = userCreatedEventSchema.safeParse(event.data);
+    if (!parseResult.success) {
+      console.error(
+        "[welcome-sequence] Invalid event data:",
+        parseResult.error.flatten()
+      );
+      throw new Error(
+        `Invalid event data: ${parseResult.error.issues.map((i) => i.message).join(", ")}`
+      );
+    }
+    const { userId, email } = parseResult.data;
 
     // Step 1: Create default FREE subscription for new user
     await step.run("create-subscription", async () => {
@@ -176,7 +201,18 @@ export const paidSignupEmailJob = inngest.createFunction(
   { id: "send-paid-signup-email" },
   { event: "user/paid-signup" },
   async ({ event, step }) => {
-    const { userId, email, name } = event.data;
+    // Validate event data
+    const parseResult = paidSignupEventSchema.safeParse(event.data);
+    if (!parseResult.success) {
+      console.error(
+        "[send-paid-signup-email] Invalid event data:",
+        parseResult.error.flatten()
+      );
+      throw new Error(
+        `Invalid event data: ${parseResult.error.issues.map((i) => i.message).join(", ")}`
+      );
+    }
+    const { userId, email, name } = parseResult.data;
 
     // Wait briefly for subscription to be created by webhook
     await step.sleep("wait-for-webhook", "1s");

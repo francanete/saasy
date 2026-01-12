@@ -2,30 +2,40 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { verifyUnsubscribeToken } from "@/lib/unsubscribe-token";
 
 /**
- * Unsubscribe a user from marketing emails.
- * GET /api/unsubscribe?email=xxx
+ * Unsubscribe a user from marketing emails using a signed token.
+ * GET /api/unsubscribe?token=xxx
+ *
+ * The token is cryptographically signed and includes the email + expiration,
+ * preventing unauthorized unsubscription attacks.
  */
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
-  const email = searchParams.get("email");
+  const token = searchParams.get("token");
 
-  if (!email) {
+  if (!token) {
     return NextResponse.redirect(
-      new URL("/unsubscribe?error=missing-email", request.url)
+      new URL("/unsubscribe?error=invalid-token", request.url)
     );
   }
 
   try {
-    // Decode email (was URL encoded in the link)
-    const decodedEmail = decodeURIComponent(email);
+    // Verify token and extract email
+    const email = verifyUnsubscribeToken(token);
+
+    if (!email) {
+      return NextResponse.redirect(
+        new URL("/unsubscribe?error=invalid-token", request.url)
+      );
+    }
 
     // Update user's marketing preference
     const result = await db
       .update(users)
       .set({ marketingUnsubscribed: true })
-      .where(eq(users.email, decodedEmail))
+      .where(eq(users.email, email))
       .returning({ id: users.id });
 
     if (result.length === 0) {

@@ -8,9 +8,18 @@ interface SendEmailOptions {
 }
 
 export async function sendEmail({ to, subject, html, from }: SendEmailOptions) {
-  // Skip sending if no API key (development without Resend)
+  // Check for missing API key with environment-aware handling
   if (!process.env.RESEND_API_KEY) {
-    console.log("[Email] Skipping send (no RESEND_API_KEY):", { to, subject });
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "[Email] RESEND_API_KEY is not configured. Cannot send emails in production."
+      );
+    }
+    // Development: log and return fake ID
+    console.log("[Email] Skipping send (no RESEND_API_KEY - dev mode):", {
+      to,
+      subject,
+    });
     return { id: "dev-mode" };
   }
 

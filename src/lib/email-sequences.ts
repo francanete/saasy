@@ -3,6 +3,7 @@ import { users, emailsSent } from "./db/schema";
 import { eq, and } from "drizzle-orm";
 import { sendEmail } from "./email";
 import { appConfig } from "./config";
+import { generateUnsubscribeUrl } from "./unsubscribe-token";
 
 // ============ Types ============
 
@@ -61,7 +62,7 @@ const emailTemplates = {
         </p>
         <hr style="border: none; border-top: 1px solid #eee; margin: 32px 0;" />
         <p style="color: #999; font-size: 12px;">
-          <a href="${process.env.NEXT_PUBLIC_APP_URL}/api/unsubscribe?email={{email}}" style="color: #999;">
+          <a href="{{unsubscribe_url}}" style="color: #999;">
             Unsubscribe from marketing emails
           </a>
         </p>
@@ -93,7 +94,7 @@ const emailTemplates = {
         </p>
         <hr style="border: none; border-top: 1px solid #eee; margin: 32px 0;" />
         <p style="color: #999; font-size: 12px;">
-          <a href="${process.env.NEXT_PUBLIC_APP_URL}/api/unsubscribe?email={{email}}" style="color: #999;">
+          <a href="{{unsubscribe_url}}" style="color: #999;">
             Unsubscribe from marketing emails
           </a>
         </p>
@@ -215,23 +216,42 @@ export async function sendSequenceEmail({
 
   const { subject, html } = template({ name: name || "there" });
 
-  // Replace {{email}} placeholder with actual email for unsubscribe link
-  const htmlWithEmail = html.replace(
-    /\{\{email\}\}/g,
-    encodeURIComponent(email)
+  // Replace {{unsubscribe_url}} placeholder with secure token-based URL
+  const unsubscribeUrl = generateUnsubscribeUrl(email);
+  const htmlWithUnsubscribe = html.replace(
+    /\{\{unsubscribe_url\}\}/g,
+    unsubscribeUrl
   );
 
-  await sendEmail({
-    to: email,
-    subject,
-    html: htmlWithEmail,
-  });
+  // 4. Send email with error handling
+  try {
+    await sendEmail({
+      to: email,
+      subject,
+      html: htmlWithUnsubscribe,
+    });
+  } catch (emailError) {
+    console.error(
+      `[Email Sequence] Failed to send ${emailKey} to ${email}:`,
+      emailError
+    );
+    throw emailError; // Re-throw to let Inngest handle retry
+  }
 
-  // 4. Record that email was sent
-  await db.insert(emailsSent).values({
-    userId,
-    emailKey,
-  });
+  // 5. Record that email was sent
+  try {
+    await db.insert(emailsSent).values({
+      userId,
+      emailKey,
+    });
+  } catch (dbError) {
+    // Email was sent but DB insert failed - log critically
+    // Don't throw since email WAS sent; idempotency check prevents re-send
+    console.error(
+      `[Email Sequence] CRITICAL: Email ${emailKey} sent to ${email} but DB insert failed:`,
+      dbError
+    );
+  }
 
   return { sent: true };
 }
@@ -287,17 +307,35 @@ export async function sendTransactionalEmail({
     ...templateData,
   } as TrialEndingParams);
 
-  await sendEmail({
-    to: email,
-    subject,
-    html,
-  });
+  // 4. Send email with error handling
+  try {
+    await sendEmail({
+      to: email,
+      subject,
+      html,
+    });
+  } catch (emailError) {
+    console.error(
+      `[Transactional Email] Failed to send ${emailKey} to ${email}:`,
+      emailError
+    );
+    throw emailError; // Re-throw to let Inngest handle retry
+  }
 
-  // 4. Record that email was sent
-  await db.insert(emailsSent).values({
-    userId,
-    emailKey,
-  });
+  // 5. Record that email was sent
+  try {
+    await db.insert(emailsSent).values({
+      userId,
+      emailKey,
+    });
+  } catch (dbError) {
+    // Email was sent but DB insert failed - log critically
+    // Don't throw since email WAS sent; idempotency check prevents re-send
+    console.error(
+      `[Transactional Email] CRITICAL: Email ${emailKey} sent to ${email} but DB insert failed:`,
+      dbError
+    );
+  }
 
   return { sent: true };
 }

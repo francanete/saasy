@@ -37,6 +37,11 @@ vi.mock("@/lib/config", () => ({
   appConfig: { name: "TestApp" },
 }));
 
+vi.mock("@/lib/unsubscribe-token", () => ({
+  generateUnsubscribeUrl: (email: string) =>
+    `https://testapp.com/api/unsubscribe?token=mock-token-for-${encodeURIComponent(email)}`,
+}));
+
 // Import after mocks are set up
 import {
   sendSequenceEmail,
@@ -125,15 +130,18 @@ describe("sendSequenceEmail", () => {
       expect(mockInsert).toHaveBeenCalled();
     });
 
-    it("replaces {{email}} placeholder with encoded email in unsubscribe link", async () => {
+    it("replaces {{unsubscribe_url}} placeholder with secure token-based URL", async () => {
       mockFindFirstEmailsSent.mockResolvedValue(null);
       mockFindFirstUsers.mockResolvedValue({ marketingUnsubscribed: false });
 
       await sendSequenceEmail(defaultParams);
 
       const emailCall = mockSendEmail.mock.calls[0][0];
-      expect(emailCall.html).toContain(encodeURIComponent("test@example.com"));
-      expect(emailCall.html).not.toContain("{{email}}");
+      // Should contain the mocked token URL
+      expect(emailCall.html).toContain(
+        "https://testapp.com/api/unsubscribe?token=mock-token-for-"
+      );
+      expect(emailCall.html).not.toContain("{{unsubscribe_url}}");
     });
 
     it("uses fallback name when name is null", async () => {

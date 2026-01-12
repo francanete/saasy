@@ -17,10 +17,11 @@ function getErrorContent(error: string | undefined): {
         title: "Email Not Found",
         message: "We couldn't find an account with that email address.",
       };
-    case "missing-email":
+    case "invalid-token":
       return {
-        title: "Invalid Link",
-        message: "The unsubscribe link appears to be invalid.",
+        title: "Invalid or Expired Link",
+        message:
+          "This unsubscribe link is invalid or has expired. Please use the link from a recent email.",
       };
     default:
       return {
