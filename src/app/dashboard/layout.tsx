@@ -6,7 +6,7 @@ import { eq, and } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { onboardingFlows } from "@/lib/db/schema";
 import { getSubscriptionStatus } from "@/lib/subscription";
-import { isUserAdmin } from "@/lib/dal";
+import { getSubscriptionFromRequest, isUserAdmin } from "@/lib/dal";
 import { appConfig } from "@/lib/config";
 import { TrialBanner } from "@/components/trial-banner";
 import { AppSidebar } from "@/components/layouts/app-sidebar";
@@ -25,6 +25,8 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Session check (uses Better Auth's 5-min cookie cache)
+  // proxy.ts handles redirects, this is a fallback
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -33,9 +35,21 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  // Get subscription status, admin status, and onboarding flow status
-  const [subscription, isAdmin, dashboardOnboarding] = await Promise.all([
-    getSubscriptionStatus(session.user.id),
+  // Read subscription from proxy-injected header (no DB query)
+  // Falls back to DB query if header is missing
+  let subscription = await getSubscriptionFromRequest();
+  if (!subscription) {
+    subscription = await getSubscriptionStatus(session.user.id);
+  }
+
+  // Fallback: If paid access required and user is FREE, redirect to gate
+  // (proxy.ts should handle this, but this is defense-in-depth)
+  if (REQUIRE_PAID_ACCESS && subscription.plan === "FREE") {
+    redirect("/gate");
+  }
+
+  // Get admin status and onboarding flow status
+  const [isAdmin, dashboardOnboarding] = await Promise.all([
     isUserAdmin(session.user.id),
     db.query.onboardingFlows.findFirst({
       where: and(
@@ -49,11 +63,6 @@ export default async function DashboardLayout({
   const dashboardFlowCompleted = !!(
     dashboardOnboarding?.completedAt || dashboardOnboarding?.skippedAt
   );
-
-  // If paid access required and user is on FREE plan, redirect to gate
-  if (REQUIRE_PAID_ACCESS && subscription.plan === "FREE") {
-    redirect("/gate");
-  }
 
   return (
     <OnboardingProvider

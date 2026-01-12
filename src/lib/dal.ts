@@ -46,6 +46,28 @@ export const getCurrentSession = cache(async () => {
   return auth.api.getSession({ headers: await headers() });
 });
 
+/**
+ * Get subscription status from proxy-injected header (no DB query).
+ * Use this in layouts/pages where proxy.ts has already validated and passed subscription data.
+ * Returns null if header is missing (e.g., for routes not covered by proxy).
+ */
+export const getSubscriptionFromRequest = cache(
+  async (): Promise<SubscriptionStatus | null> => {
+    const headersList = await headers();
+    const subscriptionHeader = headersList.get("x-subscription-status");
+
+    if (subscriptionHeader) {
+      try {
+        return JSON.parse(subscriptionHeader) as SubscriptionStatus;
+      } catch {
+        // Invalid header, fall through to return null
+      }
+    }
+
+    return null;
+  }
+);
+
 // ============ Server Action Helper ============
 
 export async function requirePaidAccess(): Promise<{
