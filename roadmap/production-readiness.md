@@ -8,6 +8,7 @@
 ## 🔴 CRITICAL - Must Fix Before Production
 
 ### 1. Legal Compliance Configuration
+
 - [ ] Update company name from placeholder
 - [ ] Add real registration number (UK compliance)
 - [ ] Update registered address
@@ -30,6 +31,7 @@ legal: {
 ---
 
 ### 2. Missing Security Headers
+
 - [ ] Add Content-Security-Policy header
 - [ ] Add X-Frame-Options header
 - [ ] Add Strict-Transport-Security header
@@ -39,30 +41,32 @@ legal: {
 **File:** `next.config.ts`
 
 **Recommended implementation:**
+
 ```typescript
 const securityHeaders = [
   {
-    key: 'X-Frame-Options',
-    value: 'DENY'
+    key: "X-Frame-Options",
+    value: "DENY",
   },
   {
-    key: 'X-Content-Type-Options',
-    value: 'nosniff'
+    key: "X-Content-Type-Options",
+    value: "nosniff",
   },
   {
-    key: 'Referrer-Policy',
-    value: 'strict-origin-when-cross-origin'
+    key: "Referrer-Policy",
+    value: "strict-origin-when-cross-origin",
   },
   {
-    key: 'Strict-Transport-Security',
-    value: 'max-age=63072000; includeSubDomains; preload'
-  }
+    key: "Strict-Transport-Security",
+    value: "max-age=63072000; includeSubDomains; preload",
+  },
 ];
 ```
 
 ---
 
 ### 3. Environment Variable Validation
+
 - [ ] Create startup validation script
 - [ ] Validate `GOOGLE_AI_API_KEY` exists
 - [ ] Validate `POLAR_ACCESS_TOKEN` exists
@@ -80,12 +84,14 @@ const securityHeaders = [
 ---
 
 ### 4. N+1 Query in Background Job
+
 - [ ] Refactor trial reminder to batch query users
 - [ ] Add index if needed for performance
 
 **File:** `src/lib/inngest/functions.ts:308-320`
 
 **Current (inefficient):**
+
 ```typescript
 for (const trial of batch) {
   const [user] = await db
@@ -101,12 +107,14 @@ for (const trial of batch) {
 ## 🟠 HIGH Priority - Fix Before GA
 
 ### 5. Rate Limit Feature Filter Missing
+
 - [ ] Add feature filter to rate limit query
 - [ ] Add test coverage for rate limiting
 
 **File:** `src/lib/rate-limit.ts:60-65`
 
 **Current (bug):**
+
 ```typescript
 const config = await db.query.featureRateLimits.findFirst({
   where: and(
@@ -120,6 +128,7 @@ const config = await db.query.featureRateLimits.findFirst({
 ---
 
 ### 6. Centralized Logging System
+
 - [ ] Choose logging library (Pino recommended)
 - [ ] Create logger utility with levels (debug, info, warn, error)
 - [ ] Add structured log format (JSON)
@@ -127,6 +136,7 @@ const config = await db.query.featureRateLimits.findFirst({
 - [ ] Integrate error tracking (Sentry/LogRocket)
 
 **Files with console.error() to replace:**
+
 - `src/lib/rate-limit.ts`
 - `src/lib/subscription.ts`
 - `src/lib/email-sequences.ts`
@@ -137,6 +147,7 @@ const config = await db.query.featureRateLimits.findFirst({
 ---
 
 ### 7. Test Coverage Improvements
+
 - [ ] Write tests for server actions (`src/actions/`)
 - [ ] Write tests for API routes (`src/app/api/`)
 - [ ] Write tests for DAL (`src/lib/dal.ts`)
@@ -145,22 +156,24 @@ const config = await db.query.featureRateLimits.findFirst({
 
 **Current coverage:** ~22%
 
-| Category | Tested | Total | Priority |
-|----------|--------|-------|----------|
-| Server Actions | 0 | 3 | Critical |
-| API Routes | 0 | 9 | Critical |
-| Components | 2 | 40+ | High |
-| Lib Functions | 12 | 26 | Medium |
+| Category       | Tested | Total | Priority |
+| -------------- | ------ | ----- | -------- |
+| Server Actions | 0      | 3     | Critical |
+| API Routes     | 0      | 9     | Critical |
+| Components     | 2      | 40+   | High     |
+| Lib Functions  | 12     | 26    | Medium   |
 
 ---
 
 ### 8. Health Check Endpoint
+
 - [ ] Create `/api/health` endpoint
 - [ ] Check database connectivity
 - [ ] Return service versions
 - [ ] Add uptime monitoring integration
 
 **Recommended response format:**
+
 ```json
 {
   "status": "healthy",
@@ -177,10 +190,12 @@ const config = await db.query.featureRateLimits.findFirst({
 ---
 
 ### 9. Dashboard Subscription Re-query
+
 - [ ] Use subscription data from proxy headers
 - [ ] Remove redundant database queries
 
 **Files:**
+
 - `src/app/dashboard/page.tsx:13-17`
 - `src/app/dashboard/settings/page.tsx:23-27`
 
@@ -189,6 +204,7 @@ const config = await db.query.featureRateLimits.findFirst({
 ## 🟡 MEDIUM Priority - Polish Before Launch
 
 ### 10. Rate Limiting Fail-Open Behavior
+
 - [ ] Add circuit breaker pattern
 - [ ] Add alerting for DB failures
 - [ ] Consider fallback queue
@@ -205,6 +221,7 @@ const config = await db.query.featureRateLimits.findFirst({
 ---
 
 ### 11. Subscription Status Caching
+
 - [ ] Wrap `getSubscriptionStatus()` with React `cache()`
 - [ ] Add cache invalidation on subscription changes
 
@@ -213,16 +230,19 @@ const config = await db.query.featureRateLimits.findFirst({
 ---
 
 ### 12. SQL Query Anti-Pattern
+
 - [ ] Refactor raw SQL to use Drizzle operators
 
 **File:** `src/lib/ai-usage.ts:58-70`
 
 **Current:**
+
 ```typescript
 .where(sql`${aiUsage.userId} = ${userId} AND ${aiUsage.createdAt} >= ${startDate}`)
 ```
 
 **Better:**
+
 ```typescript
 .where(and(eq(aiUsage.userId, userId), gte(aiUsage.createdAt, startDate)))
 ```
@@ -230,6 +250,7 @@ const config = await db.query.featureRateLimits.findFirst({
 ---
 
 ### 13. Dashboard Error Boundaries
+
 - [ ] Add error boundary for `/dashboard` routes
 - [ ] Add error boundary for `/dashboard/settings`
 - [ ] Add error boundary for `/dashboard/chat`
@@ -240,34 +261,37 @@ const config = await db.query.featureRateLimits.findFirst({
 
 These areas passed the review:
 
-| Area | Status | Notes |
-|------|--------|-------|
-| Authentication | ✅ Strong | Better Auth with CSRF, session caching |
-| Input Validation | ✅ Strong | Zod schemas on all external APIs |
-| SQL Injection | ✅ Protected | Drizzle ORM with parameterized queries |
-| Webhook Security | ✅ Strong | HMAC signature verification |
-| XSS Protection | ✅ Good | Proper escaping in JSON-LD |
-| Secrets Management | ✅ Good | All externalized to env vars |
+| Area               | Status       | Notes                                     |
+| ------------------ | ------------ | ----------------------------------------- |
+| Authentication     | ✅ Strong    | Better Auth with CSRF, session caching    |
+| Input Validation   | ✅ Strong    | Zod schemas on all external APIs          |
+| SQL Injection      | ✅ Protected | Drizzle ORM with parameterized queries    |
+| Webhook Security   | ✅ Strong    | HMAC signature verification               |
+| XSS Protection     | ✅ Good      | Proper escaping in JSON-LD                |
+| Secrets Management | ✅ Good      | All externalized to env vars              |
 | Unsubscribe Tokens | ✅ Excellent | HMAC-SHA256 with constant-time comparison |
-| Database Schema | ✅ Good | Proper indexes and foreign keys |
+| Database Schema    | ✅ Good      | Proper indexes and foreign keys           |
 
 ---
 
 ## 📅 Suggested Timeline
 
 ### Week 1 (Critical Items)
+
 - [ ] Update legal configuration
 - [ ] Add security headers
 - [ ] Create env validation script
 - [ ] Fix N+1 query
 
 ### Week 2 (High Priority)
+
 - [ ] Fix rate limit feature filter
 - [ ] Add health check endpoint
 - [ ] Set up structured logging
 - [ ] Write critical tests
 
 ### Week 3 (Medium Priority)
+
 - [ ] Add subscription caching
 - [ ] Add dashboard error boundaries
 - [ ] Fix SQL query patterns
