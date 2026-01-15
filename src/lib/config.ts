@@ -23,7 +23,59 @@ export type TierConfig = {
   marketing: TierMarketing;
 };
 
-export const appConfig = {
+export type AppConfig = {
+  name: string;
+  description: string;
+  email: { from: string };
+  socials: { twitter: string; github: string; linkedin: string };
+  pricing: {
+    mode: "subscription" | "ltd";
+    allowFreePlan: boolean;
+    tiers: Record<PaidTier, TierConfig>;
+    freeMarketing: TierMarketing;
+    ltdExtraFeatures: string[];
+  };
+  plans: { hierarchy: Record<Plan, number> };
+  legal: {
+    company: {
+      name: string;
+      registrationNumber: string;
+      registeredAddress: string;
+      contactEmail: string;
+    };
+    dataHandling: { subProcessors: string[] };
+    terms: { minimumAge: number; jurisdiction: string };
+    lastUpdated: string;
+  };
+  seo: {
+    siteUrl: string;
+    title: { default: string; template: string };
+    description: string;
+    keywords: string[];
+    openGraph: { type: "website"; locale: string; siteName: string };
+    twitter: { card: "summary_large_image"; site: string; creator: string };
+    organization: { name: string; logo: string; sameAs: string[] };
+    product: {
+      name: string;
+      applicationCategory: string;
+      operatingSystem: string;
+    };
+    verification: { google: string | null };
+    robots: {
+      index: boolean;
+      follow: boolean;
+      googleBot: {
+        index: boolean;
+        follow: boolean;
+        "max-video-preview": number;
+        "max-image-preview": "large";
+        "max-snippet": number;
+      };
+    };
+  };
+};
+
+export const appConfig: AppConfig = {
   name: "Saasy",
   description: "The complete platform for building modern applications.",
   email: {
@@ -40,8 +92,8 @@ export const appConfig = {
     tiers: {
       STARTER: {
         enabled: true,
-        prices: { ltd: 4900, monthly: 900, annual: 9000 },
-        originalPrices: { ltd: 9900, monthly: 900, annual: 19900 },
+        prices: { ltd: 6700, monthly: 2400, annual: 24000 },
+        originalPrices: { ltd: 9900, monthly: 2400, annual: 28800 },
         polarProductIds: {
           ltd: "64e937b4-4da7-4c09-9bd3-f38f440799e1",
           monthly: "64e937b4-4da7-4c09-9bd3-f38f440799e1",

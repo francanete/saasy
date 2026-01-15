@@ -23,19 +23,16 @@ export default async function PricingPage({
   return (
     <>
       <SoftwareApplicationJsonLd />
-      <div className="py-12 sm:py-24">
-        <div className="container">
-          {showSubscriptionMessage && (
-            <div className="mx-auto mb-8 max-w-2xl rounded-lg border border-amber-200 bg-amber-50 p-4 text-center dark:border-amber-800 dark:bg-amber-950">
-              <p className="text-amber-800 dark:text-amber-200">
-                Choose a plan to access the dashboard.
-              </p>
-            </div>
-          )}
-
-          <PricingSection />
+      {showSubscriptionMessage && (
+        <div className="container mx-auto px-4 pt-12 sm:pt-24">
+          <div className="mx-auto max-w-2xl rounded-lg border border-amber-200 bg-amber-50 p-4 text-center dark:border-amber-800 dark:bg-amber-950">
+            <p className="text-amber-800 dark:text-amber-200">
+              Choose a plan to access the dashboard.
+            </p>
+          </div>
         </div>
-      </div>
+      )}
+      <PricingSection />
     </>
   );
 }
