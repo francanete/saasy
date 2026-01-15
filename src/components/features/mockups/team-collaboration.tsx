@@ -167,7 +167,9 @@ export function TeamCollaborationMockup({ className, isInView }: MockupProps) {
                         "border border-slate-100",
                         "px-3 py-2 shadow-sm",
                         "transition-all delay-500 duration-300",
-                        isInView ? "scale-100 opacity-100" : "scale-95 opacity-0"
+                        isInView
+                          ? "scale-100 opacity-100"
+                          : "scale-95 opacity-0"
                       )}
                     >
                       <MessageSquare className="mt-0.5 mr-2 h-3 w-3 shrink-0 text-slate-400" />

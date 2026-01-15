@@ -43,7 +43,7 @@ export function TestimonialCard({
       <blockquote className="relative z-10 mb-8 flex-grow">
         <p
           className={cn(
-            "font-medium leading-relaxed tracking-tight",
+            "leading-relaxed font-medium tracking-tight",
             featured
               ? "text-xl text-slate-100 md:text-2xl"
               : "text-lg text-slate-700"
@@ -57,7 +57,7 @@ export function TestimonialCard({
       {stats && (
         <div
           className={cn(
-            "absolute right-8 top-8 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide",
+            "absolute top-8 right-8 rounded-full px-3 py-1 text-xs font-semibold tracking-wide uppercase",
             featured
               ? "border border-indigo-500/30 bg-indigo-500/20 text-indigo-200"
               : "border border-indigo-100 bg-indigo-50 text-indigo-600"
@@ -97,7 +97,10 @@ export function TestimonialCard({
             />
           </div>
           <div
-            className={cn("text-sm", featured ? "text-slate-400" : "text-slate-500")}
+            className={cn(
+              "text-sm",
+              featured ? "text-slate-400" : "text-slate-500"
+            )}
           >
             {role},{" "}
             <span

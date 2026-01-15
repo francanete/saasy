@@ -24,7 +24,7 @@ export function HeroSection({ className }: HeroSectionProps) {
       ref={ref}
       className={cn(
         "relative overflow-hidden bg-white",
-        "min-h-[calc(100vh-4rem)] flex items-center",
+        "flex min-h-[calc(100vh-4rem)] items-center",
         "py-16 md:py-20 lg:py-24",
         className
       )}
@@ -58,13 +58,13 @@ export function HeroSection({ className }: HeroSectionProps) {
             <div
               className={cn(
                 "mb-8 inline-flex items-center gap-2 rounded-full",
-                "bg-slate-50 border border-slate-200",
+                "border border-slate-200 bg-slate-50",
                 "px-3 py-1 pr-4",
                 "transition-all delay-100 duration-700",
                 isInView ? "opacity-100" : "opacity-0"
               )}
             >
-              <span className="flex h-5 items-center rounded-full bg-slate-900 px-2 text-[10px] font-bold uppercase text-white">
+              <span className="flex h-5 items-center rounded-full bg-slate-900 px-2 text-[10px] font-bold text-white uppercase">
                 New
               </span>
               <span className="text-sm font-medium text-slate-600">
@@ -107,7 +107,7 @@ export function HeroSection({ className }: HeroSectionProps) {
               <Button
                 size="lg"
                 asChild
-                className="h-12 rounded-full bg-slate-900 px-8 text-base font-semibold text-white shadow-lg shadow-slate-900/20 transition-all hover:bg-slate-800 hover:shadow-xl hover:shadow-slate-900/30 hover:-translate-y-0.5"
+                className="h-12 rounded-full bg-slate-900 px-8 text-base font-semibold text-white shadow-lg shadow-slate-900/20 transition-all hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-xl hover:shadow-slate-900/30"
               >
                 <Link href="/register">
                   Get Started
@@ -157,10 +157,13 @@ export function HeroSection({ className }: HeroSectionProps) {
             )}
           >
             {/* Abstract Background Shapes */}
-            <div className="absolute -right-12 -top-12 h-[500px] w-[500px] rounded-full bg-slate-50 opacity-50 blur-3xl" />
+            <div className="absolute -top-12 -right-12 h-[500px] w-[500px] rounded-full bg-slate-50 opacity-50 blur-3xl" />
             <div className="absolute -bottom-12 -left-12 h-[400px] w-[400px] rounded-full bg-slate-100 opacity-50 blur-3xl" />
 
-            <HeroDashboardMockup className="relative z-10" isInView={isInView} />
+            <HeroDashboardMockup
+              className="relative z-10"
+              isInView={isInView}
+            />
           </div>
         </div>
       </div>

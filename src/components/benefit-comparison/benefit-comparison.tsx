@@ -142,7 +142,7 @@ function OldWayItem({ item, isInView, delay }: ItemProps) {
         <div className="h-1.5 w-1.5 rounded-full bg-slate-400" />
       </div>
       <div>
-        <p className="text-[15px] font-medium leading-snug text-slate-900">
+        <p className="text-[15px] leading-snug font-medium text-slate-900">
           {item.title}
         </p>
         <p className="mt-1.5 text-[15px] leading-relaxed text-slate-600">
@@ -167,7 +167,7 @@ function ModernApproachItem({ item, isInView, delay }: ItemProps) {
         <Check className="h-5 w-5 text-emerald-600" strokeWidth={2.5} />
       </div>
       <div>
-        <p className="text-[15px] font-medium leading-snug text-slate-900">
+        <p className="text-[15px] leading-snug font-medium text-slate-900">
           {item.title}
         </p>
         <p className="mt-1.5 text-[15px] leading-relaxed text-slate-600">

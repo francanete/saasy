@@ -105,7 +105,7 @@ export function NotificationCardMockup({ className, isInView }: MockupProps) {
                   {notification.subtitle}
                 </p>
               </div>
-              <span className="text-xs tabular-nums text-slate-400">
+              <span className="text-xs text-slate-400 tabular-nums">
                 {notification.time}
               </span>
             </div>

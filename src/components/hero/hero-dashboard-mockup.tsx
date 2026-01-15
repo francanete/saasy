@@ -67,9 +67,9 @@ export function HeroDashboardMockup({
             <div className="h-2.5 w-2.5 rounded-full bg-slate-200" />
           </div>
         </div>
-        <div className="flex items-center gap-2 rounded-full bg-slate-50 px-2 py-1 border border-slate-100">
+        <div className="flex items-center gap-2 rounded-full border border-slate-100 bg-slate-50 px-2 py-1">
           <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-          <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">
+          <span className="text-[10px] font-medium tracking-wider text-slate-500 uppercase">
             System Operational
           </span>
         </div>
@@ -79,15 +79,15 @@ export function HeroDashboardMockup({
       <div className="p-6 md:p-8">
         {/* Main Metric */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-2">
+          <div className="mb-2 flex items-center justify-between">
             <p className="text-sm font-medium text-slate-500">Total Revenue</p>
             <span
               className={cn(
-                "inline-flex items-center gap-1 text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full",
+                "inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-600",
                 "transition-all delay-200 duration-500 ease-out",
                 isInView
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-2"
+                  ? "translate-y-0 opacity-100"
+                  : "translate-y-2 opacity-0"
               )}
             >
               <TrendingUp className="h-3 w-3" />
@@ -124,7 +124,7 @@ export function HeroDashboardMockup({
             {weekData.map((bar, index) => (
               <div
                 key={index}
-                className="flex flex-col items-center gap-2 flex-1 group"
+                className="group flex flex-1 flex-col items-center gap-2"
               >
                 <div
                   className="w-full rounded-sm bg-slate-900 opacity-90 transition-all hover:opacity-100"
@@ -141,7 +141,7 @@ export function HeroDashboardMockup({
             {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day, i) => (
               <span
                 key={i}
-                className="text-[10px] font-medium text-slate-400 uppercase tracking-wide"
+                className="text-[10px] font-medium tracking-wide text-slate-400 uppercase"
               >
                 {day}
               </span>
@@ -151,7 +151,7 @@ export function HeroDashboardMockup({
 
         {/* Recent Transactions - Minimal List */}
         <div>
-          <p className="mb-4 text-xs font-semibold text-slate-900 uppercase tracking-wider">
+          <p className="mb-4 text-xs font-semibold tracking-wider text-slate-900 uppercase">
             Recent Transactions
           </p>
           <div className="space-y-3">
@@ -173,14 +173,16 @@ export function HeroDashboardMockup({
                   }}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-50 border border-slate-100 text-slate-500">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-100 bg-slate-50 text-slate-500">
                       <Icon className="h-4 w-4" />
                     </div>
                     <div className="flex flex-col">
                       <span className="text-sm font-medium text-slate-700">
                         {item.text}
                       </span>
-                      <span className="text-xs text-slate-400">{item.time}</span>
+                      <span className="text-xs text-slate-400">
+                        {item.time}
+                      </span>
                     </div>
                   </div>
                   <span
