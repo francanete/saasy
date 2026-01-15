@@ -45,12 +45,14 @@ export default function TermsPage() {
                 {legal.company.registrationNumber})<br />
                 {legal.company.registeredAddress}
                 <br />
-                <a
-                  href={`mailto:${legal.company.contactEmail}`}
+                <Link
+                  href={legal.company.contactLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-primary hover:underline"
                 >
-                  {legal.company.contactEmail}
-                </a>
+                  Contact Us
+                </Link>
               </p>
             </section>
 
@@ -242,13 +244,15 @@ export default function TermsPage() {
                 Contact
               </h2>
               <p className="text-slate-600">
-                Questions? Email us at{" "}
-                <a
-                  href={`mailto:${legal.company.contactEmail}`}
+                Questions?{" "}
+                <Link
+                  href={legal.company.contactLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-primary hover:underline"
                 >
-                  {legal.company.contactEmail}
-                </a>
+                  Contact us
+                </Link>
               </p>
             </section>
           </div>

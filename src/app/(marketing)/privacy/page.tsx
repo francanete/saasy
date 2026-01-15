@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { seo, getCanonicalUrl } from "@/lib/seo";
 import { BreadcrumbJsonLd } from "@/components/seo/json-ld";
 import { appConfig } from "@/lib/config";
+import Link from "next/link";
 
 export const metadata: Metadata = seo.page({
   title: "Privacy Policy",
@@ -44,12 +45,14 @@ export default function PrivacyPage() {
                 {legal.company.registrationNumber})<br />
                 {legal.company.registeredAddress}
                 <br />
-                <a
-                  href={`mailto:${legal.company.contactEmail}`}
+                <Link
+                  href={legal.company.contactLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-primary hover:underline"
                 >
-                  {legal.company.contactEmail}
-                </a>
+                  Contact Us
+                </Link>
               </p>
             </section>
 
@@ -160,13 +163,14 @@ export default function PrivacyPage() {
                 <li>Not be subject to automated decision-making</li>
               </ul>
               <p className="mt-3 text-slate-600">
-                Contact us at{" "}
-                <a
-                  href={`mailto:${legal.company.contactEmail}`}
+                <Link
+                  href={legal.company.contactLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-primary hover:underline"
                 >
-                  {legal.company.contactEmail}
-                </a>{" "}
+                  Contact us
+                </Link>{" "}
                 to exercise these rights.
               </p>
             </section>
@@ -225,13 +229,15 @@ export default function PrivacyPage() {
                 Contact
               </h2>
               <p className="text-slate-600">
-                Questions about this policy? Email us at{" "}
-                <a
-                  href={`mailto:${legal.company.contactEmail}`}
+                Questions about this policy?{" "}
+                <Link
+                  href={legal.company.contactLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-primary hover:underline"
                 >
-                  {legal.company.contactEmail}
-                </a>
+                  Contact us
+                </Link>
               </p>
             </section>
           </div>

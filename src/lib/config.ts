@@ -41,7 +41,7 @@ export type AppConfig = {
       name: string;
       registrationNumber: string;
       registeredAddress: string;
-      contactEmail: string;
+      contactLink: string;
     };
     dataHandling: { subProcessors: string[] };
     terms: { minimumAge: number; jurisdiction: string };
@@ -186,10 +186,11 @@ export const appConfig: AppConfig = {
    */
   legal: {
     company: {
-      name: "Acme Software Ltd",
-      registrationNumber: "12345678",
-      registeredAddress: "71-75 Shelton Street, London, WC2H 9JQ",
-      contactEmail: "hello@acme.com",
+      name: "Emmerit Business Consulting Ltd",
+      registrationNumber: "08361828",
+      registeredAddress:
+        "3 Hardman Square, Spinningfields, Manchester, United Kingdom, M3 3EB",
+      contactLink: "https://tally.so/r/eqrMWE?ref=saasy",
     },
     dataHandling: {
       subProcessors: [
