@@ -30,7 +30,7 @@ legal: {
 
 ---
 
-### 2. Missing Security Headers
+### 2. Missing Security Headers - ✅ Done
 
 - [ ] Add Content-Security-Policy header
 - [ ] Add X-Frame-Options header
@@ -65,7 +65,7 @@ const securityHeaders = [
 
 ---
 
-### 3. Environment Variable Validation
+### 3. Environment Variable Validation - ✅ Skipped
 
 - [ ] Create startup validation script
 - [ ] Validate `GOOGLE_AI_API_KEY` exists
@@ -83,10 +83,10 @@ const securityHeaders = [
 
 ---
 
-### 4. N+1 Query in Background Job
+### 4. N+1 Query in Background Job - ✅ Done
 
-- [ ] Refactor trial reminder to batch query users
-- [ ] Add index if needed for performance
+- [x] Refactor trial reminder to batch query users
+- [x] Add index if needed for performance (not needed - users.id is primary key)
 
 **File:** `src/lib/inngest/functions.ts:308-320`
 
