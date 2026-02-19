@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Loader2, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,24 +10,38 @@ import {
   type SyncSubscriptionResult,
 } from "@/actions/subscription";
 
-type SyncState = "loading" | "done";
+type SyncState = "loading" | "success" | "processing";
 
 export function CheckoutSuccessContent() {
+  const searchParams = useSearchParams();
   const [state, setState] = useState<SyncState>("loading");
   const [canAccessDashboard, setCanAccessDashboard] = useState(false);
 
+  const customerSessionToken =
+    searchParams.get("customer_session_token") ?? undefined;
+
+  const runSync = useCallback(async () => {
+    const result: SyncSubscriptionResult = await syncSubscriptionAction(
+      customerSessionToken
+    );
+    setCanAccessDashboard(result.canAccessDashboard);
+
+    if (result.canAccessDashboard) {
+      setState("success");
+    } else {
+      setState("processing");
+    }
+  }, [customerSessionToken]);
+
   useEffect(() => {
-    syncSubscriptionAction().then((result: SyncSubscriptionResult) => {
-      setCanAccessDashboard(result.canAccessDashboard);
-      setState("done");
-    });
-  }, []);
+    runSync();
+  }, [runSync]);
 
   if (state === "loading") {
     return (
       <div className="text-center">
         <Loader2 className="text-primary mx-auto mb-4 h-12 w-12 animate-spin" />
-        <p className="text-muted-foreground">Updating your access...</p>
+        <p className="text-muted-foreground">Confirming your payment...</p>
       </div>
     );
   }
@@ -39,11 +54,33 @@ export function CheckoutSuccessContent() {
       <h1 className="text-2xl font-bold">Payment Successful!</h1>
       <p className="text-muted-foreground mt-2">Thank you for your purchase.</p>
 
-      {canAccessDashboard ? (
+      {state === "success" && canAccessDashboard ? (
         <div className="mt-8">
           <Button asChild size="lg">
             <Link href="/dashboard">Go to Dashboard</Link>
           </Button>
+        </div>
+      ) : state === "processing" ? (
+        <div className="mt-8 space-y-4">
+          <p className="text-muted-foreground text-sm">
+            Your payment is confirmed. Access is being set up and may take a
+            moment.
+          </p>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setState("loading");
+              runSync();
+            }}
+          >
+            Check Again
+          </Button>
+          <p className="text-muted-foreground text-sm">
+            Already have an account?{" "}
+            <Link href="/login" className="hover:text-foreground underline">
+              Sign in here
+            </Link>
+          </p>
         </div>
       ) : (
         <div className="mt-8 space-y-4">
