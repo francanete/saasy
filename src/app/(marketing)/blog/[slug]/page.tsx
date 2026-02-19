@@ -15,6 +15,7 @@ import { BlogCard } from "@/components/blog/blog-card";
 import { ShareButtons } from "@/components/blog/share-buttons";
 import { getBaseUrl, getCanonicalUrl } from "@/lib/seo";
 import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
+import { BlogCta } from "@/components/blog/blog-cta";
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
@@ -33,7 +34,7 @@ export async function generateMetadata({
 
   if (!post) {
     return {
-      title: `Post Not Found | ${appConfig.name}`,
+      title: "Post Not Found",
     };
   }
 
@@ -41,7 +42,7 @@ export async function generateMetadata({
   const postUrl = `${baseUrl}/blog/${slug}`;
 
   return {
-    title: `${post.title} | ${appConfig.name}`,
+    title: post.title,
     description: post.description,
     alternates: {
       canonical: postUrl,
@@ -347,35 +348,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           </section>
         )}
 
-        {/* CTA Section */}
-        <section className="bg-slate-900 py-24 text-white">
-          <div className="container mx-auto max-w-4xl px-4 text-center">
-            <h2 className="mb-6 text-3xl font-bold tracking-tight md:text-4xl">
-              Ready to transform your workflow?
-            </h2>
-            <p className="mx-auto mb-10 max-w-2xl text-lg text-slate-300 md:text-xl">
-              Join thousands of teams who use {appConfig.name} to build better
-              products faster. Start your 14-day free trial today.
-            </p>
-            <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Button
-                size="lg"
-                className="h-12 w-full bg-white px-8 font-semibold text-slate-900 hover:bg-slate-100 sm:w-auto"
-                asChild
-              >
-                <Link href="/pricing">Get Started for Free</Link>
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="h-12 w-full border-slate-700 bg-transparent px-8 text-white hover:bg-slate-800 hover:text-white sm:w-auto"
-                asChild
-              >
-                <Link href="/pricing">Contact Sales</Link>
-              </Button>
-            </div>
-          </div>
-        </section>
+        <BlogCta />
       </div>
     </>
   );
