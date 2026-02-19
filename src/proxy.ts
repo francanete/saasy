@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { getSubscriptionStatus } from "@/lib/subscription";
 import { appConfig } from "@/lib/config";
@@ -28,7 +27,7 @@ export async function proxy(req: NextRequest) {
 
   // Get session (uses Better Auth's 5-min cookie cache)
   const session = await auth.api.getSession({
-    headers: await headers(),
+    headers: req.headers,
   });
 
   // === Auth Route Logic ===
@@ -94,6 +93,6 @@ export async function proxy(req: NextRequest) {
 export const config = {
   matcher: [
     // Match all paths except static files, images, and API routes
-    "/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|.*\\..*).*)",
   ],
 };
