@@ -67,17 +67,12 @@ function SidebarProvider({
 }) {
   const isMobile = useIsMobile();
   const [openMobile, setOpenMobile] = React.useState(false);
-  const { settings, updateSettings } = useDashboardSettings();
+  const { updateSettings } = useDashboardSettings();
 
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.
   const [_open, _setOpen] = React.useState(defaultOpen);
   const open = openProp ?? _open;
-
-  // Sync localStorage → internal state on mount
-  React.useEffect(() => {
-    _setOpen(settings.sidebarOpen);
-  }, [settings.sidebarOpen]);
 
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {

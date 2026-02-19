@@ -2,7 +2,8 @@
 
 import { useCallback, useSyncExternalStore } from "react";
 
-const STORAGE_KEY = "dashboardSettings";
+const COOKIE_NAME = "dashboardSettings";
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 year
 
 type DashboardSettings = {
   sidebarOpen: boolean;
@@ -12,10 +13,14 @@ const DEFAULT_SETTINGS: DashboardSettings = {
   sidebarOpen: true,
 };
 
-function getSnapshot(): DashboardSettings {
+function parseCookie(): DashboardSettings {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? { ...DEFAULT_SETTINGS, ...JSON.parse(raw) } : DEFAULT_SETTINGS;
+    const match = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith(`${COOKIE_NAME}=`));
+    if (!match) return DEFAULT_SETTINGS;
+    const raw = decodeURIComponent(match.split("=")[1]);
+    return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
   } catch {
     return DEFAULT_SETTINGS;
   }
@@ -30,14 +35,14 @@ let cachedSettings = DEFAULT_SETTINGS;
 
 function subscribe(listener: () => void) {
   listeners = [...listeners, listener];
-  cachedSettings = getSnapshot();
+  cachedSettings = parseCookie();
   return () => {
     listeners = listeners.filter((l) => l !== listener);
   };
 }
 
 function emitChange() {
-  cachedSettings = getSnapshot();
+  cachedSettings = parseCookie();
   for (const listener of listeners) {
     listener();
   }
@@ -51,11 +56,9 @@ export function useDashboardSettings() {
   );
 
   const updateSettings = useCallback((partial: Partial<DashboardSettings>) => {
-    const current = getSnapshot();
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({ ...current, ...partial })
-    );
+    const current = parseCookie();
+    const next = { ...current, ...partial };
+    document.cookie = `${COOKIE_NAME}=${encodeURIComponent(JSON.stringify(next))}; path=/; max-age=${COOKIE_MAX_AGE}`;
     emitChange();
   }, []);
 

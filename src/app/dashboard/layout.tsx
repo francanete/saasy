@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { auth } from "@/lib/auth";
+import { cookies } from "next/headers";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { eq, and } from "drizzle-orm";
@@ -64,12 +65,25 @@ export default async function DashboardLayout({
     dashboardOnboarding?.completedAt || dashboardOnboarding?.skippedAt
   );
 
+  // Read sidebar state from cookie (written by useDashboardSettings)
+  const cookieStore = await cookies();
+  const settingsRaw = cookieStore.get("dashboardSettings")?.value;
+  let sidebarOpen = true;
+  if (settingsRaw) {
+    try {
+      const parsed = JSON.parse(decodeURIComponent(settingsRaw));
+      sidebarOpen = parsed.sidebarOpen !== false;
+    } catch {
+      // ignore malformed cookie
+    }
+  }
+
   return (
     <OnboardingProvider
       flowId="dashboard"
       flowCompleted={dashboardFlowCompleted}
     >
-      <SidebarProvider>
+      <SidebarProvider defaultOpen={sidebarOpen}>
         <Suspense fallback={null}>
           <CheckoutSuccessToast />
         </Suspense>
