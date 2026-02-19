@@ -211,6 +211,18 @@ function PricingCard({
           />
         </button>
 
+        {/* Trial days text */}
+        {!isLtd && tier.trialDays && tier.trialDays > 0 && (
+          <p
+            className={cn(
+              "mt-3 text-center text-xs font-medium",
+              isHighlighted ? "text-slate-400" : "text-slate-500"
+            )}
+          >
+            {tier.trialDays}-day free trial
+          </p>
+        )}
+
         {/* Guarantee text */}
         {isLtd && (
           <p

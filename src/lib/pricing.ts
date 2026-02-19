@@ -216,7 +216,7 @@ export function getPricingPlans(): PlanDisplay[] {
   });
 
   // Only include free plan if allowed
-  if (appConfig.pricing.allowFreePlan) {
+  if (!appConfig.pricing.requirePaidAccess) {
     return [freePlan, ...paidPlans];
   }
 
@@ -238,6 +238,7 @@ export type TierPricingDisplay = {
   description: string;
   features: string[];
   cta: string;
+  trialDays?: number;
   // Prices in formatted strings
   monthlyPrice: string;
   annualPrice: string;
@@ -298,6 +299,7 @@ export function getTierPricing(): TierPricingDisplay[] {
       description: marketing.description,
       features,
       cta: marketing.cta,
+      trialDays: appConfig.pricing.trialDays,
       monthlyPrice: formatPrice(prices.monthly),
       annualPrice: formatPrice(prices.annual),
       ltdPrice: formatPrice(prices.ltd),

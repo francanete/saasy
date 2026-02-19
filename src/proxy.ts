@@ -8,7 +8,7 @@ const protectedRoutes = ["/dashboard", "/checkout/success"];
 const authRoutes = ["/login"];
 const gateRoute = "/gate";
 
-const REQUIRE_PAID_ACCESS = !appConfig.pricing.allowFreePlan;
+const REQUIRE_PAID_ACCESS = appConfig.pricing.requirePaidAccess;
 
 export async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;

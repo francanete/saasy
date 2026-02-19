@@ -18,7 +18,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 
-const REQUIRE_PAID_ACCESS = !appConfig.pricing.allowFreePlan;
+const REQUIRE_PAID_ACCESS = appConfig.pricing.requirePaidAccess;
 
 export default async function DashboardLayout({
   children,

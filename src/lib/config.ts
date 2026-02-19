@@ -23,18 +23,41 @@ export type TierConfig = {
   marketing: TierMarketing;
 };
 
+export type FeatureRateLimits = {
+  maxRequests: number;
+  windowMs: number;
+};
+
+export type PlanRateLimits = {
+  ai: FeatureRateLimits;
+};
+
+export type ResendSegments = {
+  freeTrialId: string;
+  paidId: string;
+};
+
 export type AppConfig = {
   name: string;
   description: string;
   email: { from: string };
-  socials: { twitter: string; github: string; linkedin: string };
+  team: { name: string };
+  socials: {
+    twitter: string;
+    twitterHandle: string;
+    github: string;
+    linkedin: string;
+  };
   pricing: {
     mode: "subscription" | "ltd";
-    allowFreePlan: boolean;
+    requirePaidAccess: boolean;
+    trialDays?: number;
     tiers: Record<PaidTier, TierConfig>;
     freeMarketing: TierMarketing;
     ltdExtraFeatures: string[];
+    rateLimits: Record<Plan, PlanRateLimits>;
   };
+  resendSegments: ResendSegments;
   plans: { hierarchy: Record<Plan, number> };
   legal: {
     company: {
@@ -75,30 +98,58 @@ export type AppConfig = {
   };
 };
 
+export const polarProductIdsByEnv = {
+  sandbox: {
+    STARTER: {
+      ltd: "64e937b4-4da7-4c09-9bd3-f38f440799e1",
+      monthly: "64e937b4-4da7-4c09-9bd3-f38f440799e1",
+      annual: "64e937b4-4da7-4c09-9bd3-f38f440799e1",
+    },
+    GROWTH: { ltd: "", monthly: "", annual: "" },
+    SCALE: { ltd: "", monthly: "", annual: "" },
+  },
+  production: {
+    STARTER: { ltd: "", monthly: "", annual: "" },
+    GROWTH: { ltd: "", monthly: "", annual: "" },
+    SCALE: { ltd: "", monthly: "", annual: "" },
+  },
+} as const satisfies Record<
+  string,
+  Record<PaidTier, Record<BillingCycle, string>>
+>;
+
+const polarEnv = (
+  process.env.POLAR_SERVER === "production" ? "production" : "sandbox"
+) as keyof typeof polarProductIdsByEnv;
+const polarIds = polarProductIdsByEnv[polarEnv];
+
 export const appConfig: AppConfig = {
   name: "Saasy",
   description: "The complete platform for building modern applications.",
   email: {
     from: "noreply@simplesubscriber.com",
   },
+  team: { name: "Saasy" },
   socials: {
     twitter: "https://twitter.com",
+    twitterHandle: "@saasyapp",
     github: "https://github.com",
     linkedin: "https://linkedin.com",
   },
+  resendSegments: {
+    freeTrialId: "",
+    paidId: "",
+  },
   pricing: {
     mode: "subscription" as const, // "subscription" | "ltd"
-    allowFreePlan: false, // Show free plan on pricing page & allow FREE users in dashboard
+    requirePaidAccess: true, // Require paid plan to access dashboard
+    trialDays: 5,
     tiers: {
       STARTER: {
         enabled: true,
         prices: { ltd: 6700, monthly: 2400, annual: 24000 },
         originalPrices: { ltd: 9900, monthly: 2400, annual: 28800 },
-        polarProductIds: {
-          ltd: "64e937b4-4da7-4c09-9bd3-f38f440799e1",
-          monthly: "64e937b4-4da7-4c09-9bd3-f38f440799e1",
-          annual: "64e937b4-4da7-4c09-9bd3-f38f440799e1",
-        },
+        polarProductIds: polarIds.STARTER,
         marketing: {
           name: "Starter",
           description: "For professionals and small teams",
@@ -114,11 +165,7 @@ export const appConfig: AppConfig = {
       GROWTH: {
         enabled: false,
         prices: { ltd: 0, monthly: 0, annual: 0 },
-        polarProductIds: {
-          ltd: "",
-          monthly: "",
-          annual: "",
-        },
+        polarProductIds: polarIds.GROWTH,
         marketing: {
           name: "Growth",
           description: "For growing businesses",
@@ -138,7 +185,7 @@ export const appConfig: AppConfig = {
       SCALE: {
         enabled: false,
         prices: { ltd: 0, monthly: 0, annual: 0 },
-        polarProductIds: { ltd: "", monthly: "", annual: "" },
+        polarProductIds: polarIds.SCALE,
         marketing: {
           name: "Scale",
           description: "For enterprises",
@@ -171,6 +218,12 @@ export const appConfig: AppConfig = {
 
     /** Extra features for LTD plans (appended to tier features) */
     ltdExtraFeatures: ["Lifetime updates", "No recurring fees"],
+    rateLimits: {
+      FREE: { ai: { maxRequests: 5, windowMs: 24 * 60 * 60 * 1000 } },
+      STARTER: { ai: { maxRequests: 50, windowMs: 24 * 60 * 60 * 1000 } },
+      GROWTH: { ai: { maxRequests: 200, windowMs: 24 * 60 * 60 * 1000 } },
+      SCALE: { ai: { maxRequests: 1000, windowMs: 24 * 60 * 60 * 1000 } },
+    },
   },
   plans: {
     hierarchy: {
