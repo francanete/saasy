@@ -41,8 +41,6 @@ const nextConfig: NextConfig = {
     ],
   },
 
-  // Server external packages (for Drizzle + Neon)
-  serverExternalPackages: ["@neondatabase/serverless"],
 
   // Experimental features
   experimental: {
