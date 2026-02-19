@@ -1,4 +1,25 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(npm view:*)",
+      "WebFetch(domain:polar.sh)",
+      "mcp__plugin_database-expert_context7__query-docs",
+      "mcp__plugin_database-expert_context7__resolve-library-id",
+      "Bash(grep:*)",
+      "Bash(ls:*)",
+      "mcp__shadcn__search_items_in_registries",
+      "mcp__shadcn__view_items_in_registries",
+      "mcp__shadcn__get_add_command_for_items",
+      "mcp__acp__Edit",
+      "Bash(npx eslint:*)",
+      "mcp__plugin_context7_context7__resolve-library-id",
+      "mcp__plugin_context7_context7__query-docs"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "shadcn"
+  ],
   "hooks": {
     "PostToolUse": [
       {
@@ -13,24 +34,5 @@
       }
     ]
   },
-  "permissions": {
-    "allow": [
-      "Bash(npm view:*)",
-      "WebFetch(domain:polar.sh)",
-      "mcp__plugin_database-expert_context7__query-docs",
-      "mcp__plugin_database-expert_context7__resolve-library-id",
-      "Bash(grep:*)",
-      "Bash(ls:*)",
-      "mcp__shadcn__search_items_in_registries",
-      "mcp__shadcn__view_items_in_registries",
-      "mcp__shadcn__get_add_command_for_items",
-      "mcp__acp__Edit",
-      "Bash(npx eslint:*)"
-    ]
-  },
-  "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": [
-    "shadcn"
-  ],
   "outputStyle": "Learning"
 }

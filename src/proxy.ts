@@ -20,9 +20,16 @@ export async function proxy(req: NextRequest) {
   const isAuthRoute = authRoutes.some((route) => path.startsWith(route));
   const isGateRoute = path.startsWith(gateRoute);
 
+  // Strip internal headers to prevent client spoofing
+  const sanitizedHeaders = new Headers(req.headers);
+  sanitizedHeaders.delete("x-subscription-status");
+  sanitizedHeaders.delete("x-user-id");
+
   // Skip public routes (no checks needed)
   if (!isProtectedRoute && !isAuthRoute && !isGateRoute) {
-    return NextResponse.next();
+    return NextResponse.next({
+      request: { headers: sanitizedHeaders },
+    });
   }
 
   // Get session (uses Better Auth's 5-min cookie cache)
@@ -49,17 +56,16 @@ export async function proxy(req: NextRequest) {
     const subscription = await getSubscriptionStatus(session.user.id);
 
     // Check paid access requirement
-    if (REQUIRE_PAID_ACCESS && subscription.plan === "FREE") {
+    if (REQUIRE_PAID_ACCESS && !subscription.hasAccess) {
       return NextResponse.redirect(new URL("/gate", req.nextUrl));
     }
 
-    // Pass subscription to Server Components via header
-    const requestHeaders = new Headers(req.headers);
-    requestHeaders.set("x-subscription-status", JSON.stringify(subscription));
-    requestHeaders.set("x-user-id", session.user.id);
+    // Pass subscription to Server Components via header (on sanitized headers)
+    sanitizedHeaders.set("x-subscription-status", JSON.stringify(subscription));
+    sanitizedHeaders.set("x-user-id", session.user.id);
 
     return NextResponse.next({
-      request: { headers: requestHeaders },
+      request: { headers: sanitizedHeaders },
     });
   }
 
@@ -73,21 +79,22 @@ export async function proxy(req: NextRequest) {
     const subscription = await getSubscriptionStatus(session.user.id);
 
     // Paid users shouldn't see gate - redirect to dashboard
-    if (!REQUIRE_PAID_ACCESS || subscription.plan !== "FREE") {
+    if (!REQUIRE_PAID_ACCESS || subscription.hasAccess) {
       return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
     }
 
-    // Pass subscription for gate page UI
-    const requestHeaders = new Headers(req.headers);
-    requestHeaders.set("x-subscription-status", JSON.stringify(subscription));
-    requestHeaders.set("x-user-id", session.user.id);
+    // Pass subscription for gate page UI (on sanitized headers)
+    sanitizedHeaders.set("x-subscription-status", JSON.stringify(subscription));
+    sanitizedHeaders.set("x-user-id", session.user.id);
 
     return NextResponse.next({
-      request: { headers: requestHeaders },
+      request: { headers: sanitizedHeaders },
     });
   }
 
-  return NextResponse.next();
+  return NextResponse.next({
+    request: { headers: sanitizedHeaders },
+  });
 }
 
 export const config = {

@@ -54,6 +54,13 @@ async function resolveOrCreateUser(customer: {
   email: string;
   name?: string | null;
 }): Promise<string> {
+  // Validate email
+  if (!customer.email?.includes("@")) {
+    throw new Error(
+      `Polar webhook: Invalid or missing customer email for customer ${customer.id}`
+    );
+  }
+
   // 1. Use externalId if set (existing user went through our checkout)
   if (customer.externalId) {
     return customer.externalId;

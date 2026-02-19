@@ -1,14 +1,18 @@
-import { getCurrentSession } from "@/lib/dal";
+import { requireAdminAccess, AuthError } from "@/lib/dal";
 import { clearAILimitCache } from "@/lib/rate-limit";
 import { NextResponse } from "next/server";
 
 export async function POST() {
-  const session = await getCurrentSession();
-
-  if (!session) {
+  try {
+    await requireAdminAccess();
+  } catch (error) {
+    const status =
+      error instanceof AuthError && error.message === "Unauthorized"
+        ? 401
+        : 403;
     return NextResponse.json(
-      { error: "Unauthorized", code: "UNAUTHORIZED" },
-      { status: 401 }
+      { error: "Admin access required", code: "FORBIDDEN" },
+      { status }
     );
   }
 

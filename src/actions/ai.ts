@@ -10,9 +10,18 @@ type ActionResult<T> =
   | { success: true; data: T }
   | { success: false; error: string; resetAt?: Date };
 
+const MAX_INPUT_LENGTH = 10_000;
+
 export async function summarizeText(
   text: string
 ): Promise<ActionResult<string>> {
+  if (text.length > MAX_INPUT_LENGTH) {
+    return {
+      success: false,
+      error: `Input exceeds ${MAX_INPUT_LENGTH} character limit`,
+    };
+  }
+
   try {
     const { userId, plan } = await requirePaidAccess();
 
@@ -63,6 +72,13 @@ export async function generateContent(
   prompt: string,
   model: ModelName = "flash"
 ): Promise<ActionResult<string>> {
+  if (prompt.length > MAX_INPUT_LENGTH) {
+    return {
+      success: false,
+      error: `Input exceeds ${MAX_INPUT_LENGTH} character limit`,
+    };
+  }
+
   try {
     const { userId, plan } = await requirePaidAccess();
 

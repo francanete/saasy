@@ -110,7 +110,7 @@ export function protectedApiRouteWrapper<P = Record<string, string>>(
       const subscription = await getSubscriptionStatus(session.user.id);
 
       // 3. Paid access check (default: required)
-      if (requirePaid && subscription.plan === "FREE") {
+      if (requirePaid && !subscription.hasAccess) {
         return NextResponse.json(
           {
             error: "This feature requires a paid plan",

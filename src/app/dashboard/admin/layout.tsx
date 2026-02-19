@@ -1,6 +1,4 @@
-import { auth } from "@/lib/auth";
-import { isUserAdmin } from "@/lib/dal";
-import { headers } from "next/headers";
+import { requireAdminAccess, AuthError } from "@/lib/dal";
 import { redirect } from "next/navigation";
 
 export default async function AdminLayout({
@@ -8,18 +6,12 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session) {
-    redirect("/login");
-  }
-
-  // Check if user is admin
-  const isAdmin = await isUserAdmin(session.user.id);
-
-  if (!isAdmin) {
+  try {
+    await requireAdminAccess();
+  } catch (error) {
+    if (error instanceof AuthError) {
+      redirect(error.message === "Unauthorized" ? "/login" : "/dashboard");
+    }
     redirect("/dashboard");
   }
 

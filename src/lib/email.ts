@@ -1,5 +1,14 @@
 import { appConfig } from "./config";
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 interface SendEmailOptions {
   to: string | string[];
   subject: string;
@@ -58,8 +67,8 @@ export async function sendAccountSetupEmail(
     subject: `Your ${appConfig.name} account is ready!`,
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1>Welcome${name ? `, ${name}` : ""}!</h1>
-        <p>Thank you for purchasing the <strong>${planName}</strong> plan.</p>
+        <h1>Welcome${name ? `, ${escapeHtml(name)}` : ""}!</h1>
+        <p>Thank you for purchasing the <strong>${escapeHtml(planName)}</strong> plan.</p>
         <p>Your account has been created with this email address.</p>
         <p>Click below to sign in and access your dashboard:</p>
         <p style="margin: 24px 0;">
