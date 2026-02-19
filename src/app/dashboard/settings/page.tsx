@@ -1,3 +1,4 @@
+import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-header";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { db, subscriptions } from "@/lib/db";
@@ -37,12 +38,10 @@ export default async function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground mt-1">
-          Manage your account settings and preferences.
-        </p>
-      </div>
+      <DashboardPageHeader
+        title="Settings"
+        subtitle="Manage your account settings and preferences."
+      />
 
       <Tabs defaultValue="profile" className="space-y-6">
         <TabsList id="tour-settings-tabs">

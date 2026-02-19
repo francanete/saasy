@@ -1,3 +1,4 @@
+import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-header";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { db, subscriptions } from "@/lib/db";
@@ -50,14 +51,10 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold">
-          Welcome back, {session!.user.name || "there"}!
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Here&apos;s what&apos;s happening with your account.
-        </p>
-      </div>
+      <DashboardPageHeader
+        title={`Welcome back, ${session!.user.name || "there"}!`}
+        subtitle="Here's what's happening with your account."
+      />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (

@@ -1,3 +1,4 @@
+import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-header";
 import { getTierConfigs } from "@/actions/admin";
 import { RateLimitsEditor } from "@/components/admin/rate-limits-editor";
 import {
@@ -29,12 +30,10 @@ export default async function TiersPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Tier Management</h1>
-        <p className="text-muted-foreground">
-          Configure subscription tiers and their rate limits
-        </p>
-      </div>
+      <DashboardPageHeader
+        title="Tier Management"
+        subtitle="Configure subscription tiers and their rate limits"
+      />
 
       <Card>
         <CardHeader>
