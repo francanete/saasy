@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LayoutDashboard, MessageSquare, Settings, Shield } from "lucide-react";
+import { LayoutDashboard, MessageSquare, Settings } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -45,9 +45,7 @@ const navigation = [
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
-const adminNavigation = [
-  { name: "Tiers", href: "/dashboard/admin/tiers", icon: Shield },
-];
+const adminNavigation: typeof navigation = [];
 
 export function AppSidebar({
   user,

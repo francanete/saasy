@@ -24,12 +24,12 @@ export type TierConfig = {
 };
 
 export type FeatureRateLimits = {
-  maxRequests: number;
-  windowMs: number;
+  requestsPerDay: number | null; // null = unlimited
+  tokensPerDay?: number | null;
 };
 
 export type PlanRateLimits = {
-  ai: FeatureRateLimits;
+  [feature: string]: FeatureRateLimits;
 };
 
 export type ResendSegments = {
@@ -219,10 +219,18 @@ export const appConfig: AppConfig = {
     /** Extra features for LTD plans (appended to tier features) */
     ltdExtraFeatures: ["Lifetime updates", "No recurring fees"],
     rateLimits: {
-      FREE: { ai: { maxRequests: 5, windowMs: 24 * 60 * 60 * 1000 } },
-      STARTER: { ai: { maxRequests: 50, windowMs: 24 * 60 * 60 * 1000 } },
-      GROWTH: { ai: { maxRequests: 200, windowMs: 24 * 60 * 60 * 1000 } },
-      SCALE: { ai: { maxRequests: 1000, windowMs: 24 * 60 * 60 * 1000 } },
+      FREE: {
+        chat: { requestsPerDay: 10, tokensPerDay: 10000 },
+      },
+      STARTER: {
+        chat: { requestsPerDay: 50, tokensPerDay: 50000 },
+      },
+      GROWTH: {
+        chat: { requestsPerDay: 200, tokensPerDay: 200000 },
+      },
+      SCALE: {
+        chat: { requestsPerDay: 1000, tokensPerDay: 1000000 },
+      },
     },
   },
   plans: {
