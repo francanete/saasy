@@ -65,9 +65,18 @@ export default async function DashboardLayout({
     dashboardOnboarding?.completedAt || dashboardOnboarding?.skippedAt
   );
 
-  // Read sidebar state from cookie (written by shadcn SidebarProvider)
+  // Read sidebar state from cookie (written by useDashboardSettings)
   const cookieStore = await cookies();
-  const sidebarOpen = cookieStore.get("sidebar_state")?.value !== "false";
+  const settingsRaw = cookieStore.get("dashboardSettings")?.value;
+  let sidebarOpen = true;
+  if (settingsRaw) {
+    try {
+      const parsed = JSON.parse(decodeURIComponent(settingsRaw));
+      sidebarOpen = parsed.sidebarOpen !== false;
+    } catch {
+      // ignore malformed cookie
+    }
+  }
 
   return (
     <OnboardingProvider
