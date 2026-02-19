@@ -1,13 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {
-  LayoutDashboard,
-  MessageSquare,
-  Settings,
-  CreditCard,
-  Shield,
-} from "lucide-react";
+import { LayoutDashboard, MessageSquare, Settings, Shield } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -46,7 +40,7 @@ interface AppSidebarProps {
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Chat", href: "/dashboard/chat", icon: MessageSquare },
-  { name: "Billing", href: "/dashboard/billing", icon: CreditCard },
+
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
