@@ -123,6 +123,85 @@ export function mapPolarStatus(polarStatus: string): SubscriptionStatusType {
 // ============ Sync with Polar API ============
 
 /**
+ * Fast-path sync using a Customer Portal session token.
+ * Validates the token belongs to the authenticated user, then fetches
+ * subscriptions + orders via the Customer Portal API (no eventual consistency delay).
+ */
+export async function syncWithCustomerToken(
+  userId: string,
+  userEmail: string,
+  customerSessionToken: string
+): Promise<void> {
+  const security = { customerSession: customerSessionToken };
+
+  // Validate token and get customer info
+  const customer = await polarClient.customerPortal.customers.get(security);
+
+  // Ownership check: portal customer email must match the authenticated user
+  if (customer.email !== userEmail) {
+    throw new Error("Customer session token does not belong to this user");
+  }
+
+  // Fetch subscriptions and orders in parallel via Customer Portal API
+  const [subsPages, ordersPages] = await Promise.all([
+    polarClient.customerPortal.subscriptions.list(security, { active: true }),
+    polarClient.customerPortal.orders.list(security, {}),
+  ]);
+
+  // PageIterator IS the first page (V & { next, asyncIterator })
+  const activeSub = subsPages.result.items[0];
+  const paidOrder = ordersPages.result.items.find((o) => o.paid);
+
+  // Determine best option (higher tier wins)
+  let bestOption: {
+    type: "subscription" | "order" | "none";
+    data?: unknown;
+    plan: Plan;
+  } = { type: "none", plan: "FREE" };
+
+  if (activeSub?.product) {
+    const subPlan = getPlanFromPolarProduct(activeSub.product.id);
+    if (PLAN_HIERARCHY[subPlan] > PLAN_HIERARCHY[bestOption.plan]) {
+      bestOption = { type: "subscription", data: activeSub, plan: subPlan };
+    }
+  }
+
+  if (paidOrder?.product) {
+    const orderPlan = getPlanFromPolarProduct(paidOrder.product.id);
+    if (PLAN_HIERARCHY[orderPlan] > PLAN_HIERARCHY[bestOption.plan]) {
+      bestOption = { type: "order", data: paidOrder, plan: orderPlan };
+    }
+  }
+
+  // Apply the best option
+  if (bestOption.type === "subscription") {
+    const sub = bestOption.data as typeof activeSub;
+    await upsertSubscription({
+      userId,
+      polarCustomerId: customer.id,
+      polarSubscriptionId: sub!.id,
+      polarProductId: sub!.product.id,
+      billingType: "recurring",
+      status: mapPolarStatus(sub!.status),
+      currentPeriodEnd: sub!.currentPeriodEnd
+        ? new Date(sub!.currentPeriodEnd)
+        : undefined,
+      cancelAtPeriodEnd: sub!.cancelAtPeriodEnd,
+    });
+  } else if (bestOption.type === "order") {
+    const order = bestOption.data as typeof paidOrder;
+    await upsertSubscription({
+      userId,
+      polarCustomerId: customer.id,
+      polarOrderId: order!.id,
+      polarProductId: order!.product!.id,
+      billingType: "one_time",
+      status: "ACTIVE",
+    });
+  }
+}
+
+/**
  * Sync subscription from Polar API.
  * Fetches both subscriptions and orders, picks the higher tier.
  * Used by daily cron job to keep all users in sync.

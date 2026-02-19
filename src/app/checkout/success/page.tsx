@@ -7,11 +7,17 @@ export const metadata: Metadata = {
   description: "Thank you for your purchase",
 };
 
-export default function CheckoutSuccessPage() {
+export default async function CheckoutSuccessPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ customer_session_token?: string }>;
+}) {
+  const { customer_session_token } = await searchParams;
+
   return (
     <div className="bg-background flex min-h-screen items-center justify-center">
       <div className="max-w-md px-4">
-        <CheckoutSuccessContent />
+        <CheckoutSuccessContent customerSessionToken={customer_session_token} />
       </div>
     </div>
   );
