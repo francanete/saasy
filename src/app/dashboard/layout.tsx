@@ -9,6 +9,7 @@ import { onboardingFlows } from "@/lib/db/schema";
 import { getSubscriptionStatus } from "@/lib/subscription";
 import { getSubscriptionFromRequest, isUserAdmin } from "@/lib/dal";
 import { appConfig } from "@/lib/config";
+import { IdentifyUser } from "@/components/analytics/identify-user";
 import { TrialBanner } from "@/components/trial-banner";
 import { AppSidebar } from "@/components/layouts/app-sidebar";
 import { CheckoutSuccessToast } from "@/components/checkout-success-toast";
@@ -83,6 +84,7 @@ export default async function DashboardLayout({
       flowId="dashboard"
       flowCompleted={dashboardFlowCompleted}
     >
+      <IdentifyUser />
       <SidebarProvider defaultOpen={sidebarOpen}>
         <Suspense fallback={null}>
           <CheckoutSuccessToast />
