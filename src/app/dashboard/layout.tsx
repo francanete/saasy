@@ -13,7 +13,11 @@ import { TrialBanner } from "@/components/trial-banner";
 import { AppSidebar } from "@/components/layouts/app-sidebar";
 import { CheckoutSuccessToast } from "@/components/checkout-success-toast";
 import { OnboardingProvider } from "@/components/onboarding/onboarding-provider";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 
 const REQUIRE_PAID_ACCESS = appConfig.pricing.requirePaidAccess;
 
@@ -82,6 +86,15 @@ export default async function DashboardLayout({
           isAdmin={isAdmin}
         />
         <SidebarInset>
+          <header className="flex h-12 items-center gap-3 px-4 md:hidden">
+            <SidebarTrigger />
+            <div className="bg-primary text-primary-foreground flex size-7 items-center justify-center rounded-lg">
+              <span className="text-xs font-bold">
+                {appConfig.name.charAt(0)}
+              </span>
+            </div>
+            <span className="text-sm font-semibold">{appConfig.name}</span>
+          </header>
           {subscription.status === "TRIALING" && subscription.expiresAt && (
             <TrialBanner endsAt={subscription.expiresAt} />
           )}
