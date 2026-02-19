@@ -51,12 +51,12 @@ export function DashboardPageHeader({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="flex items-center gap-2 text-3xl font-bold">
-            {icon && <span className={cn("size-7", iconClassName)}>{icon}</span>}
+            {icon && (
+              <span className={cn("size-7", iconClassName)}>{icon}</span>
+            )}
             {title}
           </h1>
-          {subtitle && (
-            <p className="text-muted-foreground mt-1">{subtitle}</p>
-          )}
+          {subtitle && <p className="text-muted-foreground mt-1">{subtitle}</p>}
         </div>
 
         {action &&
