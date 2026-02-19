@@ -39,7 +39,6 @@ export const users = pgTable("users", {
   name: text("name"),
   image: text("image"),
   role: roleEnum("role").default("user").notNull(),
-  testColumn: text("test_column"), // FAKE: remove before merging
   marketingUnsubscribed: boolean("marketing_unsubscribed")
     .default(false)
     .notNull(),
