@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { auth } from "@/lib/auth";
+import { cookies } from "next/headers";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { eq, and } from "drizzle-orm";
@@ -12,11 +13,7 @@ import { TrialBanner } from "@/components/trial-banner";
 import { AppSidebar } from "@/components/layouts/app-sidebar";
 import { CheckoutSuccessToast } from "@/components/checkout-success-toast";
 import { OnboardingProvider } from "@/components/onboarding/onboarding-provider";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 const REQUIRE_PAID_ACCESS = appConfig.pricing.requirePaidAccess;
 
@@ -64,12 +61,16 @@ export default async function DashboardLayout({
     dashboardOnboarding?.completedAt || dashboardOnboarding?.skippedAt
   );
 
+  // Read sidebar state from cookie (written by shadcn SidebarProvider)
+  const cookieStore = await cookies();
+  const sidebarOpen = cookieStore.get("sidebar_state")?.value !== "false";
+
   return (
     <OnboardingProvider
       flowId="dashboard"
       flowCompleted={dashboardFlowCompleted}
     >
-      <SidebarProvider>
+      <SidebarProvider defaultOpen={sidebarOpen}>
         <Suspense fallback={null}>
           <CheckoutSuccessToast />
         </Suspense>
@@ -81,14 +82,10 @@ export default async function DashboardLayout({
           isAdmin={isAdmin}
         />
         <SidebarInset>
-          <header className="flex h-12 shrink-0 items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <span className="text-muted-foreground text-sm">Dashboard</span>
-          </header>
           {subscription.status === "TRIALING" && subscription.expiresAt && (
             <TrialBanner endsAt={subscription.expiresAt} />
           )}
-          <main className="flex-1 p-6">{children}</main>
+          <main className="flex min-h-0 flex-1 flex-col p-6">{children}</main>
         </SidebarInset>
       </SidebarProvider>
     </OnboardingProvider>

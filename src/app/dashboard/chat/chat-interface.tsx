@@ -46,9 +46,7 @@ export function ChatInterface() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] flex-col">
-      <h1 className="mb-4 text-2xl font-bold">AI Assistant</h1>
-
+    <div className="flex min-h-0 flex-1 flex-col">
       {/* Error display (rate limit errors handled via toast) */}
       {error && !isRateLimited && (
         <div className="bg-destructive/10 text-destructive mb-4 flex items-center gap-2 rounded-lg p-3">
