@@ -8,22 +8,14 @@ vi.mock("@/actions/subscription", () => ({
     mockSyncSubscriptionAction(...args),
 }));
 
-let mockSearchParams = new URLSearchParams();
-
-vi.mock("next/navigation", () => ({
-  useSearchParams: () => mockSearchParams,
-}));
-
 import { CheckoutSuccessContent } from "@/components/checkout-success-content";
 
 describe("CheckoutSuccessContent", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockSearchParams = new URLSearchParams();
   });
 
   it("shows loading spinner initially", async () => {
-    // Never resolve so we stay in loading state
     mockSyncSubscriptionAction.mockReturnValue(new Promise(() => {}));
 
     await act(async () => {
@@ -33,17 +25,16 @@ describe("CheckoutSuccessContent", () => {
     expect(screen.getByText("Confirming your payment...")).toBeInTheDocument();
   });
 
-  it("shows 'Go to Dashboard' on success", async () => {
+  it("shows 'Go to Dashboard' on success with token", async () => {
     mockSyncSubscriptionAction.mockResolvedValue({
       success: true,
       canAccessDashboard: true,
     });
 
     await act(async () => {
-      render(<CheckoutSuccessContent />);
+      render(<CheckoutSuccessContent customerSessionToken="tok-xyz-123" />);
     });
 
-    // Wait for async effect
     await act(async () => {
       await vi.waitFor(() => {
         expect(screen.getByText("Go to Dashboard")).toBeInTheDocument();
@@ -58,7 +49,7 @@ describe("CheckoutSuccessContent", () => {
     });
 
     await act(async () => {
-      render(<CheckoutSuccessContent />);
+      render(<CheckoutSuccessContent customerSessionToken="tok-xyz-123" />);
     });
 
     await act(async () => {
@@ -68,17 +59,14 @@ describe("CheckoutSuccessContent", () => {
     });
   });
 
-  it("passes customer_session_token from URL to action", async () => {
-    mockSearchParams = new URLSearchParams(
-      "customer_session_token=tok-xyz-123"
-    );
+  it("passes customerSessionToken to action", async () => {
     mockSyncSubscriptionAction.mockResolvedValue({
       success: true,
       canAccessDashboard: true,
     });
 
     await act(async () => {
-      render(<CheckoutSuccessContent />);
+      render(<CheckoutSuccessContent customerSessionToken="tok-xyz-123" />);
     });
 
     await act(async () => {
@@ -95,7 +83,7 @@ describe("CheckoutSuccessContent", () => {
     });
 
     await act(async () => {
-      render(<CheckoutSuccessContent />);
+      render(<CheckoutSuccessContent customerSessionToken="tok-xyz-123" />);
     });
 
     await act(async () => {
@@ -104,7 +92,6 @@ describe("CheckoutSuccessContent", () => {
       });
     });
 
-    // Now resolve with success on second call
     mockSyncSubscriptionAction.mockResolvedValue({
       success: true,
       canAccessDashboard: true,
