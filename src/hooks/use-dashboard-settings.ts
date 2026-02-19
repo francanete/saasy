@@ -4,11 +4,13 @@ import { useCallback, useSyncExternalStore } from "react";
 
 const STORAGE_KEY = "dashboardSettings";
 
-interface DashboardSettings {
-  // TODO(human): Define the dashboard settings shape and defaults
-}
+type DashboardSettings = {
+  sidebarOpen: boolean;
+};
 
-const DEFAULT_SETTINGS: DashboardSettings = {};
+const DEFAULT_SETTINGS: DashboardSettings = {
+  sidebarOpen: true,
+};
 
 function getSnapshot(): DashboardSettings {
   try {
