@@ -41,7 +41,10 @@ export async function syncSubscriptionAction(
       const canAccess = await hasPaidAccess(userId);
       return { success: true, canAccessDashboard: canAccess };
     } catch (error) {
-      console.error("Customer token sync failed, falling back to admin API:", error);
+      console.error(
+        "Customer token sync failed, falling back to admin API:",
+        error
+      );
       // Fall through to retry path
     }
   }

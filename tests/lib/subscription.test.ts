@@ -92,10 +92,7 @@ describe("syncWithCustomerToken", () => {
       { customerSession: token },
       { active: true }
     );
-    expect(mockOrdersList).toHaveBeenCalledWith(
-      { customerSession: token },
-      {}
-    );
+    expect(mockOrdersList).toHaveBeenCalledWith({ customerSession: token }, {});
   });
 
   it("throws when email does not match (ownership check)", async () => {

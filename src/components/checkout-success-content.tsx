@@ -21,9 +21,8 @@ export function CheckoutSuccessContent() {
     searchParams.get("customer_session_token") ?? undefined;
 
   const runSync = useCallback(async () => {
-    const result: SyncSubscriptionResult = await syncSubscriptionAction(
-      customerSessionToken
-    );
+    const result: SyncSubscriptionResult =
+      await syncSubscriptionAction(customerSessionToken);
     setCanAccessDashboard(result.canAccessDashboard);
 
     if (result.canAccessDashboard) {
