@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
 import readingTime from "reading-time";
+import { appConfig } from "./config";
 
 const BLOG_DIR = path.join(process.cwd(), "content/blog");
 
@@ -69,7 +70,7 @@ export function getAllPosts(): PostMeta[] {
           readingTime: readingTime(content).text,
           category: data.category,
           image: data.image,
-          author: data.author || { name: "Saasy Team" },
+          author: data.author || { name: `${appConfig.team.name} Team` },
           featured: data.featured || false,
           tags: data.tags || [],
         });
@@ -122,7 +123,7 @@ export function getPostBySlug(slug: string): Post | null {
       readingTime: readingTime(content).text,
       category: data.category || undefined,
       image: data.image || undefined,
-      author: data.author || { name: "Saasy Team" },
+      author: data.author || { name: `${appConfig.team.name} Team` },
       featured: data.featured || false,
       tags: data.tags || [],
       content,

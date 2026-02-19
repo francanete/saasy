@@ -128,10 +128,10 @@ export default async function Image({
               fontWeight: 600,
             }}
           >
-            {post.author?.name?.charAt(0) || "S"}
+            {post.author?.name?.charAt(0) || appConfig.team.name.charAt(0)}
           </div>
           <div style={{ color: "#d1d5db", fontSize: 20 }}>
-            {post.author?.name || "Saasy Team"}
+            {post.author?.name || `${appConfig.team.name} Team`}
           </div>
         </div>
 

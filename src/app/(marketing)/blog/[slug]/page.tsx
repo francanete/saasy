@@ -161,7 +161,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         url={postUrl}
         image={post.image}
         datePublished={post.date}
-        author={{ name: post.author?.name || "Saasy Team" }}
+        author={{ name: post.author?.name || `${appConfig.team.name} Team` }}
       />
       <BreadcrumbJsonLd
         items={[
@@ -231,7 +231,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 </Avatar>
                 <div>
                   <div className="font-semibold text-slate-900">
-                    {post.author?.name || "Saasy Team"}
+                    {post.author?.name || `${appConfig.team.name} Team`}
                   </div>
                   {post.author?.role && (
                     <div className="text-sm text-slate-500">
@@ -302,9 +302,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                   About the Author
                 </h3>
                 <p className="mb-4 leading-relaxed text-slate-600">
-                  {post.author?.name || "Saasy Team"} is part of the{" "}
-                  {appConfig.name} team, sharing insights and updates about our
-                  platform.
+                  {post.author?.name || `${appConfig.team.name} Team`} is part
+                  of the {appConfig.name} team, sharing insights and updates
+                  about our platform.
                 </p>
                 <Button
                   variant="link"

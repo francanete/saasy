@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { appConfig } from "@/lib/config";
 import { Calendar, Clock, ArrowRight } from "lucide-react";
 import type { PostMeta } from "@/lib/blog";
 import { cn } from "@/lib/utils";
@@ -113,7 +114,7 @@ export function BlogCard({ post, featured = false }: BlogCardProps) {
                 </AvatarFallback>
               </Avatar>
               <span className="text-sm font-medium text-slate-900">
-                {post.author?.name || "Saasy Team"}
+                {post.author?.name || `${appConfig.team.name} Team`}
               </span>
             </div>
 

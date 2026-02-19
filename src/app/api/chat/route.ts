@@ -1,6 +1,7 @@
 import { streamText } from "ai";
 import { models, type ModelName } from "@/lib/ai";
 import { trackAIUsage } from "@/lib/ai-usage";
+import { appConfig } from "@/lib/config";
 import { protectedApiRouteWrapper } from "@/lib/dal";
 import { BadRequestError } from "@/lib/errors";
 
@@ -8,7 +9,7 @@ import { BadRequestError } from "@/lib/errors";
 export const maxDuration = 30;
 
 // Server-side system prompt (never sent from client)
-const SYSTEM_PROMPT = `You are a helpful assistant for Saasy, a SaaS application.
+const SYSTEM_PROMPT = `You are a helpful assistant for ${appConfig.name}, a SaaS application.
 
 PRICING:
 - Free plan: Up to 3 projects, basic analytics, community support
