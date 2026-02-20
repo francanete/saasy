@@ -1,10 +1,17 @@
 "use client";
 
+import { ThemeProvider } from "next-themes";
 import { OpenPanelComponent } from "@openpanel/nextjs";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({
+  children,
+  defaultTheme = "system",
+}: {
+  children: React.ReactNode;
+  defaultTheme?: "light" | "dark" | "system";
+}) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -18,15 +25,22 @@ export function Providers({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <OpenPanelComponent
-        clientId={process.env.NEXT_PUBLIC_OPENPANEL_CLIENT_ID!}
-        apiUrl="https://api.analytics.francanete.dev"
-        trackScreenViews
-        trackOutgoingLinks
-        trackAttributes
-      />
-      {children}
-    </QueryClientProvider>
+    <ThemeProvider
+      attribute="class"
+      defaultTheme={defaultTheme}
+      enableSystem
+      disableTransitionOnChange
+    >
+      <QueryClientProvider client={queryClient}>
+        <OpenPanelComponent
+          clientId={process.env.NEXT_PUBLIC_OPENPANEL_CLIENT_ID!}
+          apiUrl="https://api.analytics.francanete.dev"
+          trackScreenViews
+          trackOutgoingLinks
+          trackAttributes
+        />
+        {children}
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }

@@ -1,7 +1,7 @@
 export function PlauderaLogo({ className }: { className?: string }) {
   return (
     <svg
-      viewBox="0 0 48 48"
+      viewBox="8 0 32 40"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={className}

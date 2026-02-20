@@ -26,7 +26,7 @@ export function BenefitComparison({ className }: BenefitComparisonProps) {
     <section
       ref={ref}
       className={cn(
-        "bg-gradient-to-b from-white to-slate-50 py-24 lg:py-32",
+        "from-background to-muted bg-gradient-to-b py-24 lg:py-32",
         className
       )}
     >
@@ -39,10 +39,10 @@ export function BenefitComparison({ className }: BenefitComparisonProps) {
             isInView ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
           )}
         >
-          <h2 className="text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
+          <h2 className="text-foreground text-4xl font-semibold tracking-tight sm:text-5xl">
             {header.title}
           </h2>
-          <p className="mt-6 text-lg leading-8 text-slate-600">
+          <p className="text-muted-foreground mt-6 text-lg leading-8">
             {header.subtitle}
           </p>
         </div>
@@ -59,13 +59,16 @@ export function BenefitComparison({ className }: BenefitComparisonProps) {
                 : "translate-y-12 opacity-0"
             )}
           >
-            <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-slate-100 to-slate-50" />
-            <div className="relative rounded-2xl bg-white p-8 lg:p-10">
+            <div className="from-muted to-muted/50 absolute -inset-px rounded-2xl bg-gradient-to-b" />
+            <div className="bg-background relative rounded-2xl p-8 lg:p-10">
               <div className="mb-8 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
-                  <X className="h-5 w-5 text-slate-600" strokeWidth={2.5} />
+                <div className="bg-muted flex h-10 w-10 items-center justify-center rounded-lg">
+                  <X
+                    className="text-muted-foreground h-5 w-5"
+                    strokeWidth={2.5}
+                  />
                 </div>
-                <h3 className="text-lg font-semibold text-slate-900">
+                <h3 className="text-foreground text-lg font-semibold">
                   {oldWay.label}
                 </h3>
               </div>
@@ -93,13 +96,16 @@ export function BenefitComparison({ className }: BenefitComparisonProps) {
                 : "translate-y-12 opacity-0"
             )}
           >
-            <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-emerald-500/20 to-emerald-500/5" />
-            <div className="relative rounded-2xl bg-white p-8 shadow-lg shadow-emerald-500/10 lg:p-10">
+            <div className="from-success/20 to-success/5 absolute -inset-px rounded-2xl bg-gradient-to-b" />
+            <div className="bg-background shadow-success/10 relative rounded-2xl p-8 shadow-lg lg:p-10">
               <div className="mb-8 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500">
-                  <Check className="h-5 w-5 text-white" strokeWidth={2.5} />
+                <div className="bg-success flex h-10 w-10 items-center justify-center rounded-lg">
+                  <Check
+                    className="text-primary-foreground h-5 w-5"
+                    strokeWidth={2.5}
+                  />
                 </div>
-                <h3 className="text-lg font-semibold text-slate-900">
+                <h3 className="text-foreground text-lg font-semibold">
                   {modernApproach.label}
                 </h3>
               </div>
@@ -139,13 +145,13 @@ function OldWayItem({ item, isInView, delay }: ItemProps) {
       style={{ transitionDelay: isInView ? `${300 + delay}ms` : "0ms" }}
     >
       <div className="mt-0.5 flex-shrink-0">
-        <div className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+        <div className="bg-muted-foreground h-1.5 w-1.5 rounded-full" />
       </div>
       <div>
-        <p className="text-[15px] leading-snug font-medium text-slate-900">
+        <p className="text-foreground text-[15px] leading-snug font-medium">
           {item.title}
         </p>
-        <p className="mt-1.5 text-[15px] leading-relaxed text-slate-600">
+        <p className="text-muted-foreground mt-1.5 text-[15px] leading-relaxed">
           {item.description}
         </p>
       </div>
@@ -164,13 +170,13 @@ function ModernApproachItem({ item, isInView, delay }: ItemProps) {
       style={{ transitionDelay: isInView ? `${400 + delay}ms` : "0ms" }}
     >
       <div className="mt-0.5 flex-shrink-0">
-        <Check className="h-5 w-5 text-emerald-600" strokeWidth={2.5} />
+        <Check className="text-success h-5 w-5" strokeWidth={2.5} />
       </div>
       <div>
-        <p className="text-[15px] leading-snug font-medium text-slate-900">
+        <p className="text-foreground text-[15px] leading-snug font-medium">
           {item.title}
         </p>
-        <p className="mt-1.5 text-[15px] leading-relaxed text-slate-600">
+        <p className="text-muted-foreground mt-1.5 text-[15px] leading-relaxed">
           {item.description}
         </p>
       </div>

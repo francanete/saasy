@@ -23,8 +23,8 @@ export function TestimonialCard({
       className={cn(
         "relative flex h-full flex-col rounded-2xl p-8 transition-all duration-500",
         featured
-          ? "bg-gradient-to-br from-slate-900 to-slate-800 text-white shadow-xl lg:col-span-2"
-          : "border border-slate-200/60 bg-white/80 shadow-sm hover:-translate-y-1 hover:shadow-lg",
+          ? "from-foreground to-foreground/90 text-primary-foreground bg-gradient-to-br shadow-xl lg:col-span-2"
+          : "border-border/60 bg-background/80 border shadow-sm hover:-translate-y-1 hover:shadow-lg",
         isInView ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
       )}
       style={{ transitionDelay: isInView ? `${delay}ms` : "0ms" }}
@@ -34,7 +34,7 @@ export function TestimonialCard({
         <QuoteIcon
           className={cn(
             "h-6 w-6",
-            featured ? "text-indigo-400" : "text-slate-300"
+            featured ? "text-primary" : "text-muted-foreground"
           )}
         />
       </div>
@@ -45,8 +45,8 @@ export function TestimonialCard({
           className={cn(
             "leading-relaxed font-medium tracking-tight",
             featured
-              ? "text-xl text-slate-100 md:text-2xl"
-              : "text-lg text-slate-700"
+              ? "text-primary-foreground/90 text-xl md:text-2xl"
+              : "text-foreground text-lg"
           )}
         >
           &ldquo;{quote}&rdquo;
@@ -59,8 +59,8 @@ export function TestimonialCard({
           className={cn(
             "absolute top-8 right-8 rounded-full px-3 py-1 text-xs font-semibold tracking-wide uppercase",
             featured
-              ? "border border-indigo-500/30 bg-indigo-500/20 text-indigo-200"
-              : "border border-indigo-100 bg-indigo-50 text-indigo-600"
+              ? "border-primary/30 bg-primary/20 text-primary/70 border"
+              : "border-primary/20 bg-primary/10 text-primary border"
           )}
         >
           {stats}
@@ -68,14 +68,14 @@ export function TestimonialCard({
       )}
 
       {/* Author Info */}
-      <div className="relative z-10 mt-auto flex items-center border-t border-slate-100/10 pt-6">
+      <div className="border-border/10 relative z-10 mt-auto flex items-center border-t pt-6">
         {/* Avatar */}
         <div
           className={cn(
             "mr-4 flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold shadow-inner",
             featured
-              ? "bg-gradient-to-br from-indigo-400 to-purple-500 text-white ring-2 ring-white/10"
-              : "bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600 ring-1 ring-slate-200"
+              ? "from-primary text-primary-foreground ring-background/10 bg-gradient-to-br to-purple-500 ring-2"
+              : "from-muted to-muted/70 text-muted-foreground ring-border bg-gradient-to-br ring-1"
           )}
         >
           {initials}
@@ -85,28 +85,28 @@ export function TestimonialCard({
           <div
             className={cn(
               "flex items-center gap-2 font-bold",
-              featured ? "text-white" : "text-slate-900"
+              featured ? "text-primary-foreground" : "text-foreground"
             )}
           >
             {author}
             <VerifiedIcon
               className={cn(
                 "h-4 w-4",
-                featured ? "text-blue-400" : "text-blue-500"
+                featured ? "text-primary" : "text-primary"
               )}
             />
           </div>
           <div
             className={cn(
               "text-sm",
-              featured ? "text-slate-400" : "text-slate-500"
+              featured ? "text-muted-foreground" : "text-muted-foreground"
             )}
           >
             {role},{" "}
             <span
               className={cn(
                 "font-medium",
-                featured ? "text-indigo-300" : "text-indigo-600"
+                featured ? "text-primary" : "text-primary"
               )}
             >
               {company}

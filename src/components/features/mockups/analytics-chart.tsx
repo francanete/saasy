@@ -19,23 +19,23 @@ export function AnalyticsChartMockup({ className, isInView }: MockupProps) {
     <div
       className={cn(
         "w-full max-w-sm rounded-xl p-6",
-        "bg-white",
-        "border border-slate-100",
-        "shadow-xl shadow-slate-200/50",
-        "ring-1 ring-slate-100",
+        "bg-background",
+        "border-border border",
+        "shadow-muted/50 shadow-xl",
+        "ring-border ring-1",
         className
       )}
     >
       {/* Header */}
       <div className="mb-2 flex items-center justify-between">
         <div>
-          <p className="mb-1.5 text-xs font-medium tracking-wide text-slate-500">
+          <p className="text-muted-foreground mb-1.5 text-xs font-medium tracking-wide">
             Total Revenue
           </p>
           <div className="flex items-baseline space-x-3">
             <h3
               className={cn(
-                "text-3xl font-semibold tracking-tight text-slate-900",
+                "text-foreground text-3xl font-semibold tracking-tight",
                 "transition-all duration-700 ease-out",
                 isInView
                   ? "translate-y-0 opacity-100"
@@ -46,7 +46,7 @@ export function AnalyticsChartMockup({ className, isInView }: MockupProps) {
             </h3>
             <span
               className={cn(
-                "flex items-center rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700",
+                "bg-success/10 text-success flex items-center rounded-full px-2 py-1 text-xs font-medium",
                 "transition-all delay-300 duration-500 ease-out",
                 isInView ? "scale-100 opacity-100" : "scale-75 opacity-0"
               )}
@@ -72,8 +72,8 @@ export function AnalyticsChartMockup({ className, isInView }: MockupProps) {
             className={cn(
               "rounded-md px-3 py-1 text-xs font-medium transition-colors",
               index === 0
-                ? "bg-slate-900 text-white"
-                : "text-slate-500 hover:bg-slate-100"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-muted"
             )}
           >
             {period}
@@ -86,7 +86,7 @@ export function AnalyticsChartMockup({ className, isInView }: MockupProps) {
         {/* Horizontal Grid Lines */}
         <div className="absolute inset-0 flex flex-col justify-between">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="border-t border-dashed border-slate-100" />
+            <div key={i} className="border-border border-t border-dashed" />
           ))}
         </div>
 
@@ -105,7 +105,7 @@ export function AnalyticsChartMockup({ className, isInView }: MockupProps) {
                   <div
                     className={cn(
                       "absolute -top-10 left-1/2 z-10 -translate-x-1/2",
-                      "rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-medium text-white",
+                      "bg-foreground text-background rounded-lg px-2.5 py-1.5 text-xs font-medium",
                       "shadow-lg",
                       "transition-all delay-700 duration-300",
                       isInView
@@ -115,7 +115,7 @@ export function AnalyticsChartMockup({ className, isInView }: MockupProps) {
                   >
                     {bar.value}
                     {/* Arrow */}
-                    <div className="absolute -bottom-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 bg-slate-900" />
+                    <div className="bg-foreground absolute -bottom-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45" />
                   </div>
                 )}
 
@@ -124,8 +124,8 @@ export function AnalyticsChartMockup({ className, isInView }: MockupProps) {
                   className={cn(
                     "w-full rounded-t-md transition-all ease-out",
                     isHighlighted
-                      ? "bg-gradient-to-t from-emerald-600 to-emerald-500 shadow-lg shadow-emerald-500/30"
-                      : "bg-gradient-to-t from-slate-200 to-slate-100"
+                      ? "from-success to-success/85 shadow-success/30 bg-gradient-to-t shadow-lg"
+                      : "from-muted to-muted/70 bg-gradient-to-t"
                   )}
                   style={{
                     height: isInView ? `${bar.height}%` : "0%",
@@ -142,7 +142,7 @@ export function AnalyticsChartMockup({ className, isInView }: MockupProps) {
       {/* X-Axis Labels */}
       <div
         className={cn(
-          "mt-3 flex justify-between text-xs text-slate-400",
+          "text-muted-foreground mt-3 flex justify-between text-xs",
           "transition-all delay-500 duration-500",
           isInView ? "opacity-100" : "opacity-0"
         )}
@@ -152,7 +152,7 @@ export function AnalyticsChartMockup({ className, isInView }: MockupProps) {
             key={bar.day}
             className={cn(
               "flex-1 text-center",
-              bar.highlighted && "font-medium text-slate-700"
+              bar.highlighted && "text-foreground font-medium"
             )}
           >
             {bar.day}
@@ -163,7 +163,7 @@ export function AnalyticsChartMockup({ className, isInView }: MockupProps) {
       {/* Comparison Text */}
       <p
         className={cn(
-          "mt-4 text-center text-xs text-slate-400",
+          "text-muted-foreground mt-4 text-center text-xs",
           "transition-all delay-600 duration-500",
           isInView ? "opacity-100" : "opacity-0"
         )}

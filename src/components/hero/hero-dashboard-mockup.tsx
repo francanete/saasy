@@ -51,25 +51,25 @@ export function HeroDashboardMockup({
       className={cn(
         "relative w-full max-w-[500px]",
         "rounded-xl",
-        "bg-white",
-        "border border-slate-200",
-        "shadow-2xl shadow-slate-200/50",
+        "bg-background",
+        "border-border border",
+        "shadow-muted/50 shadow-2xl",
         "overflow-hidden",
         className
       )}
     >
       {/* Header - Minimalist */}
-      <div className="flex items-center justify-between border-b border-slate-100 bg-white px-6 py-4">
+      <div className="border-border bg-background flex items-center justify-between border-b px-6 py-4">
         <div className="flex items-center gap-4">
           <div className="flex gap-2">
-            <div className="h-2.5 w-2.5 rounded-full bg-slate-200" />
-            <div className="h-2.5 w-2.5 rounded-full bg-slate-200" />
-            <div className="h-2.5 w-2.5 rounded-full bg-slate-200" />
+            <div className="bg-muted h-2.5 w-2.5 rounded-full" />
+            <div className="bg-muted h-2.5 w-2.5 rounded-full" />
+            <div className="bg-muted h-2.5 w-2.5 rounded-full" />
           </div>
         </div>
-        <div className="flex items-center gap-2 rounded-full border border-slate-100 bg-slate-50 px-2 py-1">
-          <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-          <span className="text-[10px] font-medium tracking-wider text-slate-500 uppercase">
+        <div className="border-border bg-muted flex items-center gap-2 rounded-full border px-2 py-1">
+          <div className="bg-success h-1.5 w-1.5 rounded-full" />
+          <span className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
             System Operational
           </span>
         </div>
@@ -80,10 +80,12 @@ export function HeroDashboardMockup({
         {/* Main Metric */}
         <div className="mb-8">
           <div className="mb-2 flex items-center justify-between">
-            <p className="text-sm font-medium text-slate-500">Total Revenue</p>
+            <p className="text-muted-foreground text-sm font-medium">
+              Total Revenue
+            </p>
             <span
               className={cn(
-                "inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-600",
+                "bg-success/10 text-success inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
                 "transition-all delay-200 duration-500 ease-out",
                 isInView
                   ? "translate-y-0 opacity-100"
@@ -95,12 +97,12 @@ export function HeroDashboardMockup({
             </span>
           </div>
           <div className="flex items-baseline gap-1">
-            <span className="text-3xl font-light tracking-tight text-slate-400">
+            <span className="text-muted-foreground text-3xl font-light tracking-tight">
               $
             </span>
             <span
               className={cn(
-                "text-4xl font-semibold tracking-tight text-slate-900",
+                "text-foreground text-4xl font-semibold tracking-tight",
                 "transition-all duration-700 ease-out",
                 isInView
                   ? "translate-y-0 opacity-100"
@@ -127,7 +129,7 @@ export function HeroDashboardMockup({
                 className="group flex flex-1 flex-col items-center gap-2"
               >
                 <div
-                  className="w-full rounded-sm bg-slate-900 opacity-90 transition-all hover:opacity-100"
+                  className="bg-foreground w-full rounded-sm opacity-90 transition-all hover:opacity-100"
                   style={{
                     height: isInView ? `${bar.height}%` : "0%",
                     transition: "height 1000ms cubic-bezier(0.4, 0, 0.2, 1)",
@@ -137,11 +139,11 @@ export function HeroDashboardMockup({
               </div>
             ))}
           </div>
-          <div className="mt-3 flex justify-between border-t border-slate-100 pt-3">
+          <div className="border-border mt-3 flex justify-between border-t pt-3">
             {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day, i) => (
               <span
                 key={i}
-                className="text-[10px] font-medium tracking-wide text-slate-400 uppercase"
+                className="text-muted-foreground text-[10px] font-medium tracking-wide uppercase"
               >
                 {day}
               </span>
@@ -151,7 +153,7 @@ export function HeroDashboardMockup({
 
         {/* Recent Transactions - Minimal List */}
         <div>
-          <p className="mb-4 text-xs font-semibold tracking-wider text-slate-900 uppercase">
+          <p className="text-foreground mb-4 text-xs font-semibold tracking-wider uppercase">
             Recent Transactions
           </p>
           <div className="space-y-3">
@@ -162,7 +164,7 @@ export function HeroDashboardMockup({
                   key={index}
                   className={cn(
                     "flex items-center justify-between py-2",
-                    "border-b border-slate-50 last:border-0",
+                    "border-muted border-b last:border-0",
                     "transition-all duration-500 ease-out",
                     isInView
                       ? "translate-x-0 opacity-100"
@@ -173,14 +175,14 @@ export function HeroDashboardMockup({
                   }}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-100 bg-slate-50 text-slate-500">
+                    <div className="border-border bg-muted text-muted-foreground flex h-8 w-8 items-center justify-center rounded-full border">
                       <Icon className="h-4 w-4" />
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium text-slate-700">
+                      <span className="text-foreground text-sm font-medium">
                         {item.text}
                       </span>
-                      <span className="text-xs text-slate-400">
+                      <span className="text-muted-foreground text-xs">
                         {item.time}
                       </span>
                     </div>
@@ -189,8 +191,8 @@ export function HeroDashboardMockup({
                     className={cn(
                       "text-sm font-medium",
                       item.amount.startsWith("+")
-                        ? "text-slate-700"
-                        : "text-slate-400"
+                        ? "text-foreground"
+                        : "text-muted-foreground"
                     )}
                   >
                     {item.amount}

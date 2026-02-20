@@ -70,6 +70,12 @@ export type AppConfig = {
     terms: { minimumAge: number; jurisdiction: string };
     lastUpdated: string;
   };
+  theme: {
+    primaryColor: string;
+    secondaryColor?: string;
+    defaultMode: "light" | "dark" | "system";
+    allowToggle: boolean;
+  };
   seo: {
     siteUrl: string;
     title: { default: string; template: string };
@@ -268,6 +274,12 @@ export const appConfig: AppConfig = {
     },
     lastUpdated: "January 2025",
   },
+  theme: {
+    primaryColor: "#4f46e5",
+    secondaryColor: "#0ea5e9",
+    defaultMode: "system",
+    allowToggle: true,
+  },
   seo: {
     siteUrl: process.env.NEXT_PUBLIC_APP_URL || "https://yourdomain.com",
     title: {
@@ -296,7 +308,7 @@ export const appConfig: AppConfig = {
     },
     organization: {
       name: "Saasy",
-      logo: "/logo.png",
+      logo: "/logo.svg",
       sameAs: [
         "https://twitter.com/saasyapp",
         "https://github.com/saasyapp",

@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
-import { ChevronsUpDown, LogOut, Settings } from "lucide-react";
+import { ChevronsUpDown, LogOut, Settings, Sun, Moon } from "lucide-react";
+import { useTheme } from "next-themes";
+import { appConfig } from "@/lib/config";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -55,6 +57,7 @@ export function NavUser({
   expiresAt,
 }: NavUserProps) {
   const router = useRouter();
+  const { resolvedTheme, setTheme } = useTheme();
   const initials = user.name
     ? user.name
         .split(" ")
@@ -142,6 +145,17 @@ export function NavUser({
                   Settings
                 </Link>
               </DropdownMenuItem>
+              {appConfig.theme.allowToggle && (
+                <DropdownMenuItem
+                  onClick={() =>
+                    setTheme(resolvedTheme === "dark" ? "light" : "dark")
+                  }
+                >
+                  <Sun className="mr-2 h-4 w-4 dark:hidden" />
+                  <Moon className="mr-2 hidden h-4 w-4 dark:block" />
+                  Toggle theme
+                </DropdownMenuItem>
+              )}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem

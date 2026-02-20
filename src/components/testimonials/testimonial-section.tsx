@@ -23,7 +23,7 @@ export function TestimonialSection({ className }: TestimonialSectionProps) {
     <section
       ref={ref}
       className={cn(
-        "bg-gradient-to-b from-slate-50 to-white py-24 lg:py-32",
+        "from-muted to-background bg-gradient-to-b py-24 lg:py-32",
         className
       )}
       aria-labelledby="testimonial-heading"
@@ -38,21 +38,21 @@ export function TestimonialSection({ className }: TestimonialSectionProps) {
           )}
         >
           {/* Badge */}
-          <div className="mb-6 inline-flex items-center rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-sm font-semibold text-indigo-600">
-            <span className="mr-2 flex h-2 w-2 rounded-full bg-indigo-600" />
+          <div className="border-primary/20 bg-primary/10 text-primary mb-6 inline-flex items-center rounded-full border px-3 py-1 text-sm font-semibold">
+            <span className="bg-primary mr-2 flex h-2 w-2 rounded-full" />
             {header.badge}
           </div>
 
           {/* Title */}
           <h2
             id="testimonial-heading"
-            className="mb-6 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-600 bg-clip-text text-4xl font-bold tracking-tight text-transparent sm:text-5xl lg:text-6xl"
+            className="from-foreground via-foreground/90 to-foreground/60 mb-6 bg-gradient-to-r bg-clip-text text-4xl font-bold tracking-tight text-transparent sm:text-5xl lg:text-6xl"
           >
             {header.title}
           </h2>
 
           {/* Description */}
-          <p className="mx-auto max-w-2xl text-lg leading-relaxed text-slate-600 lg:text-xl">
+          <p className="text-muted-foreground mx-auto max-w-2xl text-lg leading-relaxed lg:text-xl">
             {header.description}
           </p>
         </div>

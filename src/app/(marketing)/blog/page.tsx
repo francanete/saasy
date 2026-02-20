@@ -17,7 +17,7 @@ export default function BlogPage() {
   return (
     <div className="bg-background min-h-screen font-sans antialiased">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-linear-to-b from-slate-50/50 to-white py-12 md:py-16">
+      <section className="from-muted/50 to-background relative overflow-hidden bg-linear-to-b py-12 md:py-16">
         {/* Subtle Background Pattern */}
         <div
           className="absolute inset-0 -z-10 opacity-[0.03]"
@@ -28,14 +28,14 @@ export default function BlogPage() {
 
         <div className="container mx-auto px-4 md:px-6">
           <div className="mx-auto max-w-4xl text-center">
-            <h1 className="mb-4 text-4xl font-extrabold tracking-tight text-slate-900 md:text-5xl lg:text-6xl">
+            <h1 className="text-foreground mb-4 text-4xl font-extrabold tracking-tight md:text-5xl lg:text-6xl">
               Tips, guides, <br className="hidden md:block" />
               <span className="from-primary to-primary/60 bg-linear-to-r bg-clip-text text-transparent">
                 and feedback insights.
               </span>
             </h1>
 
-            <p className="mx-auto mb-6 max-w-2xl text-lg leading-relaxed text-slate-600">
+            <p className="text-muted-foreground mx-auto mb-6 max-w-2xl text-lg leading-relaxed">
               Learn how to collect better feedback, prioritize what matters, and
               build products your customers love.
             </p>
@@ -49,8 +49,8 @@ export default function BlogPage() {
                     onClick={() => setSelectedCategory(category)}
                     className={
                       index === 0
-                        ? "rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-md transition-all duration-200"
-                        : "rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-slate-100 hover:text-slate-900"
+                        ? "rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-md transition-all duration-200"
+                        : "rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground"
                     }
                   >
                     {category}
@@ -64,17 +64,17 @@ export default function BlogPage() {
       </section>
 
       {/* Main Content */}
-      <section className="bg-white py-12 md:py-16">
+      <section className="bg-background py-12 md:py-16">
         <div className="container mx-auto max-w-7xl px-4 md:px-6">
           {posts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
-              <div className="mb-6 rounded-full bg-slate-50 p-6 ring-1 ring-slate-100">
-                <Newspaper className="h-10 w-10 text-slate-400" />
+              <div className="bg-muted ring-border mb-6 rounded-full p-6 ring-1">
+                <Newspaper className="text-muted-foreground h-10 w-10" />
               </div>
-              <h3 className="mb-2 text-2xl font-bold text-slate-900">
+              <h3 className="text-foreground mb-2 text-2xl font-bold">
                 No posts found
               </h3>
-              <p className="max-w-md text-slate-500">
+              <p className="text-muted-foreground max-w-md">
                 We couldn&apos;t find any posts. Check back later for new
                 content!
               </p>
@@ -100,13 +100,13 @@ export default function BlogPage() {
       </section>
 
       {/* TODO: Implement newsletter subscription with Resend
-      <section className="border-t bg-slate-50 py-20">
+      <section className="border-t bg-muted py-20">
         <div className="container mx-auto px-4 text-center">
           <div className="mx-auto max-w-2xl">
-            <h2 className="mb-4 text-3xl font-bold tracking-tight text-slate-900">
+            <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground">
               Subscribe to our newsletter
             </h2>
-            <p className="mb-8 text-slate-600">
+            <p className="mb-8 text-muted-foreground">
               Get the latest updates, articles, and resources sent straight to
               your inbox. No spam, unsubscribe anytime.
             </p>

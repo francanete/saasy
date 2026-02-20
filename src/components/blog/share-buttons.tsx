@@ -70,7 +70,7 @@ export function ShareButtons({ title, slug }: ShareButtonsProps) {
         variant="ghost"
         size="icon"
         onClick={handleTwitterShare}
-        className="h-9 w-9 text-slate-500 hover:bg-[#1DA1F2]/10 hover:text-[#1DA1F2]"
+        className="text-muted-foreground h-9 w-9 hover:bg-[#1DA1F2]/10 hover:text-[#1DA1F2]"
         aria-label="Share on Twitter"
       >
         <Twitter className="h-4 w-4" />
@@ -79,7 +79,7 @@ export function ShareButtons({ title, slug }: ShareButtonsProps) {
         variant="ghost"
         size="icon"
         onClick={handleLinkedInShare}
-        className="h-9 w-9 text-slate-500 hover:bg-[#0A66C2]/10 hover:text-[#0A66C2]"
+        className="text-muted-foreground h-9 w-9 hover:bg-[#0A66C2]/10 hover:text-[#0A66C2]"
         aria-label="Share on LinkedIn"
       >
         <Linkedin className="h-4 w-4" />
@@ -88,7 +88,7 @@ export function ShareButtons({ title, slug }: ShareButtonsProps) {
         variant="ghost"
         size="icon"
         onClick={handleFacebookShare}
-        className="h-9 w-9 text-slate-500 hover:bg-[#1877F2]/10 hover:text-[#1877F2]"
+        className="text-muted-foreground h-9 w-9 hover:bg-[#1877F2]/10 hover:text-[#1877F2]"
         aria-label="Share on Facebook"
       >
         <Facebook className="h-4 w-4" />
@@ -97,11 +97,11 @@ export function ShareButtons({ title, slug }: ShareButtonsProps) {
         variant="ghost"
         size="icon"
         onClick={handleCopyLink}
-        className="h-9 w-9 text-slate-500 hover:text-slate-900"
+        className="text-muted-foreground hover:text-foreground h-9 w-9"
         aria-label="Copy Link"
       >
         {copied ? (
-          <Check className="h-4 w-4 text-green-500" />
+          <Check className="text-success h-4 w-4" />
         ) : (
           <LinkIcon className="h-4 w-4" />
         )}

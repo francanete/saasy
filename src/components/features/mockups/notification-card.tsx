@@ -7,9 +7,9 @@ import type { MockupProps } from "@/lib/features-config";
 const notifications = [
   {
     icon: Check,
-    iconBg: "bg-gradient-to-br from-emerald-50 to-emerald-100",
-    iconRing: "ring-emerald-200/50",
-    iconColor: "text-emerald-600",
+    iconBg: "bg-gradient-to-br from-success/10 to-success/15",
+    iconRing: "ring-success/20",
+    iconColor: "text-success",
     title: "System update completed",
     subtitle: "All services running normally",
     time: "2m",
@@ -42,27 +42,27 @@ export function NotificationCardMockup({ className, isInView }: MockupProps) {
     <div
       className={cn(
         "w-full max-w-sm overflow-hidden rounded-xl",
-        "bg-white/90 backdrop-blur-sm",
-        "border border-slate-200/60",
-        "shadow-xl shadow-slate-200/50",
+        "bg-background/90 backdrop-blur-sm",
+        "border-border/60 border",
+        "shadow-muted/50 shadow-xl",
         className
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white px-5 py-4">
+      <div className="border-border from-muted/80 to-background flex items-center justify-between border-b bg-gradient-to-r px-5 py-4">
         <div className="flex items-center space-x-3">
           <div className="flex items-center space-x-2">
-            <div className="animate-pulse-glow h-2 w-2 rounded-full bg-emerald-500" />
-            <span className="text-xs font-medium tracking-wide text-slate-500">
+            <div className="animate-pulse-glow bg-success h-2 w-2 rounded-full" />
+            <span className="text-muted-foreground text-xs font-medium tracking-wide">
               Live
             </span>
           </div>
-          <div className="h-4 w-px bg-slate-200" />
-          <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
+          <div className="bg-muted h-4 w-px" />
+          <span className="bg-success/10 text-success rounded-full px-2 py-0.5 text-xs font-medium">
             3 new
           </span>
         </div>
-        <Bell className="h-4 w-4 text-slate-400" />
+        <Bell className="text-muted-foreground h-4 w-4" />
       </div>
 
       {/* Content */}
@@ -77,11 +77,11 @@ export function NotificationCardMockup({ className, isInView }: MockupProps) {
               className={cn(
                 "flex items-start space-x-3 rounded-lg p-3",
                 "transition-all duration-500 ease-out",
-                "hover:bg-slate-50/80",
+                "hover:bg-muted/80",
                 isInView
                   ? "translate-x-0 opacity-100"
                   : "-translate-x-4 opacity-0",
-                !isLast && "border-b border-slate-100/50"
+                !isLast && "border-border/50 border-b"
               )}
               style={{
                 transitionDelay: isInView ? `${notification.delay}ms` : "0ms",
@@ -98,14 +98,14 @@ export function NotificationCardMockup({ className, isInView }: MockupProps) {
                 <Icon className={cn("h-4 w-4", notification.iconColor)} />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium tracking-tight text-slate-900">
+                <p className="text-foreground text-sm font-medium tracking-tight">
                   {notification.title}
                 </p>
-                <p className="mt-0.5 text-xs text-slate-500">
+                <p className="text-muted-foreground mt-0.5 text-xs">
                   {notification.subtitle}
                 </p>
               </div>
-              <span className="text-xs text-slate-400 tabular-nums">
+              <span className="text-muted-foreground text-xs tabular-nums">
                 {notification.time}
               </span>
             </div>

@@ -44,10 +44,10 @@ export default function HomePage() {
         <section className="py-24 lg:py-32">
           <div className="container mx-auto px-4 md:px-6">
             <div className="mb-16 text-center">
-              <h2 className="text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
+              <h2 className="text-foreground text-4xl font-semibold tracking-tight sm:text-5xl">
                 Simple, transparent pricing
               </h2>
-              <p className="mt-6 text-lg leading-8 text-slate-600">
+              <p className="text-muted-foreground mt-6 text-lg leading-8">
                 Choose the plan that fits your needs. No hidden fees.
               </p>
             </div>

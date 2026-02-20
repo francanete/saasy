@@ -21,13 +21,13 @@ export default function PrivacyPage() {
           { name: "Privacy Policy", url: getCanonicalUrl("/privacy") },
         ]}
       />
-      <div className="min-h-screen bg-white">
-        <header className="border-b border-slate-100 py-12 md:py-16">
+      <div className="bg-background min-h-screen">
+        <header className="border-border border-b py-12 md:py-16">
           <div className="container mx-auto max-w-3xl px-4">
-            <h1 className="text-4xl font-bold text-slate-900 md:text-5xl">
+            <h1 className="text-foreground text-4xl font-bold md:text-5xl">
               Privacy Policy
             </h1>
-            <p className="mt-4 text-slate-600">
+            <p className="text-muted-foreground mt-4">
               Last updated: {legal.lastUpdated}
             </p>
           </div>
@@ -37,10 +37,10 @@ export default function PrivacyPage() {
           <div className="container mx-auto max-w-3xl space-y-10 px-4">
             {/* Data Controller */}
             <section>
-              <h2 className="mb-4 text-xl font-semibold text-slate-900">
+              <h2 className="text-foreground mb-4 text-xl font-semibold">
                 Data Controller
               </h2>
-              <p className="text-slate-600">
+              <p className="text-muted-foreground">
                 {legal.company.name} (Company No.{" "}
                 {legal.company.registrationNumber})<br />
                 {legal.company.registeredAddress}
@@ -58,10 +58,10 @@ export default function PrivacyPage() {
 
             {/* What We Collect */}
             <section>
-              <h2 className="mb-4 text-xl font-semibold text-slate-900">
+              <h2 className="text-foreground mb-4 text-xl font-semibold">
                 Information We Collect
               </h2>
-              <ul className="list-disc space-y-1 pl-6 text-slate-600">
+              <ul className="text-muted-foreground list-disc space-y-1 pl-6">
                 <li>Account data (name, email)</li>
                 <li>
                   Payment status (via Polar - we don&apos;t store card details)
@@ -73,10 +73,10 @@ export default function PrivacyPage() {
 
             {/* How We Use It */}
             <section>
-              <h2 className="mb-4 text-xl font-semibold text-slate-900">
+              <h2 className="text-foreground mb-4 text-xl font-semibold">
                 How We Use Your Data
               </h2>
-              <ul className="list-disc space-y-1 pl-6 text-slate-600">
+              <ul className="text-muted-foreground list-disc space-y-1 pl-6">
                 <li>Provide and maintain {name}</li>
                 <li>Process payments and manage subscriptions</li>
                 <li>Send service-related communications</li>
@@ -87,10 +87,10 @@ export default function PrivacyPage() {
 
             {/* Legal Basis */}
             <section>
-              <h2 className="mb-4 text-xl font-semibold text-slate-900">
+              <h2 className="text-foreground mb-4 text-xl font-semibold">
                 Legal Basis (UK GDPR)
               </h2>
-              <ul className="list-disc space-y-1 pl-6 text-slate-600">
+              <ul className="text-muted-foreground list-disc space-y-1 pl-6">
                 <li>
                   <strong className="font-medium">Contract:</strong> To provide
                   our service to you
@@ -108,13 +108,13 @@ export default function PrivacyPage() {
 
             {/* Third Parties */}
             <section>
-              <h2 className="mb-4 text-xl font-semibold text-slate-900">
+              <h2 className="text-foreground mb-4 text-xl font-semibold">
                 Third-Party Services
               </h2>
-              <p className="mb-3 text-slate-600">
+              <p className="text-muted-foreground mb-3">
                 We use the following services to operate {name}:
               </p>
-              <ul className="list-disc space-y-1 pl-6 text-slate-600">
+              <ul className="text-muted-foreground list-disc space-y-1 pl-6">
                 {legal.dataHandling.subProcessors.map((processor) => (
                   <li key={processor}>{processor}</li>
                 ))}
@@ -123,10 +123,10 @@ export default function PrivacyPage() {
 
             {/* Data Transfers */}
             <section>
-              <h2 className="mb-4 text-xl font-semibold text-slate-900">
+              <h2 className="text-foreground mb-4 text-xl font-semibold">
                 International Transfers
               </h2>
-              <p className="text-slate-600">
+              <p className="text-muted-foreground">
                 Some services are based outside the UK. We ensure appropriate
                 safeguards (Standard Contractual Clauses or adequacy decisions)
                 are in place.
@@ -135,10 +135,10 @@ export default function PrivacyPage() {
 
             {/* Retention */}
             <section>
-              <h2 className="mb-4 text-xl font-semibold text-slate-900">
+              <h2 className="text-foreground mb-4 text-xl font-semibold">
                 Data Retention
               </h2>
-              <p className="text-slate-600">
+              <p className="text-muted-foreground">
                 We keep your account data while your account is active and for 2
                 years after deletion. Legal/tax records are kept for 7 years as
                 required by UK law.
@@ -147,13 +147,13 @@ export default function PrivacyPage() {
 
             {/* Your Rights */}
             <section>
-              <h2 className="mb-4 text-xl font-semibold text-slate-900">
+              <h2 className="text-foreground mb-4 text-xl font-semibold">
                 Your Rights
               </h2>
-              <p className="mb-3 text-slate-600">
+              <p className="text-muted-foreground mb-3">
                 Under UK GDPR, you have the right to:
               </p>
-              <ul className="list-disc space-y-1 pl-6 text-slate-600">
+              <ul className="text-muted-foreground list-disc space-y-1 pl-6">
                 <li>Access your personal data</li>
                 <li>Correct inaccurate data</li>
                 <li>Delete your data</li>
@@ -162,7 +162,7 @@ export default function PrivacyPage() {
                 <li>Withdraw consent</li>
                 <li>Not be subject to automated decision-making</li>
               </ul>
-              <p className="mt-3 text-slate-600">
+              <p className="text-muted-foreground mt-3">
                 <Link
                   href={legal.company.contactLink}
                   target="_blank"
@@ -177,14 +177,14 @@ export default function PrivacyPage() {
 
             {/* Cookies */}
             <section>
-              <h2 className="mb-4 text-xl font-semibold text-slate-900">
+              <h2 className="text-foreground mb-4 text-xl font-semibold">
                 Cookies
               </h2>
-              <p className="mb-3 text-slate-600">
+              <p className="text-muted-foreground mb-3">
                 We use the following cookies, all necessary for the service to
                 function:
               </p>
-              <ul className="list-disc space-y-1 pl-6 text-slate-600">
+              <ul className="text-muted-foreground list-disc space-y-1 pl-6">
                 <li>
                   <strong className="font-medium">
                     Authentication cookies
@@ -196,7 +196,7 @@ export default function PrivacyPage() {
                   Remember your settings (e.g., sidebar state)
                 </li>
               </ul>
-              <p className="mt-3 text-slate-600">
+              <p className="text-muted-foreground mt-3">
                 We use privacy-friendly analytics that do not use cookies or
                 track you across sites.
               </p>
@@ -204,10 +204,10 @@ export default function PrivacyPage() {
 
             {/* Complaints */}
             <section>
-              <h2 className="mb-4 text-xl font-semibold text-slate-900">
+              <h2 className="text-foreground mb-4 text-xl font-semibold">
                 Complaints
               </h2>
-              <p className="text-slate-600">
+              <p className="text-muted-foreground">
                 You have the right to complain to the Information
                 Commissioner&apos;s Office (ICO) at{" "}
                 <a
@@ -225,10 +225,10 @@ export default function PrivacyPage() {
 
             {/* Contact */}
             <section>
-              <h2 className="mb-4 text-xl font-semibold text-slate-900">
+              <h2 className="text-foreground mb-4 text-xl font-semibold">
                 Contact
               </h2>
-              <p className="text-slate-600">
+              <p className="text-muted-foreground">
                 Questions about this policy?{" "}
                 <Link
                   href={legal.company.contactLink}
