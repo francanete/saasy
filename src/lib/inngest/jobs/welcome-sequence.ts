@@ -7,7 +7,7 @@ import { z } from "zod";
 
 const userCreatedEventSchema = z.object({
   userId: z.string().min(1, "userId is required"),
-  email: z.string().email("Invalid email format"),
+  email: z.email("Invalid email format"),
 });
 
 export const welcomeSequenceJob = inngest.createFunction(
@@ -18,7 +18,7 @@ export const welcomeSequenceJob = inngest.createFunction(
     if (!parseResult.success) {
       console.error(
         "[welcome-sequence] Invalid event data:",
-        parseResult.error.flatten()
+        z.treeifyError(parseResult.error)
       );
       throw new Error(
         `Invalid event data: ${parseResult.error.issues.map((i) => i.message).join(", ")}`
