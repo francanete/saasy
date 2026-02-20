@@ -3,11 +3,14 @@ import { syncAllSubscriptions } from "./jobs/sync-all-subscriptions";
 import { paidSignupEmailJob } from "./jobs/paid-signup-email";
 import { trialEndingReminderJob } from "./jobs/trial-ending-reminder";
 
-export { welcomeSequenceJob } from "./jobs/welcome-sequence";
-export { syncAllSubscriptions } from "./jobs/sync-all-subscriptions";
-export { paidSignupEmailJob } from "./jobs/paid-signup-email";
 export {
+  welcomeSequenceJob,
+  syncAllSubscriptions,
+  paidSignupEmailJob,
   trialEndingReminderJob,
+};
+
+export {
   trialEndingReminderHandler,
   type InngestStepLike,
 } from "./jobs/trial-ending-reminder";
