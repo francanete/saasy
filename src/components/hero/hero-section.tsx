@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { appConfig } from "@/lib/config";
 import { Button } from "@/components/ui/button";
 import { HeroDashboardMockup } from "./hero-dashboard-mockup";
 import { useIntersectionObserver } from "@/hooks/use-intersection-observer";
@@ -137,11 +138,11 @@ export function HeroSection({ className }: HeroSectionProps) {
             >
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="text-muted-foreground h-4 w-4" />
-                <span>No credit card required</span>
+                <span>Cancel anytime</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="text-muted-foreground h-4 w-4" />
-                <span>14-day free trial</span>
+                <span>{appConfig.pricing.trialDays}-day free trial</span>
               </div>
             </div>
           </div>
