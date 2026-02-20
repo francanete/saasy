@@ -8,6 +8,7 @@ import {
 } from "@/lib/email-sequences";
 import { syncWithPolar } from "@/lib/subscription";
 import { appConfig, type PaidTier } from "@/lib/config";
+import { trackEvent } from "@/lib/openpanel";
 import { z } from "zod";
 
 // ============ Event Schemas ============
@@ -77,7 +78,12 @@ export const welcomeSequenceJob = inngest.createFunction(
         .onConflictDoNothing(); // In case webhook already created one
     });
 
-    // Step 2: Get user name for emails
+    // Step 2: Track signup event
+    await step.run("track-signup", () =>
+      trackEvent("user_signed_up", { profileId: userId, email })
+    );
+
+    // Step 3: Get user name for emails
     const user = await step.run("get-user", async () => {
       const [u] = await db
         .select({ name: users.name })

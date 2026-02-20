@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getPolarProducts } from "@/lib/pricing";
 import { getCurrentSession } from "@/lib/dal";
 import { polarClient } from "@/lib/polar-client";
+import { trackEvent } from "@/lib/openpanel";
 
 export async function POST(request: Request) {
   try {
@@ -49,6 +50,12 @@ export async function POST(request: Request) {
     // else: Let Polar collect email during checkout (full guest mode)
 
     const checkout = await polarClient.checkouts.create(checkoutParams);
+
+    // Fire-and-forget: don't slow down checkout redirect
+    trackEvent("checkout_started", {
+      profileId: session?.user?.id,
+      productSlug: slug,
+    });
 
     return NextResponse.json({ url: checkout.url });
   } catch (error) {

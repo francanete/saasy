@@ -16,6 +16,8 @@ import {
   mapPolarStatus,
 } from "./subscription";
 import { inngest } from "./inngest/client";
+import { trackEvent, trackRevenue } from "./openpanel";
+import { getPlanFromPolarProduct } from "./config";
 
 /**
  * Update Polar customer with our internal userId as externalId.
@@ -198,6 +200,12 @@ export const auth = betterAuth({
               billingType: "one_time",
               status: "ACTIVE",
             });
+
+            await trackRevenue(order.totalAmount / 100, {
+              profileId: userId,
+              plan: getPlanFromPolarProduct(product.id),
+              billingType: "one_time",
+            });
           },
 
           // New recurring subscription
@@ -233,6 +241,13 @@ export const auth = betterAuth({
                 : undefined,
               cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
             });
+
+            await trackEvent("subscription_created", {
+              profileId: userId,
+              plan: getPlanFromPolarProduct(product.id),
+              billingType: "recurring",
+              status: mapPolarStatus(subscription.status),
+            });
           },
 
           // Subscription status/period changes
@@ -247,6 +262,20 @@ export const auth = betterAuth({
                 : undefined,
               cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
             });
+
+            try {
+              const record = await db.query.subscriptions.findFirst({
+                where: eq(subscriptions.polarSubscriptionId, subscription.id),
+                columns: { userId: true, plan: true },
+              });
+              if (record) {
+                await trackEvent("subscription_updated", {
+                  profileId: record.userId,
+                  plan: record.plan,
+                  status: mapPolarStatus(subscription.status),
+                });
+              }
+            } catch {}
           },
 
           // Subscription canceled
@@ -257,6 +286,19 @@ export const auth = betterAuth({
               polarSubscriptionId: subscription.id,
               status: "CANCELED",
             });
+
+            try {
+              const record = await db.query.subscriptions.findFirst({
+                where: eq(subscriptions.polarSubscriptionId, subscription.id),
+                columns: { userId: true, plan: true },
+              });
+              if (record) {
+                await trackEvent("subscription_canceled", {
+                  profileId: record.userId,
+                  plan: record.plan,
+                });
+              }
+            } catch {}
           },
         }),
       ],
