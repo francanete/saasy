@@ -30,12 +30,15 @@ function FeatureItem({ text, featured = false }: FeatureItemProps) {
         className={cn(
           "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full transition-all duration-200",
           featured
-            ? "bg-primary/20 group-hover:bg-primary/30"
+            ? "bg-background/20 group-hover:bg-background/30"
             : "bg-primary/10 group-hover:bg-primary/15"
         )}
       >
         <Check
-          className={cn("h-3 w-3", featured ? "text-primary" : "text-primary")}
+          className={cn(
+            "h-3 w-3",
+            featured ? "text-background" : "text-primary"
+          )}
           strokeWidth={3}
         />
       </div>
@@ -43,7 +46,7 @@ function FeatureItem({ text, featured = false }: FeatureItemProps) {
         className={cn(
           "text-[15px] leading-tight font-medium transition-colors duration-200",
           featured
-            ? "text-muted-foreground group-hover:text-primary-foreground/90"
+            ? "text-background/70 group-hover:text-background/90"
             : "text-muted-foreground group-hover:text-foreground"
         )}
       >
@@ -91,7 +94,7 @@ function PricingCard({
       className={cn(
         "relative flex h-full flex-col overflow-visible rounded-2xl transition-all duration-500",
         isHighlighted
-          ? "from-foreground to-foreground/90 text-primary-foreground ring-background/10 bg-gradient-to-br shadow-xl ring-1"
+          ? "from-foreground to-foreground/90 text-background ring-background/10 bg-gradient-to-br shadow-xl ring-1"
           : "border-border/60 bg-background/80 border shadow-sm hover:-translate-y-1 hover:shadow-lg",
         isInView ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0",
         isLtd ? "w-full max-w-md" : "w-full sm:w-80"
@@ -100,7 +103,7 @@ function PricingCard({
     >
       {/* Badge */}
       {badge && (
-        <span className="border-success/30 bg-success/15 text-success absolute -top-3 right-4 inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium shadow-sm dark:border-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">
+        <span className="absolute -top-3 right-4 inline-flex items-center rounded-full border border-emerald-300 bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700 shadow-sm dark:border-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">
           {badge}
         </span>
       )}
@@ -118,7 +121,7 @@ function PricingCard({
           <p
             className={cn(
               "mb-2 text-sm font-semibold tracking-wide uppercase",
-              isHighlighted ? "text-primary" : "text-primary"
+              isHighlighted ? "text-background/70" : "text-primary"
             )}
           >
             {period === "/year" ? "Annual" : "Monthly"}
@@ -131,9 +134,7 @@ function PricingCard({
             <span
               className={cn(
                 "text-lg font-medium line-through",
-                isHighlighted
-                  ? "text-muted-foreground"
-                  : "text-muted-foreground"
+                isHighlighted ? "text-background/50" : "text-muted-foreground"
               )}
             >
               {originalPrice}
@@ -143,7 +144,7 @@ function PricingCard({
             className={cn(
               "font-bold tracking-tight",
               isHighlighted
-                ? "text-primary-foreground text-5xl"
+                ? "text-background text-5xl"
                 : "text-foreground text-4xl",
               isLtd && "text-5xl"
             )}
@@ -154,9 +155,7 @@ function PricingCard({
             <span
               className={cn(
                 "text-sm",
-                isHighlighted
-                  ? "text-muted-foreground"
-                  : "text-muted-foreground"
+                isHighlighted ? "text-background/60" : "text-muted-foreground"
               )}
             >
               {period}
@@ -168,7 +167,7 @@ function PricingCard({
         <p
           className={cn(
             "mt-3 text-sm",
-            isHighlighted ? "text-muted-foreground" : "text-muted-foreground"
+            isHighlighted ? "text-background/60" : "text-muted-foreground"
           )}
         >
           {tier.description}
@@ -196,8 +195,8 @@ function PricingCard({
           className={cn(
             "group relative flex w-full items-center justify-center overflow-hidden rounded-xl px-6 py-3.5 font-semibold transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:opacity-50",
             isHighlighted
-              ? "bg-background text-foreground focus:ring-background shadow-lg hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0"
-              : "bg-primary text-primary-foreground shadow-primary/20 hover:bg-primary/90 hover:shadow-primary/30 focus:ring-ring shadow-lg hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0"
+              ? "bg-primary focus:ring-primary hover:bg-primary/90 text-white shadow-lg hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0"
+              : "bg-primary shadow-primary/20 hover:bg-primary/90 hover:shadow-primary/30 focus:ring-ring text-white shadow-lg hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0"
           )}
           onClick={() => onCheckout(slug)}
           disabled={isLoading}
@@ -219,7 +218,7 @@ function PricingCard({
           <p
             className={cn(
               "mt-3 text-center text-xs font-medium",
-              isHighlighted ? "text-muted-foreground" : "text-muted-foreground"
+              isHighlighted ? "text-background/60" : "text-muted-foreground"
             )}
           >
             {tier.trialDays}-day free trial
@@ -231,7 +230,7 @@ function PricingCard({
           <p
             className={cn(
               "mt-4 text-center text-xs font-medium",
-              isHighlighted ? "text-muted-foreground" : "text-muted-foreground"
+              isHighlighted ? "text-background/60" : "text-muted-foreground"
             )}
           >
             30-day money-back guarantee
@@ -295,23 +294,7 @@ export function PricingCards({ tiers, mode }: PricingCardsProps) {
   const isLtdMode = mode === "ltd";
 
   return (
-    <section
-      ref={ref}
-      className="from-muted to-background relative bg-gradient-to-b py-16 sm:py-24 lg:py-32"
-    >
-      {/* Subtle dot pattern background */}
-      <div className="absolute inset-0 -z-10">
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `radial-gradient(#cbd5e1 1px, transparent 1px)`,
-            backgroundSize: "24px 24px",
-            opacity: 0.4,
-          }}
-        />
-        <div className="from-background to-background absolute inset-0 bg-gradient-to-b via-transparent" />
-      </div>
-
+    <section ref={ref} className="py-16 sm:py-24 lg:py-32">
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div
