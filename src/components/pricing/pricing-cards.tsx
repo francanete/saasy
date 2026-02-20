@@ -95,7 +95,7 @@ function PricingCard({
         "relative flex h-full flex-col overflow-visible rounded-2xl transition-all duration-500",
         isHighlighted
           ? "from-foreground to-foreground/90 text-background ring-background/10 bg-gradient-to-br shadow-xl ring-1"
-          : "border-border/60 bg-background/80 border shadow-sm hover:-translate-y-1 hover:shadow-lg",
+          : "border-primary/20 bg-primary/5 border shadow-sm hover:-translate-y-1 hover:shadow-lg",
         isInView ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0",
         isLtd ? "w-full max-w-md" : "w-full sm:w-80"
       )}
