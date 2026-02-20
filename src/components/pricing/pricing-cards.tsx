@@ -195,8 +195,8 @@ function PricingCard({
           className={cn(
             "group relative flex w-full items-center justify-center overflow-hidden rounded-xl px-6 py-3.5 font-semibold transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:opacity-50",
             isHighlighted
-              ? "bg-primary focus:ring-primary hover:bg-primary/90 text-white shadow-lg hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0"
-              : "bg-primary shadow-primary/20 hover:bg-primary/90 hover:shadow-primary/30 focus:ring-ring text-white shadow-lg hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0"
+              ? "bg-primary text-primary-foreground focus:ring-primary hover:bg-primary/90 shadow-lg hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0"
+              : "bg-primary text-primary-foreground shadow-primary/20 hover:bg-primary/90 hover:shadow-primary/30 focus:ring-ring shadow-lg hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0"
           )}
           onClick={() => onCheckout(slug)}
           disabled={isLoading}
