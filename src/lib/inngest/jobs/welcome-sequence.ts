@@ -14,7 +14,6 @@ export const welcomeSequenceJob = inngest.createFunction(
   { id: "welcome-sequence" },
   { event: "user/created" },
   async ({ event, step }) => {
-    // Validate event data
     const parseResult = userCreatedEventSchema.safeParse(event.data);
     if (!parseResult.success) {
       console.error(
@@ -27,7 +26,7 @@ export const welcomeSequenceJob = inngest.createFunction(
     }
     const { userId, email } = parseResult.data;
 
-    // Step 1: Create default FREE subscription for new user
+    // onConflictDoNothing handles race conditions from duplicate events
     await step.run("create-subscription", async () => {
       await db
         .insert(subscriptions)
@@ -40,47 +39,49 @@ export const welcomeSequenceJob = inngest.createFunction(
         .onConflictDoNothing();
     });
 
-    // Step 2: Track signup event
     await step.run("track-signup", () =>
       trackEvent("user_signed_up", { profileId: userId, email })
     );
 
-    // Step 3: Get user name for emails
     const user = await step.run("get-user", async () => {
-      const [u] = await db
+      const [foundUser] = await db
         .select({ name: users.name })
         .from(users)
         .where(eq(users.id, userId))
         .limit(1);
-      return u;
+      return foundUser;
     });
 
-    // Step 4: Send instant welcome email
-    const result1 = await step.run("send-welcome-instant", async () => {
+    if (!user) {
+      console.warn(`[welcome-sequence] User ${userId} not found, aborting`);
+      return { aborted: true, reason: "user_not_found" };
+    }
+
+    const userName = user.name || null;
+
+    const welcomeResult = await step.run("send-welcome-instant", async () => {
       return sendSequenceEmail({
         userId,
         email,
-        name: user?.name || null,
+        name: userName,
         emailKey: "welcome_instant",
       });
     });
 
-    // Step 5: Wait 3 days
     await step.sleep("wait-day-3", "3d");
 
-    // Step 6: Send day 3 follow-up email
-    const result2 = await step.run("send-welcome-day3", async () => {
+    const day3FollowUpResult = await step.run("send-welcome-day3", async () => {
       return sendSequenceEmail({
         userId,
         email,
-        name: user?.name || null,
+        name: userName,
         emailKey: "welcome_day3",
       });
     });
 
     return {
-      email1: result1,
-      email2: result2,
+      welcomeEmail: welcomeResult,
+      day3FollowUp: day3FollowUpResult,
     };
   }
 );
