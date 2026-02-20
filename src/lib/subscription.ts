@@ -316,7 +316,7 @@ export async function syncWithPolar(userId: string): Promise<void> {
  */
 export async function hasPaidAccess(userId: string): Promise<boolean> {
   const status = await getSubscriptionStatus(userId);
-  return status.hasAccess && status.plan !== "FREE";
+  return status.hasAccess;
 }
 
 /**

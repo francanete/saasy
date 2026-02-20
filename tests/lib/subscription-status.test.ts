@@ -104,7 +104,7 @@ describe("getSubscriptionStatus", () => {
     expect(result.status).toBe("TRIALING");
   });
 
-  it("returns CANCELED with hasAccess false and plan forced to FREE", async () => {
+  it("returns CANCELED with hasAccess false (plan unchanged)", async () => {
     mockFindFirst.mockResolvedValue({
       status: "CANCELED",
       plan: "STARTER",
@@ -116,10 +116,10 @@ describe("getSubscriptionStatus", () => {
     const result = await getSubscriptionStatus("user-1");
 
     expect(result.hasAccess).toBe(false);
-    expect(result.plan).toBe("FREE");
+    expect(result.plan).toBe("STARTER");
   });
 
-  it("returns PAST_DUE with hasAccess false", async () => {
+  it("returns PAST_DUE with hasAccess false (plan unchanged)", async () => {
     mockFindFirst.mockResolvedValue({
       status: "PAST_DUE",
       plan: "STARTER",
@@ -131,7 +131,7 @@ describe("getSubscriptionStatus", () => {
     const result = await getSubscriptionStatus("user-1");
 
     expect(result.hasAccess).toBe(false);
-    expect(result.plan).toBe("FREE");
+    expect(result.plan).toBe("STARTER");
   });
 
   it("creates FREE record when no subscription exists", async () => {
@@ -148,7 +148,7 @@ describe("getSubscriptionStatus", () => {
 
     expect(mockInsert).toHaveBeenCalled();
     expect(result.plan).toBe("FREE");
-    expect(result.hasAccess).toBe(true);
+    expect(result.hasAccess).toBe(false);
   });
 
   it("returns NONE fallback on race condition", async () => {

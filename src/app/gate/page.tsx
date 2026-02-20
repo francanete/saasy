@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentSession, getSubscriptionFromRequest } from "@/lib/dal";
-import { hasPaidAccess } from "@/lib/subscription";
+import { getSubscriptionStatus } from "@/lib/subscription";
 import { PricingSection } from "@/components/pricing/pricing-section";
 import { appConfig } from "@/lib/config";
 
@@ -28,18 +28,16 @@ export default async function GatePage() {
   }
 
   // Check subscription from proxy-injected header (no DB query)
-  const subscription = await getSubscriptionFromRequest();
-  if (subscription && subscription.plan !== "FREE") {
-    // Paid user shouldn't see gate (proxy.ts should have redirected, but fallback)
-    redirect("/dashboard");
+  // Falls back to DB query if header is missing
+  let subscription = await getSubscriptionFromRequest();
+  if (!subscription) {
+    subscription = await getSubscriptionStatus(session.user.id);
   }
 
-  // If header missing, fall back to DB check
-  if (!subscription) {
-    const isPaid = await hasPaidAccess(session.user.id);
-    if (isPaid) {
-      redirect("/dashboard");
-    }
+  // Paid user shouldn't see gate (proxy.ts should have redirected, but fallback)
+  // Uses hasAccess (same as proxy + dashboard layout) to stay consistent
+  if (subscription.hasAccess) {
+    redirect("/dashboard");
   }
 
   return <PricingSection />;
