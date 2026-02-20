@@ -363,8 +363,10 @@ export async function getSubscriptionStatus(
   }
 
   // Just return what's in DB - no sync logic here
-  const hasAccess =
+  // hasAccess = active/trialing AND on a paid plan (not FREE)
+  const isActiveStatus =
     subscription.status === "ACTIVE" || subscription.status === "TRIALING";
+  const hasAccess = isActiveStatus && subscription.plan !== "FREE";
 
   return {
     hasAccess,
@@ -373,6 +375,6 @@ export async function getSubscriptionStatus(
     isLifetime: subscription.billingType === "one_time",
     polarProductId: subscription.polarProductId,
     expiresAt: subscription.currentPeriodEnd,
-    plan: hasAccess ? (subscription.plan as Plan) : "FREE",
+    plan: subscription.plan as Plan,
   };
 }

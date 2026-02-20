@@ -44,9 +44,9 @@ export default async function DashboardLayout({
     subscription = await getSubscriptionStatus(session.user.id);
   }
 
-  // Fallback: If paid access required and user is FREE, redirect to gate
-  // (proxy.ts should handle this, but this is defense-in-depth)
-  if (REQUIRE_PAID_ACCESS && subscription.plan === "FREE") {
+  // Fallback: If paid access required and user has no access, redirect to gate
+  // Uses hasAccess (same as proxy) to avoid redirect loop
+  if (REQUIRE_PAID_ACCESS && !subscription.hasAccess) {
     redirect("/gate");
   }
 

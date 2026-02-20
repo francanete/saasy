@@ -1,15 +1,11 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-
 export default function AuthLoading() {
   return (
-    <Card>
-      <CardContent className="space-y-4 p-6">
-        <Skeleton className="h-8 w-32" />
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-      </CardContent>
-    </Card>
+    <div className="bg-card border-border space-y-4 rounded-2xl border p-8 shadow-sm">
+      <div className="bg-muted mx-auto h-10 w-10 animate-pulse rounded" />
+      <div className="bg-muted mx-auto h-6 w-32 animate-pulse rounded" />
+      <div className="bg-muted h-10 w-full animate-pulse rounded" />
+      <div className="bg-muted h-10 w-full animate-pulse rounded" />
+      <div className="bg-muted h-10 w-full animate-pulse rounded" />
+    </div>
   );
 }

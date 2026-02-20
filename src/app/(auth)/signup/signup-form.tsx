@@ -12,7 +12,7 @@ const emailSchema = z.object({
   email: z.string().email("Please enter a valid email"),
 });
 
-export function LoginForm() {
+export function SignupForm() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -88,10 +88,10 @@ export function LoginForm() {
       <div className="mb-6 text-center">
         <PlauderaLogo className="text-foreground mx-auto mb-4 h-10 w-10" />
         <h1 className="text-foreground text-xl font-semibold">
-          Sign in to {appConfig.name}
+          Create your {appConfig.name} account
         </h1>
         <p className="text-muted-foreground mt-1 text-sm">
-          Enter your email to receive a magic link
+          Enter your email to get started
         </p>
       </div>
 
@@ -138,12 +138,12 @@ export function LoginForm() {
       </button>
 
       <p className="text-muted-foreground mt-6 text-center text-sm">
-        Don&apos;t have an account?{" "}
+        Already have an account?{" "}
         <Link
-          href="/signup"
+          href="/login"
           className="text-foreground underline underline-offset-4 hover:opacity-80"
         >
-          Sign up
+          Sign in
         </Link>
       </p>
 

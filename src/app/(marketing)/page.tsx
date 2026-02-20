@@ -63,7 +63,7 @@ export default function HomePage() {
               Join thousands of developers building with {appConfig.name}.
             </p>
             <Button size="lg" asChild>
-              <Link href="/register">Start Building Today</Link>
+              <Link href="/signup">Start Building Today</Link>
             </Button>
           </div>
         </section>
