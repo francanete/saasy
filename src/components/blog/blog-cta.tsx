@@ -4,19 +4,19 @@ import { appConfig } from "@/lib/config";
 
 export function BlogCta() {
   return (
-    <section className="bg-slate-900 py-24 text-white">
+    <section className="bg-primary text-primary-foreground py-24">
       <div className="container mx-auto max-w-4xl px-4 text-center">
         <h2 className="mb-6 text-3xl font-bold tracking-tight md:text-4xl">
           Ready to collect better feedback?
         </h2>
-        <p className="mx-auto mb-10 max-w-2xl text-lg text-slate-300 md:text-xl">
+        <p className="text-primary-foreground/70 mx-auto mb-10 max-w-2xl text-lg md:text-xl">
           {appConfig.name} helps you capture, organize, and prioritize feature
           requests — start your free trial today, cancel anytime.
         </p>
         <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Button
             size="lg"
-            className="h-12 w-full bg-white px-8 font-semibold text-slate-900 hover:bg-slate-100 sm:w-auto"
+            className="bg-background text-foreground hover:bg-muted h-12 w-full px-8 font-semibold sm:w-auto"
             asChild
           >
             <Link href="/pricing">Start Free Trial</Link>
@@ -24,7 +24,7 @@ export function BlogCta() {
           <Button
             size="lg"
             variant="outline"
-            className="h-12 w-full border-slate-700 bg-transparent px-8 text-white hover:bg-slate-800 hover:text-white sm:w-auto"
+            className="border-border text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground h-12 w-full bg-transparent px-8 sm:w-auto"
             asChild
           >
             <Link href="/">See How It Works</Link>

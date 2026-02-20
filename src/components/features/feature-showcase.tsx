@@ -36,13 +36,13 @@ export function FeatureShowcase({ feature, className }: FeatureShowcaseProps) {
           isInView ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
         )}
       >
-        <Icon className="h-8 w-8 stroke-[1.5] text-slate-900" />
+        <Icon className="text-foreground h-8 w-8 stroke-[1.5]" />
 
-        <h3 className="text-3xl font-semibold tracking-tight text-slate-900">
+        <h3 className="text-foreground text-3xl font-semibold tracking-tight">
           {feature.title}
         </h3>
 
-        <p className="text-lg leading-relaxed text-slate-600">
+        <p className="text-muted-foreground text-lg leading-relaxed">
           {feature.description}
         </p>
       </div>

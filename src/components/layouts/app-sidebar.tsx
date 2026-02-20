@@ -17,6 +17,7 @@ import {
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
 import { appConfig } from "@/lib/config";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 type SubscriptionStatus =
   | "ACTIVE"

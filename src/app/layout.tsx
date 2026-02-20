@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import "./globals.css";
 import { Providers } from "./providers";
 import { appConfig } from "@/lib/config";
+import { getThemeCssVars } from "@/lib/theme";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -75,11 +76,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `:root { ${getThemeCssVars().light} } .dark { ${getThemeCssVars().dark} }`,
+          }}
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Providers>{children}</Providers>
+        <Providers defaultTheme={appConfig.theme.defaultMode}>
+          {children}
+        </Providers>
         <Toaster richColors position="top-right" />
       </body>
     </html>

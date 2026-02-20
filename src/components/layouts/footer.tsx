@@ -22,20 +22,20 @@ const footerSections = [
 
 export function Footer() {
   return (
-    <footer className="border-t border-gray-100 bg-white">
+    <footer className="border-border bg-background border-t">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
         <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4 lg:gap-8">
           {/* Brand Column - Takes up 2 columns on large screens */}
           <div className="space-y-8 lg:col-span-2">
             <div className="flex items-center space-x-2">
-              <div className="rounded-lg bg-blue-600 p-1.5">
-                <Hexagon className="h-6 w-6 fill-current text-white" />
+              <div className="bg-primary rounded-lg p-1.5">
+                <Hexagon className="text-primary-foreground h-6 w-6 fill-current" />
               </div>
-              <span className="text-xl font-bold tracking-tight text-gray-900">
+              <span className="text-foreground text-xl font-bold tracking-tight">
                 {appConfig.name}
               </span>
             </div>
-            <p className="max-w-xs text-sm leading-relaxed text-gray-500">
+            <p className="text-muted-foreground max-w-xs text-sm leading-relaxed">
               {appConfig.description}
               <br />
               Building the future of digital experiences with confidence and
@@ -46,7 +46,7 @@ export function Footer() {
                 href={appConfig.socials.twitter}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-400 transition-colors hover:text-gray-600"
+                className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 <span className="sr-only">Twitter</span>
                 <Twitter className="h-5 w-5" />
@@ -55,7 +55,7 @@ export function Footer() {
                 href={appConfig.socials.github}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-400 transition-colors hover:text-gray-600"
+                className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 <span className="sr-only">GitHub</span>
                 <Github className="h-5 w-5" />
@@ -64,7 +64,7 @@ export function Footer() {
                 href={appConfig.socials.linkedin}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-400 transition-colors hover:text-gray-600"
+                className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 <span className="sr-only">LinkedIn</span>
                 <Linkedin className="h-5 w-5" />
@@ -75,7 +75,7 @@ export function Footer() {
           {/* Links Columns */}
           {footerSections.map((section) => (
             <div key={section.title}>
-              <h3 className="mb-4 text-sm font-semibold tracking-wider text-gray-900 uppercase">
+              <h3 className="text-foreground mb-4 text-sm font-semibold tracking-wider uppercase">
                 {section.title}
               </h3>
               <ul className="space-y-3">
@@ -83,7 +83,7 @@ export function Footer() {
                   <li key={link.name}>
                     <Link
                       href={link.href}
-                      className="text-sm text-gray-500 transition-colors duration-200 hover:text-blue-600"
+                      className="text-muted-foreground hover:text-primary text-sm transition-colors duration-200"
                     >
                       {link.name}
                     </Link>
@@ -95,8 +95,8 @@ export function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-12 border-t border-gray-100 pt-8">
-          <p className="text-center text-sm text-gray-400 md:text-left">
+        <div className="border-border mt-12 border-t pt-8">
+          <p className="text-muted-foreground text-center text-sm md:text-left">
             &copy; {new Date().getFullYear()} {appConfig.name}. All rights
             reserved.
           </p>

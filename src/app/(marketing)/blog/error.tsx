@@ -17,22 +17,22 @@ export default function BlogError({
   }, [error]);
 
   return (
-    <div className="min-h-screen bg-white font-sans text-slate-900">
+    <div className="bg-background text-foreground min-h-screen font-sans">
       <div className="container mx-auto flex min-h-[60vh] max-w-3xl flex-col items-center justify-center px-4 py-24">
         <div className="mb-6 rounded-full bg-red-50 p-6 ring-1 ring-red-100">
           <AlertCircle className="h-10 w-10 text-red-500" />
         </div>
 
-        <h1 className="mb-4 text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
+        <h1 className="text-foreground mb-4 text-3xl font-bold tracking-tight md:text-4xl">
           Something went wrong
         </h1>
 
-        <p className="mb-2 max-w-md text-center text-lg text-slate-600">
+        <p className="text-muted-foreground mb-2 max-w-md text-center text-lg">
           We encountered an error while loading this blog content.
         </p>
 
         {error.digest && (
-          <p className="mb-8 text-xs text-slate-400">
+          <p className="text-muted-foreground mb-8 text-xs">
             Error ID: {error.digest}
           </p>
         )}
@@ -41,7 +41,7 @@ export default function BlogError({
           <Button
             onClick={reset}
             size="lg"
-            className="bg-slate-900 hover:bg-slate-800"
+            className="bg-primary hover:bg-primary/90"
           >
             Try Again
           </Button>

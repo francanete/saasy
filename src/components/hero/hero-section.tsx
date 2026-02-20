@@ -23,7 +23,7 @@ export function HeroSection({ className }: HeroSectionProps) {
     <section
       ref={ref}
       className={cn(
-        "relative overflow-hidden bg-white",
+        "bg-background relative overflow-hidden",
         "flex min-h-[calc(100vh-4rem)] items-center",
         "py-16 md:py-20 lg:py-24",
         className
@@ -39,7 +39,7 @@ export function HeroSection({ className }: HeroSectionProps) {
             opacity: 0.4,
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-white via-transparent to-white" />
+        <div className="from-background to-background absolute inset-0 bg-gradient-to-b via-transparent" />
       </div>
 
       <div className="container mx-auto px-4 md:px-6">
@@ -58,31 +58,31 @@ export function HeroSection({ className }: HeroSectionProps) {
             <div
               className={cn(
                 "mb-8 inline-flex items-center gap-2 rounded-full",
-                "border border-slate-200 bg-slate-50",
+                "border-border bg-muted border",
                 "px-3 py-1 pr-4",
                 "transition-all delay-100 duration-700",
                 isInView ? "opacity-100" : "opacity-0"
               )}
             >
-              <span className="flex h-5 items-center rounded-full bg-slate-900 px-2 text-[10px] font-bold text-white uppercase">
+              <span className="bg-primary text-primary-foreground flex h-5 items-center rounded-full px-2 text-[10px] font-bold uppercase">
                 New
               </span>
-              <span className="text-sm font-medium text-slate-600">
+              <span className="text-muted-foreground text-sm font-medium">
                 AI-powered development tools
               </span>
-              <ChevronRight className="h-3 w-3 text-slate-400" />
+              <ChevronRight className="text-muted-foreground h-3 w-3" />
             </div>
 
             {/* Headline */}
-            <h1 className="mb-8 text-5xl font-bold tracking-tight text-slate-900 sm:text-6xl lg:text-7xl">
+            <h1 className="text-foreground mb-8 text-5xl font-bold tracking-tight sm:text-6xl lg:text-7xl">
               Build Your SaaS <br />
-              <span className="text-slate-400">Faster Than Ever</span>
+              <span className="text-muted-foreground">Faster Than Ever</span>
             </h1>
 
             {/* Subheadline */}
             <p
               className={cn(
-                "mb-10 max-w-lg text-lg leading-relaxed text-slate-600 md:text-xl",
+                "text-muted-foreground mb-10 max-w-lg text-lg leading-relaxed md:text-xl",
                 "transition-all delay-200 duration-700",
                 isInView
                   ? "translate-y-0 opacity-100"
@@ -107,7 +107,7 @@ export function HeroSection({ className }: HeroSectionProps) {
               <Button
                 size="lg"
                 asChild
-                className="h-12 rounded-full bg-slate-900 px-8 text-base font-semibold text-white shadow-lg shadow-slate-900/20 transition-all hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-xl hover:shadow-slate-900/30"
+                className="bg-primary text-primary-foreground shadow-primary/20 hover:bg-primary/90 hover:shadow-primary/30 h-12 rounded-full px-8 text-base font-semibold shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl"
               >
                 <Link href="/signup">
                   Get Started
@@ -119,7 +119,7 @@ export function HeroSection({ className }: HeroSectionProps) {
                 size="lg"
                 variant="ghost"
                 asChild
-                className="h-12 rounded-full px-8 text-base font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                className="text-muted-foreground hover:bg-muted hover:text-foreground h-12 rounded-full px-8 text-base font-semibold"
               >
                 <Link href="/pricing">View Pricing</Link>
               </Button>
@@ -128,7 +128,7 @@ export function HeroSection({ className }: HeroSectionProps) {
             {/* Trust Indicators */}
             <div
               className={cn(
-                "mt-12 flex items-center gap-6 text-sm font-medium text-slate-500",
+                "text-muted-foreground mt-12 flex items-center gap-6 text-sm font-medium",
                 "transition-all delay-500 duration-700",
                 isInView
                   ? "translate-y-0 opacity-100"
@@ -136,11 +136,11 @@ export function HeroSection({ className }: HeroSectionProps) {
               )}
             >
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-slate-400" />
+                <CheckCircle2 className="text-muted-foreground h-4 w-4" />
                 <span>No credit card required</span>
               </div>
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-slate-400" />
+                <CheckCircle2 className="text-muted-foreground h-4 w-4" />
                 <span>14-day free trial</span>
               </div>
             </div>
@@ -157,8 +157,8 @@ export function HeroSection({ className }: HeroSectionProps) {
             )}
           >
             {/* Abstract Background Shapes */}
-            <div className="absolute -top-12 -right-12 h-[500px] w-[500px] rounded-full bg-slate-50 opacity-50 blur-3xl" />
-            <div className="absolute -bottom-12 -left-12 h-[400px] w-[400px] rounded-full bg-slate-100 opacity-50 blur-3xl" />
+            <div className="bg-muted absolute -top-12 -right-12 h-[500px] w-[500px] rounded-full opacity-50 blur-3xl" />
+            <div className="bg-muted absolute -bottom-12 -left-12 h-[400px] w-[400px] rounded-full opacity-50 blur-3xl" />
 
             <HeroDashboardMockup
               className="relative z-10"

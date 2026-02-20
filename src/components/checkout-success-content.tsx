@@ -88,7 +88,7 @@ export function CheckoutSuccessContent({
     return (
       <div className="text-center">
         <div className="mb-6 flex justify-center">
-          <CheckCircle className="h-16 w-16 text-green-500" />
+          <CheckCircle className="text-success h-16 w-16" />
         </div>
         <h1 className="text-2xl font-bold">Payment Received!</h1>
         <p className="text-muted-foreground mt-2">
@@ -120,7 +120,7 @@ export function CheckoutSuccessContent({
   return (
     <div className="text-center">
       <div className="mb-6 flex justify-center">
-        <CheckCircle className="h-16 w-16 text-green-500" />
+        <CheckCircle className="text-success h-16 w-16" />
       </div>
       <h1 className="text-2xl font-bold">Payment Successful!</h1>
       <p className="text-muted-foreground mt-2">Thank you for your purchase.</p>

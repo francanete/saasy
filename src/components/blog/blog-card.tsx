@@ -34,7 +34,7 @@ export function BlogCard({ post, featured = false }: BlogCardProps) {
     >
       <Card
         className={cn(
-          "flex h-full flex-col gap-0 overflow-hidden border-slate-200 bg-white py-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg",
+          "border-border bg-background flex h-full flex-col gap-0 overflow-hidden py-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg",
           featured && "md:grid md:grid-cols-2"
         )}
       >
@@ -42,7 +42,7 @@ export function BlogCard({ post, featured = false }: BlogCardProps) {
         {post.image && (
           <div
             className={cn(
-              "w-full overflow-hidden bg-slate-100",
+              "bg-muted w-full overflow-hidden",
               featured
                 ? "aspect-video md:aspect-auto md:h-full"
                 : "aspect-video"
@@ -64,12 +64,12 @@ export function BlogCard({ post, featured = false }: BlogCardProps) {
             {post.category && (
               <Badge
                 variant="secondary"
-                className="bg-slate-100 text-slate-700 hover:bg-slate-200"
+                className="bg-muted text-foreground hover:bg-muted"
               >
                 {post.category}
               </Badge>
             )}
-            <div className="flex items-center gap-3 text-xs text-slate-500">
+            <div className="text-muted-foreground flex items-center gap-3 text-xs">
               <span className="flex items-center gap-1">
                 <Calendar className="h-3.5 w-3.5" />
                 {formattedDate}
@@ -86,7 +86,7 @@ export function BlogCard({ post, featured = false }: BlogCardProps) {
           {/* Title */}
           <h3
             className={cn(
-              "mb-2 leading-tight font-bold text-slate-900",
+              "text-foreground mb-2 leading-tight font-bold",
               featured ? "line-clamp-2 text-2xl" : "line-clamp-2 text-xl"
             )}
           >
@@ -94,12 +94,12 @@ export function BlogCard({ post, featured = false }: BlogCardProps) {
           </h3>
 
           {/* Description */}
-          <p className="line-clamp-3 text-sm text-slate-600">
+          <p className="text-muted-foreground line-clamp-3 text-sm">
             {post.description}
           </p>
         </CardContent>
 
-        <CardFooter className="border-t border-slate-100 p-6">
+        <CardFooter className="border-border border-t p-6">
           <div className="flex w-full items-center justify-between">
             <div className="flex items-center gap-3">
               <Avatar className="ring-background h-8 w-8 ring-2">
@@ -109,11 +109,11 @@ export function BlogCard({ post, featured = false }: BlogCardProps) {
                     alt={post.author.name}
                   />
                 )}
-                <AvatarFallback className="bg-slate-100 text-xs text-slate-500">
+                <AvatarFallback className="bg-muted text-muted-foreground text-xs">
                   {authorInitials}
                 </AvatarFallback>
               </Avatar>
-              <span className="text-sm font-medium text-slate-900">
+              <span className="text-foreground text-sm font-medium">
                 {post.author?.name || `${appConfig.team.name} Team`}
               </span>
             </div>

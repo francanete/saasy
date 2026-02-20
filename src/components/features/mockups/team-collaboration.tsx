@@ -38,25 +38,25 @@ export function TeamCollaborationMockup({ className, isInView }: MockupProps) {
     <div
       className={cn(
         "w-full max-w-sm overflow-hidden rounded-xl",
-        "bg-white",
-        "border border-slate-100",
-        "shadow-xl shadow-slate-200/50",
+        "bg-background",
+        "border-border border",
+        "shadow-muted/50 shadow-xl",
         className
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-100 bg-gradient-to-r from-slate-50/50 to-white p-5">
+      <div className="border-border from-muted/50 to-background flex items-center justify-between border-b bg-gradient-to-r p-5">
         <div className="flex items-center space-x-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100">
-            <Folder className="h-4 w-4 text-slate-600" />
+          <div className="bg-muted flex h-8 w-8 items-center justify-center rounded-lg">
+            <Folder className="text-muted-foreground h-4 w-4" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-slate-900">
+            <h3 className="text-foreground text-sm font-semibold">
               Project Alpha
             </h3>
             <div className="mt-0.5 flex items-center space-x-1.5">
-              <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              <span className="text-xs text-slate-500">Active</span>
+              <div className="bg-success h-1.5 w-1.5 rounded-full" />
+              <span className="text-muted-foreground text-xs">Active</span>
             </div>
           </div>
         </div>
@@ -68,7 +68,7 @@ export function TeamCollaborationMockup({ className, isInView }: MockupProps) {
               <div
                 key={index}
                 className={cn(
-                  "relative h-8 w-8 rounded-full ring-2 ring-white",
+                  "ring-background relative h-8 w-8 rounded-full ring-2",
                   "transition-all duration-300 ease-out",
                   isInView ? "scale-100 opacity-100" : "scale-50 opacity-0"
                 )}
@@ -89,19 +89,21 @@ export function TeamCollaborationMockup({ className, isInView }: MockupProps) {
                   </span>
                 </div>
                 {member.online && (
-                  <div className="absolute right-0 bottom-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-500" />
+                  <div className="border-background bg-success absolute right-0 bottom-0 h-2.5 w-2.5 rounded-full border-2" />
                 )}
               </div>
             ))}
           </div>
           <div
             className={cn(
-              "ml-1 flex h-8 items-center rounded-full bg-slate-100 px-2.5",
+              "bg-muted ml-1 flex h-8 items-center rounded-full px-2.5",
               "transition-all delay-300 duration-300",
               isInView ? "scale-100 opacity-100" : "scale-75 opacity-0"
             )}
           >
-            <span className="text-[10px] font-medium text-slate-500">+2</span>
+            <span className="text-muted-foreground text-[10px] font-medium">
+              +2
+            </span>
           </div>
         </div>
       </div>
@@ -109,7 +111,7 @@ export function TeamCollaborationMockup({ className, isInView }: MockupProps) {
       {/* Activity Feed */}
       <div className="relative p-5">
         {/* Timeline Connector */}
-        <div className="absolute top-8 bottom-8 left-[29px] w-px bg-gradient-to-b from-slate-200 via-slate-200 to-transparent" />
+        <div className="from-border via-border absolute top-8 bottom-8 left-[29px] w-px bg-gradient-to-b to-transparent" />
 
         <div className="space-y-4">
           {activities.map((activity, index) => {
@@ -134,7 +136,7 @@ export function TeamCollaborationMockup({ className, isInView }: MockupProps) {
                 {/* Avatar */}
                 <div
                   className={cn(
-                    "relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ring-2 ring-white",
+                    "ring-background relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ring-2",
                     member.gradient
                   )}
                 >
@@ -145,8 +147,8 @@ export function TeamCollaborationMockup({ className, isInView }: MockupProps) {
 
                 {/* Content */}
                 <div className="flex-1 pt-0.5">
-                  <p className="text-xs text-slate-600">
-                    <span className="font-medium text-slate-900">
+                  <p className="text-muted-foreground text-xs">
+                    <span className="text-foreground font-medium">
                       {member.initials === "JD"
                         ? "John"
                         : member.initials === "AS"
@@ -163,8 +165,8 @@ export function TeamCollaborationMockup({ className, isInView }: MockupProps) {
                     <div
                       className={cn(
                         "mt-2 flex items-start rounded-xl",
-                        "bg-gradient-to-r from-slate-50 to-slate-100/50",
-                        "border border-slate-100",
+                        "from-muted to-muted/70 bg-gradient-to-r",
+                        "border-border border",
                         "px-3 py-2 shadow-sm",
                         "transition-all delay-500 duration-300",
                         isInView
@@ -172,14 +174,14 @@ export function TeamCollaborationMockup({ className, isInView }: MockupProps) {
                           : "scale-95 opacity-0"
                       )}
                     >
-                      <MessageSquare className="mt-0.5 mr-2 h-3 w-3 shrink-0 text-slate-400" />
-                      <span className="text-xs text-slate-600">
+                      <MessageSquare className="text-muted-foreground mt-0.5 mr-2 h-3 w-3 shrink-0" />
+                      <span className="text-muted-foreground text-xs">
                         {activity.comment}
                       </span>
                     </div>
                   )}
 
-                  <p className="mt-1 text-[10px] text-slate-400">
+                  <p className="text-muted-foreground mt-1 text-[10px]">
                     {activity.time}
                   </p>
                 </div>

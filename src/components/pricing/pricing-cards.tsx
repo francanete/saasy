@@ -30,15 +30,12 @@ function FeatureItem({ text, featured = false }: FeatureItemProps) {
         className={cn(
           "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full transition-all duration-200",
           featured
-            ? "bg-indigo-500/20 group-hover:bg-indigo-500/30"
-            : "bg-indigo-50 group-hover:bg-indigo-100"
+            ? "bg-primary/20 group-hover:bg-primary/30"
+            : "bg-primary/10 group-hover:bg-primary/15"
         )}
       >
         <Check
-          className={cn(
-            "h-3 w-3",
-            featured ? "text-indigo-300" : "text-indigo-600"
-          )}
+          className={cn("h-3 w-3", featured ? "text-primary" : "text-primary")}
           strokeWidth={3}
         />
       </div>
@@ -46,8 +43,8 @@ function FeatureItem({ text, featured = false }: FeatureItemProps) {
         className={cn(
           "text-[15px] leading-tight font-medium transition-colors duration-200",
           featured
-            ? "text-slate-300 group-hover:text-slate-100"
-            : "text-slate-600 group-hover:text-slate-900"
+            ? "text-muted-foreground group-hover:text-primary-foreground/90"
+            : "text-muted-foreground group-hover:text-foreground"
         )}
       >
         {text}
@@ -94,8 +91,8 @@ function PricingCard({
       className={cn(
         "relative flex h-full flex-col overflow-visible rounded-2xl transition-all duration-500",
         isHighlighted
-          ? "bg-gradient-to-br from-slate-900 to-slate-800 text-white shadow-xl ring-1 ring-white/10"
-          : "border border-slate-200/60 bg-white/80 shadow-sm hover:-translate-y-1 hover:shadow-lg",
+          ? "from-foreground to-foreground/90 text-primary-foreground ring-background/10 bg-gradient-to-br shadow-xl ring-1"
+          : "border-border/60 bg-background/80 border shadow-sm hover:-translate-y-1 hover:shadow-lg",
         isInView ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0",
         isLtd ? "w-full max-w-md" : "w-full sm:w-80"
       )}
@@ -103,7 +100,7 @@ function PricingCard({
     >
       {/* Badge */}
       {badge && (
-        <span className="absolute -top-3 right-4 inline-flex items-center rounded-full border border-emerald-300 bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700 shadow-sm dark:border-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">
+        <span className="border-success/30 bg-success/15 text-success absolute -top-3 right-4 inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium shadow-sm dark:border-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">
           {badge}
         </span>
       )}
@@ -112,7 +109,7 @@ function PricingCard({
       <div
         className={cn(
           "border-b px-6 py-6 text-center",
-          isHighlighted ? "border-white/10" : "border-slate-100",
+          isHighlighted ? "border-background/10" : "border-border",
           isLtd && "px-8 py-8"
         )}
       >
@@ -121,7 +118,7 @@ function PricingCard({
           <p
             className={cn(
               "mb-2 text-sm font-semibold tracking-wide uppercase",
-              isHighlighted ? "text-indigo-300" : "text-indigo-600"
+              isHighlighted ? "text-primary" : "text-primary"
             )}
           >
             {period === "/year" ? "Annual" : "Monthly"}
@@ -134,7 +131,9 @@ function PricingCard({
             <span
               className={cn(
                 "text-lg font-medium line-through",
-                isHighlighted ? "text-slate-500" : "text-slate-400"
+                isHighlighted
+                  ? "text-muted-foreground"
+                  : "text-muted-foreground"
               )}
             >
               {originalPrice}
@@ -143,7 +142,9 @@ function PricingCard({
           <span
             className={cn(
               "font-bold tracking-tight",
-              isHighlighted ? "text-5xl text-white" : "text-4xl text-slate-900",
+              isHighlighted
+                ? "text-primary-foreground text-5xl"
+                : "text-foreground text-4xl",
               isLtd && "text-5xl"
             )}
           >
@@ -153,7 +154,9 @@ function PricingCard({
             <span
               className={cn(
                 "text-sm",
-                isHighlighted ? "text-slate-400" : "text-slate-500"
+                isHighlighted
+                  ? "text-muted-foreground"
+                  : "text-muted-foreground"
               )}
             >
               {period}
@@ -165,7 +168,7 @@ function PricingCard({
         <p
           className={cn(
             "mt-3 text-sm",
-            isHighlighted ? "text-slate-400" : "text-slate-500"
+            isHighlighted ? "text-muted-foreground" : "text-muted-foreground"
           )}
         >
           {tier.description}
@@ -193,8 +196,8 @@ function PricingCard({
           className={cn(
             "group relative flex w-full items-center justify-center overflow-hidden rounded-xl px-6 py-3.5 font-semibold transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:opacity-50",
             isHighlighted
-              ? "bg-white text-slate-900 shadow-lg hover:-translate-y-0.5 hover:shadow-xl focus:ring-white active:translate-y-0"
-              : "bg-slate-900 text-white shadow-lg shadow-slate-900/20 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-xl hover:shadow-slate-900/30 focus:ring-slate-900 active:translate-y-0"
+              ? "bg-background text-foreground focus:ring-background shadow-lg hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0"
+              : "bg-primary text-primary-foreground shadow-primary/20 hover:bg-primary/90 hover:shadow-primary/30 focus:ring-ring shadow-lg hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0"
           )}
           onClick={() => onCheckout(slug)}
           disabled={isLoading}
@@ -206,7 +209,7 @@ function PricingCard({
           <div
             className={cn(
               "absolute inset-0 translate-y-full transition-transform duration-300 ease-out group-hover:translate-y-0",
-              isHighlighted ? "bg-slate-100" : "bg-white/10"
+              isHighlighted ? "bg-muted" : "bg-background/10"
             )}
           />
         </button>
@@ -216,7 +219,7 @@ function PricingCard({
           <p
             className={cn(
               "mt-3 text-center text-xs font-medium",
-              isHighlighted ? "text-slate-400" : "text-slate-500"
+              isHighlighted ? "text-muted-foreground" : "text-muted-foreground"
             )}
           >
             {tier.trialDays}-day free trial
@@ -228,7 +231,7 @@ function PricingCard({
           <p
             className={cn(
               "mt-4 text-center text-xs font-medium",
-              isHighlighted ? "text-slate-500" : "text-slate-400"
+              isHighlighted ? "text-muted-foreground" : "text-muted-foreground"
             )}
           >
             30-day money-back guarantee
@@ -294,7 +297,7 @@ export function PricingCards({ tiers, mode }: PricingCardsProps) {
   return (
     <section
       ref={ref}
-      className="relative bg-gradient-to-b from-slate-50 to-white py-16 sm:py-24 lg:py-32"
+      className="from-muted to-background relative bg-gradient-to-b py-16 sm:py-24 lg:py-32"
     >
       {/* Subtle dot pattern background */}
       <div className="absolute inset-0 -z-10">
@@ -306,7 +309,7 @@ export function PricingCards({ tiers, mode }: PricingCardsProps) {
             opacity: 0.4,
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-white via-transparent to-white" />
+        <div className="from-background to-background absolute inset-0 bg-gradient-to-b via-transparent" />
       </div>
 
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
@@ -321,19 +324,19 @@ export function PricingCards({ tiers, mode }: PricingCardsProps) {
           {/* Badge */}
           <div
             className={cn(
-              "mb-6 inline-flex items-center rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-sm font-semibold text-indigo-600",
+              "border-primary/20 bg-primary/10 text-primary mb-6 inline-flex items-center rounded-full border px-3 py-1 text-sm font-semibold",
               "transition-all delay-100 duration-500",
               isInView ? "opacity-100" : "opacity-0"
             )}
           >
-            <span className="mr-2 flex h-2 w-2 rounded-full bg-indigo-600" />
+            <span className="bg-primary mr-2 flex h-2 w-2 rounded-full" />
             {isLtdMode ? "Limited Time Offer" : "Simple Pricing"}
           </div>
 
           {/* Headline */}
           <h2
             className={cn(
-              "mb-6 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-600 bg-clip-text text-4xl font-bold tracking-tight text-transparent sm:text-5xl lg:text-6xl",
+              "from-foreground via-foreground/90 to-foreground/60 mb-6 bg-gradient-to-r bg-clip-text text-4xl font-bold tracking-tight text-transparent sm:text-5xl lg:text-6xl",
               "transition-all delay-150 duration-700",
               isInView ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
             )}
@@ -344,7 +347,7 @@ export function PricingCards({ tiers, mode }: PricingCardsProps) {
           {/* Subheadline */}
           <p
             className={cn(
-              "mx-auto max-w-2xl text-lg leading-relaxed text-slate-600 lg:text-xl",
+              "text-muted-foreground mx-auto max-w-2xl text-lg leading-relaxed lg:text-xl",
               "transition-all delay-200 duration-700",
               isInView ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
             )}
@@ -357,7 +360,7 @@ export function PricingCards({ tiers, mode }: PricingCardsProps) {
 
         {/* Error message */}
         {error && (
-          <div className="mb-8 rounded-xl bg-red-50 p-4 text-center text-red-600">
+          <div className="bg-destructive/10 text-destructive mb-8 rounded-xl p-4 text-center">
             {error}
           </div>
         )}
@@ -381,7 +384,7 @@ export function PricingCards({ tiers, mode }: PricingCardsProps) {
                     : "0ms",
                 }}
               >
-                <h3 className="text-xl font-semibold text-slate-900 sm:text-2xl">
+                <h3 className="text-foreground text-xl font-semibold sm:text-2xl">
                   {tier.name}
                 </h3>
               </div>
