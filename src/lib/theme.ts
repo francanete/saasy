@@ -48,7 +48,7 @@ function oklchString(l: number, c: number, h: number): string {
 }
 
 function getForeground(lightness: number): string {
-  return lightness > 0.5 ? "oklch(0.145 0 0)" : "oklch(0.985 0 0)";
+  return lightness > 0.7 ? "oklch(0.145 0 0)" : "oklch(0.985 0 0)";
 }
 
 export function getThemeCssVars(): { light: string; dark: string } {
