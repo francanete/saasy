@@ -57,7 +57,7 @@ export function NavUser({
   expiresAt,
 }: NavUserProps) {
   const router = useRouter();
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const initials = user.name
     ? user.name
         .split(" ")
@@ -147,7 +147,9 @@ export function NavUser({
               </DropdownMenuItem>
               {appConfig.theme.allowToggle && (
                 <DropdownMenuItem
-                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                  onClick={() =>
+                    setTheme(resolvedTheme === "dark" ? "light" : "dark")
+                  }
                 >
                   <Sun className="mr-2 h-4 w-4 dark:hidden" />
                   <Moon className="mr-2 hidden h-4 w-4 dark:block" />

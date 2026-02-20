@@ -80,7 +80,10 @@ export default function RootLayout({
       <head>
         <style
           dangerouslySetInnerHTML={{
-            __html: `:root { ${getThemeCssVars().light} } .dark { ${getThemeCssVars().dark} }`,
+            __html: (() => {
+              const { light, dark } = getThemeCssVars();
+              return `:root { ${light} } .dark { ${dark} }`;
+            })(),
           }}
         />
       </head>

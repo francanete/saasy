@@ -4,17 +4,24 @@ import { appConfig } from "./config";
  * Convert hex color to OKLCh CSS string.
  * Hex → sRGB → Linear RGB → OKLab → OKLCh
  */
+const DEFAULT_HEX = "#6d28d9";
+
+function isValidHex(hex: string): boolean {
+  return /^#[0-9a-fA-F]{6}$/.test(hex);
+}
+
 function hexToOklch(hex: string): { l: number; c: number; h: number } {
-  const r = parseInt(hex.slice(1, 3), 16) / 255;
-  const g = parseInt(hex.slice(3, 5), 16) / 255;
-  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  const safeHex = isValidHex(hex) ? hex : DEFAULT_HEX;
+  const r = parseInt(safeHex.slice(1, 3), 16) / 255;
+  const g = parseInt(safeHex.slice(3, 5), 16) / 255;
+  const blue = parseInt(safeHex.slice(5, 7), 16) / 255;
 
   // sRGB to linear
   const toLinear = (v: number) =>
     v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
   const lr = toLinear(r);
   const lg = toLinear(g);
-  const lb = toLinear(b);
+  const lb = toLinear(blue);
 
   // Linear RGB to OKLab
   const l_ = Math.cbrt(
@@ -48,7 +55,7 @@ function oklchString(l: number, c: number, h: number): string {
 }
 
 function getForeground(lightness: number): string {
-  return lightness > 0.7 ? "oklch(0.145 0 0)" : "oklch(0.985 0 0)";
+  return lightness > 0.5 ? "oklch(0.145 0 0)" : "oklch(0.985 0 0)";
 }
 
 export function getThemeCssVars(): { light: string; dark: string } {
@@ -57,9 +64,11 @@ export function getThemeCssVars(): { light: string; dark: string } {
     ? hexToOklch(appConfig.theme.secondaryColor)
     : null;
 
-  // Dark mode: bump lightness
-  const darkPrimaryL = Math.min(0.85, primary.l + 0.25);
-  const darkSecondaryL = secondary ? Math.min(0.85, secondary.l + 0.25) : null;
+  // Dark mode: ensure lightness is at least 0.7 for visibility
+  const darkPrimaryL = Math.max(0.7, Math.min(0.85, primary.l + 0.25));
+  const darkSecondaryL = secondary
+    ? Math.max(0.7, Math.min(0.85, secondary.l + 0.25))
+    : null;
 
   const lp = oklchString(primary.l, primary.c, primary.h);
   const lpFg = getForeground(primary.l);

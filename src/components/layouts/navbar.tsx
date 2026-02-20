@@ -158,7 +158,7 @@ export function Navbar() {
                       <DropdownMenuSeparator className="bg-muted" />
                       <DropdownMenuItem
                         onClick={() => signOut()}
-                        className="cursor-pointer rounded-lg px-3 py-2 text-red-600 hover:bg-red-50"
+                        className="text-destructive hover:bg-destructive/10 cursor-pointer rounded-lg px-3 py-2"
                       >
                         <LogOut className="mr-2 h-4 w-4" />
                         Sign out
@@ -266,7 +266,7 @@ export function Navbar() {
                     signOut();
                     setIsMobileMenuOpen(false);
                   }}
-                  className="flex w-full items-center rounded-lg px-3 py-3 text-base font-medium text-red-600 transition-colors hover:bg-red-50"
+                  className="text-destructive hover:bg-destructive/10 flex w-full items-center rounded-lg px-3 py-3 text-base font-medium transition-colors"
                 >
                   <LogOut className="mr-3 h-5 w-5" />
                   Sign out

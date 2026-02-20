@@ -49,8 +49,8 @@ export default function BlogPage() {
                     onClick={() => setSelectedCategory(category)}
                     className={
                       index === 0
-                        ? "rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-md transition-all duration-200"
-                        : "rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-slate-100 hover:text-foreground"
+                        ? "rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-md transition-all duration-200"
+                        : "rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground"
                     }
                   >
                     {category}
@@ -100,7 +100,7 @@ export default function BlogPage() {
       </section>
 
       {/* TODO: Implement newsletter subscription with Resend
-      <section className="border-t bg-slate-50 py-20">
+      <section className="border-t bg-muted py-20">
         <div className="container mx-auto px-4 text-center">
           <div className="mx-auto max-w-2xl">
             <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground">

@@ -10,7 +10,7 @@ export function Providers({
   defaultTheme = "system",
 }: {
   children: React.ReactNode;
-  defaultTheme?: string;
+  defaultTheme?: "light" | "dark" | "system";
 }) {
   const [queryClient] = useState(
     () =>

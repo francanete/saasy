@@ -19,8 +19,8 @@ export default function BlogError({
   return (
     <div className="bg-background text-foreground min-h-screen font-sans">
       <div className="container mx-auto flex min-h-[60vh] max-w-3xl flex-col items-center justify-center px-4 py-24">
-        <div className="mb-6 rounded-full bg-red-50 p-6 ring-1 ring-red-100">
-          <AlertCircle className="h-10 w-10 text-red-500" />
+        <div className="bg-destructive/10 ring-destructive/20 mb-6 rounded-full p-6 ring-1">
+          <AlertCircle className="text-destructive h-10 w-10" />
         </div>
 
         <h1 className="text-foreground mb-4 text-3xl font-bold tracking-tight md:text-4xl">
