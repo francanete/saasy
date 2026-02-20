@@ -308,7 +308,7 @@ export const appConfig: AppConfig = {
     },
     organization: {
       name: "Saasy",
-      logo: "/logo.png",
+      logo: "/logo.svg",
       sameAs: [
         "https://twitter.com/saasyapp",
         "https://github.com/saasyapp",
