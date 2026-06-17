@@ -55,6 +55,8 @@ describe("POST /api/checkout", () => {
   };
 
   it("returns 400 when slug is missing", async () => {
+    mockGetCurrentSession.mockResolvedValue(mockSession);
+
     const response = await POST(makeRequest({}));
     const body = await response.json();
 
@@ -66,6 +68,23 @@ describe("POST /api/checkout", () => {
     mockGetCurrentSession.mockResolvedValue(null);
 
     const response = await POST(makeRequest({ slug: "starter" }));
+    const body = await response.json();
+
+    expect(response.status).toBe(401);
+    expect(body.code).toBe("UNAUTHORIZED");
+    expect(mockCheckoutsCreate).not.toHaveBeenCalled();
+  });
+
+  it("returns 401 for unauthenticated requests before parsing the body", async () => {
+    mockGetCurrentSession.mockResolvedValue(null);
+
+    const request = new Request("http://localhost/api/checkout", {
+      method: "POST",
+      body: "{",
+      headers: { "content-type": "application/json" },
+    });
+
+    const response = await POST(request);
     const body = await response.json();
 
     expect(response.status).toBe(401);
