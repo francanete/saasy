@@ -105,14 +105,9 @@ export function CheckoutSuccessContent({
             Check Again
           </Button>
         </div>
-        <div className="mt-4 space-y-2">
-          <p className="text-muted-foreground text-sm">
-            Already have an account?{" "}
-            <Link href="/login" className="hover:text-foreground underline">
-              Sign in here
-            </Link>
-          </p>
-        </div>
+        <p className="text-muted-foreground mt-4 text-sm">
+          If this takes more than a minute, try checking again.
+        </p>
       </div>
     );
   }
@@ -131,19 +126,7 @@ export function CheckoutSuccessContent({
             <Link href="/dashboard">Go to Dashboard</Link>
           </Button>
         </div>
-      ) : (
-        <div className="mt-8 space-y-4">
-          <p className="text-muted-foreground text-sm">
-            Check your email for a link to access your account.
-          </p>
-          <p className="text-muted-foreground text-sm">
-            Already have an account?{" "}
-            <Link href="/login" className="hover:text-foreground underline">
-              Sign in here
-            </Link>
-          </p>
-        </div>
-      )}
+      ) : null}
     </div>
   );
 }

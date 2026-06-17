@@ -6,7 +6,7 @@ import { trackEvent } from "@/lib/openpanel";
 
 export async function POST(request: Request) {
   try {
-    const { slug, email } = await request.json();
+    const { slug } = await request.json();
 
     if (!slug) {
       return NextResponse.json(
@@ -15,8 +15,14 @@ export async function POST(request: Request) {
       );
     }
 
-    // Try to get existing session (optional for guest checkout)
     const session = await getCurrentSession();
+
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: "Unauthorized", code: "UNAUTHORIZED" },
+        { status: 401 }
+      );
+    }
 
     // Find product
     const products = getPolarProducts();
@@ -26,34 +32,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    // Build checkout params
-    const checkoutParams: {
-      products: string[];
-      successUrl: string;
-      customerEmail?: string;
-      externalCustomerId?: string;
-    } = {
+    const checkout = await polarClient.checkouts.create({
       products: [product.productId],
       successUrl: `${process.env.NEXT_PUBLIC_APP_URL}/checkout/success`,
-    };
-
-    if (session?.user) {
-      // Logged-in user - only trust session data, not request body
-      checkoutParams.customerEmail = session.user.email;
-      checkoutParams.externalCustomerId = session.user.id;
-    } else if (email) {
-      // Guest checkout with email provided
-      // Note: userId from request body is intentionally ignored for security
-      // The webhook will create/link the user based on email
-      checkoutParams.customerEmail = email;
-    }
-    // else: Let Polar collect email during checkout (full guest mode)
-
-    const checkout = await polarClient.checkouts.create(checkoutParams);
+      // Only trust authenticated session data for checkout identity.
+      customerEmail: session.user.email,
+      externalCustomerId: session.user.id,
+    });
 
     // Fire-and-forget: don't slow down checkout redirect
     trackEvent("checkout_started", {
-      profileId: session?.user?.id,
+      profileId: session.user.id,
       productSlug: slug,
     });
 
