@@ -1,36 +1,115 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Saasy
 
-## Getting Started
+Reusable SaaS starter built with Next.js, Better Auth, Drizzle, Polar, Inngest, Resend, and Tailwind CSS.
 
-First, run the development server:
+## Local Runtime
+
+This project targets Node 24 to match Vercel.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+nvm install 24
+nvm use
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The repo includes `.nvmrc`, so after Node 24 is installed you can usually run:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+nvm use
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Main Development Commands
 
-## Learn More
+### Start the full local app stack
 
-To learn more about Next.js, take a look at the following resources:
+Use this for normal product development:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+make dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+This will:
+
+1. Start local Postgres with Docker Compose.
+2. Run local Drizzle migrations.
+3. Start the dev stack:
+   - Next.js app on `http://localhost:3000`
+   - Inngest dev server
+   - ngrok tunnel for webhook testing
+
+`make dev` checks that Node 24 is active before starting. If it fails, run:
+
+```bash
+nvm install 24
+nvm use
+make dev
+```
+
+### Restart the app stack
+
+Use this when ports are stuck or you want a clean app restart without touching the database:
+
+```bash
+make restart
+```
+
+This kills common dev ports and starts the app stack again.
+
+### Open Drizzle Studio
+
+Use this when you want to inspect or edit local database data without resetting it:
+
+```bash
+make studio
+```
+
+Run this in a second terminal while `make dev` is running.
+
+### Reset local database and open Drizzle Studio
+
+Use this only when you intentionally want a fresh local database:
+
+```bash
+make db
+```
+
+This resets the local DB volume, applies migrations, and opens Drizzle Studio.
+
+### Fresh local database plus Polar sandbox cleanup
+
+Use this when you need to clear both local database state and Polar sandbox customers:
+
+```bash
+npm run db:fresh
+```
+
+## Other Useful Commands
+
+```bash
+npm run lint           # Run ESLint
+npm run lint:fix       # Fix auto-fixable lint issues
+npm run format         # Format files with Prettier
+npm run format:check   # Check formatting
+npm run test:run       # Run Vitest once
+npm run test           # Run Vitest in watch mode
+```
+
+## Notes
+
+- Inngest functions are served from `/api/inngest`.
+- Inngest local auto-discovery is disabled because the dev script already passes the explicit Next.js endpoint.
+- Drizzle SQL query logs are opt-in. Enable them temporarily with:
+
+```bash
+DRIZZLE_LOG_QUERIES=true npm run dev
+```
 
 ## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Vercel should use Node 24 for this project. The expected runtime is declared in `package.json`:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```json
+"engines": {
+  "node": "24.x"
+}
+```

@@ -6,7 +6,7 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 export const db = drizzle(pool, {
   schema,
-  logger: process.env.NODE_ENV === "development",
+  logger: process.env.DRIZZLE_LOG_QUERIES === "true",
 });
 
 export type Database = typeof db;

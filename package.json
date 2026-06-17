@@ -2,11 +2,14 @@
   "name": "saasy",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "24.x"
+  },
   "scripts": {
     "dev": "concurrently -n next,inngest,ngrok -c blue,magenta,green \"npm:dev:next\" \"npm:dev:inngest\" \"npm:dev:ngrok\"",
     "dev:ngrok": "ngrok http --domain=peevish-uncontoured-joi.ngrok-free.dev 3000",
     "dev:next": "next dev",
-    "dev:inngest": "npx inngest-cli@latest dev -u http://localhost:3000/api/inngest",
+    "dev:inngest": "npx inngest-cli@latest dev --no-discovery -u http://localhost:3000/api/inngest",
     "build": "npm run db:migrate:deploy && next build",
     "start": "next start",
     "lint": "eslint",
@@ -56,7 +59,7 @@
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.45.1",
     "gray-matter": "^4.0.3",
-    "inngest": "^3.48.1",
+    "inngest": "^3.54.2",
     "lucide-react": "^0.562.0",
     "next": "16.1.1",
     "next-themes": "^0.4.6",
