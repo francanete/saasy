@@ -41,7 +41,9 @@ describe("CheckoutSuccessContent", () => {
       });
     });
 
-    expect(screen.queryByText("Already have an account?")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Already have an account?")
+    ).not.toBeInTheDocument();
     expect(screen.queryByText("Check your email")).not.toBeInTheDocument();
   });
 
@@ -61,7 +63,9 @@ describe("CheckoutSuccessContent", () => {
       });
     });
 
-    expect(screen.queryByText("Already have an account?")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Already have an account?")
+    ).not.toBeInTheDocument();
     expect(screen.queryByText("Check your email")).not.toBeInTheDocument();
   });
 
