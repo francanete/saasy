@@ -50,7 +50,13 @@ beforeEach(() => {
 });
 
 describe("POST /api/checkout", () => {
+  const mockSession = {
+    user: { id: "user-1", email: "session@example.com" },
+  };
+
   it("returns 400 when slug is missing", async () => {
+    mockGetCurrentSession.mockResolvedValue(mockSession);
+
     const response = await POST(makeRequest({}));
     const body = await response.json();
 
@@ -58,21 +64,59 @@ describe("POST /api/checkout", () => {
     expect(body.error).toContain("slug");
   });
 
+  it("returns 401 when unauthenticated", async () => {
+    mockGetCurrentSession.mockResolvedValue(null);
+
+    const response = await POST(makeRequest({ slug: "starter" }));
+    const body = await response.json();
+
+    expect(response.status).toBe(401);
+    expect(body.code).toBe("UNAUTHORIZED");
+    expect(mockCheckoutsCreate).not.toHaveBeenCalled();
+  });
+
+  it("returns 401 for unauthenticated requests before parsing the body", async () => {
+    mockGetCurrentSession.mockResolvedValue(null);
+
+    const request = new Request("http://localhost/api/checkout", {
+      method: "POST",
+      body: "{",
+      headers: { "content-type": "application/json" },
+    });
+
+    const response = await POST(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(401);
+    expect(body.code).toBe("UNAUTHORIZED");
+    expect(mockCheckoutsCreate).not.toHaveBeenCalled();
+  });
+
   it("returns 404 when product not found", async () => {
+    mockGetCurrentSession.mockResolvedValue(mockSession);
+
     const response = await POST(makeRequest({ slug: "nonexistent" }));
 
     expect(response.status).toBe(404);
+    expect(mockCheckoutsCreate).not.toHaveBeenCalled();
+    expect(mockTrackEvent).not.toHaveBeenCalled();
   });
 
-  it("uses session data for logged-in user (ignores body email)", async () => {
-    mockGetCurrentSession.mockResolvedValue({
-      user: { id: "user-1", email: "session@example.com" },
-    });
+  it("uses session identity for logged-in user even when body fields are spoofed", async () => {
+    mockGetCurrentSession.mockResolvedValue(mockSession);
     mockCheckoutsCreate.mockResolvedValue({
       url: "https://checkout.polar.sh/123",
     });
 
-    await POST(makeRequest({ slug: "starter", email: "body@example.com" }));
+    await POST(
+      makeRequest({
+        slug: "starter",
+        email: "body@example.com",
+        userId: "attacker-id",
+        profileId: "attacker-id",
+        externalCustomerId: "attacker-id",
+      })
+    );
 
     expect(mockCheckoutsCreate).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -80,39 +124,14 @@ describe("POST /api/checkout", () => {
         externalCustomerId: "user-1",
       })
     );
-  });
-
-  it("uses body email for guest checkout", async () => {
-    mockGetCurrentSession.mockResolvedValue(null);
-    mockCheckoutsCreate.mockResolvedValue({
-      url: "https://checkout.polar.sh/123",
+    expect(mockTrackEvent).toHaveBeenCalledWith("checkout_started", {
+      profileId: "user-1",
+      productSlug: "starter",
     });
-
-    await POST(makeRequest({ slug: "starter", email: "guest@example.com" }));
-
-    expect(mockCheckoutsCreate).toHaveBeenCalledWith(
-      expect.objectContaining({ customerEmail: "guest@example.com" })
-    );
-    expect(mockCheckoutsCreate).toHaveBeenCalledWith(
-      expect.not.objectContaining({ externalCustomerId: expect.anything() })
-    );
-  });
-
-  it("sets no email for full guest mode", async () => {
-    mockGetCurrentSession.mockResolvedValue(null);
-    mockCheckoutsCreate.mockResolvedValue({
-      url: "https://checkout.polar.sh/123",
-    });
-
-    await POST(makeRequest({ slug: "starter" }));
-
-    const callArgs = mockCheckoutsCreate.mock.calls[0][0];
-    expect(callArgs.customerEmail).toBeUndefined();
-    expect(callArgs.externalCustomerId).toBeUndefined();
   });
 
   it("returns 500 when Polar API fails", async () => {
-    mockGetCurrentSession.mockResolvedValue(null);
+    mockGetCurrentSession.mockResolvedValue(mockSession);
     mockCheckoutsCreate.mockRejectedValue(new Error("Polar down"));
 
     const response = await POST(makeRequest({ slug: "starter" }));
@@ -121,7 +140,7 @@ describe("POST /api/checkout", () => {
   });
 
   it("returns checkout URL on success", async () => {
-    mockGetCurrentSession.mockResolvedValue(null);
+    mockGetCurrentSession.mockResolvedValue(mockSession);
     mockCheckoutsCreate.mockResolvedValue({
       url: "https://checkout.polar.sh/123",
     });
@@ -132,7 +151,7 @@ describe("POST /api/checkout", () => {
     expect(response.status).toBe(200);
     expect(body.url).toBe("https://checkout.polar.sh/123");
     expect(mockTrackEvent).toHaveBeenCalledWith("checkout_started", {
-      profileId: undefined,
+      profileId: "user-1",
       productSlug: "starter",
     });
   });
