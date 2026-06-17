@@ -1,4 +1,9 @@
-.PHONY: restart db
+.PHONY: restart db dev
+
+dev:        ## Start local DB, run migrations, and start dev
+	npm run db:dev:up
+	npm run db:migrate
+	npm run dev
 
 restart:    ## Stop dev + start dev
 	@lsof -ti:3000,8288 | xargs kill -9 2>/dev/null || true

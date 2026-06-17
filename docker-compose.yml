@@ -17,15 +17,15 @@ services:
 
   db:
     image: postgres:17
-    container_name: saasy-db
+    container_name: ${DB_CONTAINER_NAME:-saasy-db}
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: saasy
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-saasy}
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
     volumes:
-      - saasy_db_data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -33,4 +33,5 @@ services:
       retries: 5
 
 volumes:
-  saasy_db_data:
+  db_data:
+    name: ${DB_VOLUME_NAME:-saasy_db_data}
