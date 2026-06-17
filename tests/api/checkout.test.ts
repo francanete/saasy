@@ -98,6 +98,8 @@ describe("POST /api/checkout", () => {
     const response = await POST(makeRequest({ slug: "nonexistent" }));
 
     expect(response.status).toBe(404);
+    expect(mockCheckoutsCreate).not.toHaveBeenCalled();
+    expect(mockTrackEvent).not.toHaveBeenCalled();
   });
 
   it("uses session identity for logged-in user even when body fields are spoofed", async () => {

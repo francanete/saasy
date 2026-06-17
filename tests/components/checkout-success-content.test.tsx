@@ -40,6 +40,9 @@ describe("CheckoutSuccessContent", () => {
         expect(screen.getByText("Go to Dashboard")).toBeInTheDocument();
       });
     });
+
+    expect(screen.queryByText("Already have an account?")).not.toBeInTheDocument();
+    expect(screen.queryByText("Check your email")).not.toBeInTheDocument();
   });
 
   it("shows 'Check Again' button in processing state", async () => {
@@ -57,6 +60,9 @@ describe("CheckoutSuccessContent", () => {
         expect(screen.getByText("Check Again")).toBeInTheDocument();
       });
     });
+
+    expect(screen.queryByText("Already have an account?")).not.toBeInTheDocument();
+    expect(screen.queryByText("Check your email")).not.toBeInTheDocument();
   });
 
   it("passes customerSessionToken to action", async () => {
