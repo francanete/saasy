@@ -100,13 +100,21 @@ describe("POST /api/checkout", () => {
     expect(response.status).toBe(404);
   });
 
-  it("uses session data for logged-in user (ignores body email)", async () => {
+  it("uses session identity for logged-in user even when body fields are spoofed", async () => {
     mockGetCurrentSession.mockResolvedValue(mockSession);
     mockCheckoutsCreate.mockResolvedValue({
       url: "https://checkout.polar.sh/123",
     });
 
-    await POST(makeRequest({ slug: "starter", email: "body@example.com" }));
+    await POST(
+      makeRequest({
+        slug: "starter",
+        email: "body@example.com",
+        userId: "attacker-id",
+        profileId: "attacker-id",
+        externalCustomerId: "attacker-id",
+      })
+    );
 
     expect(mockCheckoutsCreate).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -114,6 +122,10 @@ describe("POST /api/checkout", () => {
         externalCustomerId: "user-1",
       })
     );
+    expect(mockTrackEvent).toHaveBeenCalledWith("checkout_started", {
+      profileId: "user-1",
+      productSlug: "starter",
+    });
   });
 
   it("returns 500 when Polar API fails", async () => {
