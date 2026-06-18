@@ -19,6 +19,9 @@ export type SubscriptionStatus = {
   polarProductId: string | null;
   expiresAt: Date | null;
   plan: Plan;
+  nativeTrialStartedAt: Date | null;
+  nativeTrialEndsAt: Date | null;
+  isNativeTrialActive: boolean;
 };
 
 // Plan tier hierarchy for comparison (higher tier wins)
@@ -56,6 +59,8 @@ export async function upsertSubscription(
       currentPeriodEnd: data.currentPeriodEnd,
       cancelAtPeriodEnd: data.cancelAtPeriodEnd ?? false,
       plan,
+      nativeTrialStartedAt: undefined,
+      nativeTrialEndsAt: undefined,
       lastSyncedAt: new Date(),
     })
     .onConflictDoUpdate({
@@ -70,6 +75,8 @@ export async function upsertSubscription(
         currentPeriodEnd: data.currentPeriodEnd,
         cancelAtPeriodEnd: data.cancelAtPeriodEnd ?? false,
         plan,
+        nativeTrialStartedAt: null,
+        nativeTrialEndsAt: null,
         lastSyncedAt: new Date(),
         updatedAt: new Date(),
       },
@@ -92,6 +99,8 @@ export async function updateSubscriptionStatus(
       status: data.status,
       currentPeriodEnd: data.currentPeriodEnd,
       cancelAtPeriodEnd: data.cancelAtPeriodEnd,
+      nativeTrialStartedAt: null,
+      nativeTrialEndsAt: null,
       lastSyncedAt: new Date(),
       updatedAt: new Date(),
     })
@@ -359,14 +368,22 @@ export async function getSubscriptionStatus(
       polarProductId: null,
       expiresAt: null,
       plan: "FREE" as Plan,
+      nativeTrialStartedAt: null,
+      nativeTrialEndsAt: null,
+      isNativeTrialActive: false,
     };
   }
 
-  // Just return what's in DB - no sync logic here
-  // hasAccess = active/trialing AND on a paid plan (not FREE)
+  const now = new Date();
   const isActiveStatus =
     subscription.status === "ACTIVE" || subscription.status === "TRIALING";
-  const hasAccess = isActiveStatus && subscription.plan !== "FREE";
+  const hasPaidAccess =
+    isActiveStatus &&
+    subscription.plan !== "FREE" &&
+    subscription.billingType !== "none";
+  const isNativeTrialActive =
+    !!subscription.nativeTrialEndsAt && subscription.nativeTrialEndsAt > now;
+  const hasAccess = hasPaidAccess || isNativeTrialActive;
 
   return {
     hasAccess,
@@ -376,5 +393,8 @@ export async function getSubscriptionStatus(
     polarProductId: subscription.polarProductId,
     expiresAt: subscription.currentPeriodEnd,
     plan: subscription.plan as Plan,
+    nativeTrialStartedAt: subscription.nativeTrialStartedAt ?? null,
+    nativeTrialEndsAt: subscription.nativeTrialEndsAt ?? null,
+    isNativeTrialActive,
   };
 }

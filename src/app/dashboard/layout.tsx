@@ -93,7 +93,12 @@ export default async function DashboardLayout({
           user={session.user}
           plan={subscription.plan}
           subscriptionStatus={subscription.status}
-          expiresAt={subscription.expiresAt}
+          expiresAt={
+            subscription.isNativeTrialActive
+              ? subscription.nativeTrialEndsAt
+              : subscription.expiresAt
+          }
+          isNativeTrialActive={subscription.isNativeTrialActive}
           isAdmin={isAdmin}
         />
         <SidebarInset>
@@ -106,9 +111,10 @@ export default async function DashboardLayout({
             </div>
             <span className="text-sm font-semibold">{appConfig.name}</span>
           </header>
-          {subscription.status === "TRIALING" && subscription.expiresAt && (
-            <TrialBanner endsAt={subscription.expiresAt} />
-          )}
+          {subscription.isNativeTrialActive &&
+            subscription.nativeTrialEndsAt && (
+              <TrialBanner endsAt={subscription.nativeTrialEndsAt} />
+            )}
           <main className="flex min-h-0 flex-1 flex-col p-6">{children}</main>
         </SidebarInset>
       </SidebarProvider>

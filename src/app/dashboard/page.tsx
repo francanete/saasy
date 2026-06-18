@@ -17,6 +17,9 @@ export default async function DashboardPage() {
     .where(eq(subscriptions.userId, session!.user.id))
     .limit(1);
 
+  const isNativeTrialActive =
+    !!subscription?.nativeTrialEndsAt && subscription.nativeTrialEndsAt > new Date();
+
   const stats = [
     {
       title: "Projects",
@@ -35,8 +38,7 @@ export default async function DashboardPage() {
     {
       title: "Plan",
       value: subscription?.plan || "FREE",
-      description:
-        subscription?.status === "TRIALING" ? "Trial active" : "Current plan",
+      description: isNativeTrialActive ? "Trial active" : "Current plan",
       icon: CreditCard,
       tourId: "stat-plan",
     },

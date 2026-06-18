@@ -51,7 +51,8 @@ export type AppConfig = {
   pricing: {
     mode: "subscription" | "ltd";
     requirePaidAccess: boolean;
-    trialDays?: number;
+    allowNativeTrial: boolean;
+    nativeTrialDays: number;
     tiers: Record<PaidTier, TierConfig>;
     freeMarketing: TierMarketing;
     ltdExtraFeatures: string[];
@@ -149,7 +150,8 @@ export const appConfig: AppConfig = {
   pricing: {
     mode: "subscription" as const, // "subscription" | "ltd"
     requirePaidAccess: true, // Require paid plan to access dashboard
-    trialDays: 5,
+    allowNativeTrial: true,
+    nativeTrialDays: 5,
     tiers: {
       STARTER: {
         enabled: true,

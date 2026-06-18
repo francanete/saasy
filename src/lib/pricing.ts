@@ -299,7 +299,9 @@ export function getTierPricing(): TierPricingDisplay[] {
       description: marketing.description,
       features,
       cta: marketing.cta,
-      trialDays: appConfig.pricing.trialDays,
+      trialDays: appConfig.pricing.allowNativeTrial
+        ? appConfig.pricing.nativeTrialDays
+        : undefined,
       monthlyPrice: formatPrice(prices.monthly),
       annualPrice: formatPrice(prices.annual),
       ltdPrice: formatPrice(prices.ltd),

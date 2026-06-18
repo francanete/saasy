@@ -134,9 +134,14 @@ piece of brand, plan, legal, SEO, or product copy will be reused, put it in
 
 ## Database Guidance
 
+- `src/lib/db/schema.ts` is the source of truth for database schema changes.
 - Edit schema in `src/lib/db/schema.ts`.
-- Generate migrations with `npm run db:generate`; do not hand-edit generated
-  migration snapshots unless repairing a known migration issue.
+- After schema changes, run `npm run db:generate` to create the migration.
+- Prefer generated migrations over handwritten ones.
+- Review generated SQL before applying it; if Drizzle generates unexpected
+  changes, stop and inspect rather than applying blindly.
+- Do not hand-edit generated migration snapshots unless repairing a known
+  migration issue.
 - Use `npm run db:migrate` for local migration application.
 - Local Postgres is available through `docker-compose.yml`.
 - Do not run destructive DB reset commands unless explicitly requested or

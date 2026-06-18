@@ -1,6 +1,6 @@
 import { inngest } from "../client";
 import { db, users, subscriptions } from "@/lib/db";
-import { eq, and, gte, lt, inArray } from "drizzle-orm";
+import { and, gte, lt, inArray } from "drizzle-orm";
 import { sendTransactionalEmail } from "@/lib/email-sequences";
 import { appConfig, type PaidTier } from "@/lib/config";
 import {
@@ -31,15 +31,14 @@ export async function trialEndingReminderHandler(step: InngestStepLike) {
       .select({
         userId: subscriptions.userId,
         plan: subscriptions.plan,
-        currentPeriodEnd: subscriptions.currentPeriodEnd,
+        nativeTrialEndsAt: subscriptions.nativeTrialEndsAt,
       })
       .from(subscriptions)
       .where(
         and(
-          eq(subscriptions.status, "TRIALING"),
-          eq(subscriptions.billingType, "recurring"),
-          gte(subscriptions.currentPeriodEnd, windowStart),
-          lt(subscriptions.currentPeriodEnd, windowEnd)
+          gte(subscriptions.nativeTrialEndsAt, windowStart),
+          lt(subscriptions.nativeTrialEndsAt, windowEnd),
+          inArray(subscriptions.billingType, ["none"])
         )
       );
   });
@@ -91,8 +90,8 @@ export async function trialEndingReminderHandler(step: InngestStepLike) {
             ? formatPrice(tierConfig.prices.monthly, "monthly")
             : "your subscription price";
 
-          const endDate = trial.currentPeriodEnd
-            ? formatDate(new Date(trial.currentPeriodEnd))
+          const endDate = trial.nativeTrialEndsAt
+            ? formatDate(new Date(trial.nativeTrialEndsAt))
             : "soon";
 
           const result = await sendTransactionalEmail({

@@ -142,7 +142,11 @@ export function HeroSection({ className }: HeroSectionProps) {
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="text-muted-foreground h-4 w-4" />
-                <span>{appConfig.pricing.trialDays}-day free trial</span>
+                <span>
+                  {appConfig.pricing.allowNativeTrial
+                    ? `${appConfig.pricing.nativeTrialDays}-day native trial`
+                    : "No free trial"}
+                </span>
               </div>
             </div>
           </div>

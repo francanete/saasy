@@ -53,7 +53,7 @@ vi.mock("@/lib/db", () => ({
     userId: "user_id",
     status: "status",
     billingType: "billing_type",
-    currentPeriodEnd: "current_period_end",
+    nativeTrialEndsAt: "native_trial_ends_at",
     plan: "plan",
   },
 }));
@@ -87,12 +87,13 @@ vi.mock("@/lib/config", () => ({
   },
 }));
 
+const mockInArray = vi.hoisted(() => vi.fn());
 vi.mock("drizzle-orm", () => ({
   eq: vi.fn(),
   and: vi.fn(),
   gte: vi.fn(),
   lt: vi.fn(),
-  inArray: vi.fn(),
+  inArray: mockInArray,
 }));
 
 // Import after mocks are set up
@@ -145,7 +146,11 @@ describe("trialEndingReminderHandler", () => {
     it("sends email when trial and user found", async () => {
       const trialEndDate = new Date("2026-01-20T12:00:00Z");
       mockSelectTrials.mockResolvedValue([
-        { userId: "user-1", plan: "STARTER", currentPeriodEnd: trialEndDate },
+        {
+          userId: "user-1",
+          plan: "STARTER",
+          nativeTrialEndsAt: trialEndDate,
+        },
       ]);
       mockSelectUsers.mockResolvedValue([
         { id: "user-1", email: "test@example.com", name: "Test User" },
@@ -172,11 +177,26 @@ describe("trialEndingReminderHandler", () => {
       );
     });
 
+    it("filters reminder queries to native-trial rows only", async () => {
+      const trialEndDate = new Date("2026-01-20T12:00:00Z");
+      mockSelectTrials.mockResolvedValue([
+        { userId: "user-1", plan: "STARTER", nativeTrialEndsAt: trialEndDate },
+      ]);
+      mockSelectUsers.mockResolvedValue([
+        { id: "user-1", email: "test@example.com", name: "Test User" },
+      ]);
+      mockSendTransactionalEmail.mockResolvedValue({ sent: true });
+
+      await trialEndingReminderHandler(mockStep);
+
+      expect(mockInArray).toHaveBeenCalledWith("billing_type", ["none"]);
+    });
+
     it("processes multiple trials in single batch", async () => {
       const trialEndDate = new Date("2026-01-20T12:00:00Z");
       mockSelectTrials.mockResolvedValue([
-        { userId: "user-1", plan: "STARTER", currentPeriodEnd: trialEndDate },
-        { userId: "user-2", plan: "GROWTH", currentPeriodEnd: trialEndDate },
+        { userId: "user-1", plan: "STARTER", nativeTrialEndsAt: trialEndDate },
+        { userId: "user-2", plan: "GROWTH", nativeTrialEndsAt: trialEndDate },
       ]);
       mockSelectUsers.mockResolvedValue([
         { id: "user-1", email: "user1@example.com", name: "User 1" },
@@ -196,8 +216,8 @@ describe("trialEndingReminderHandler", () => {
     it("skips trial when user not in batch query result", async () => {
       const trialEndDate = new Date("2026-01-20T12:00:00Z");
       mockSelectTrials.mockResolvedValue([
-        { userId: "user-1", plan: "STARTER", currentPeriodEnd: trialEndDate },
-        { userId: "user-2", plan: "STARTER", currentPeriodEnd: trialEndDate },
+        { userId: "user-1", plan: "STARTER", nativeTrialEndsAt: trialEndDate },
+        { userId: "user-2", plan: "STARTER", nativeTrialEndsAt: trialEndDate },
       ]);
       // Only return user-1, user-2 is missing from the batch query
       mockSelectUsers.mockResolvedValue([
@@ -216,7 +236,7 @@ describe("trialEndingReminderHandler", () => {
     it("skips all trials when no users found", async () => {
       const trialEndDate = new Date("2026-01-20T12:00:00Z");
       mockSelectTrials.mockResolvedValue([
-        { userId: "user-1", plan: "STARTER", currentPeriodEnd: trialEndDate },
+        { userId: "user-1", plan: "STARTER", nativeTrialEndsAt: trialEndDate },
       ]);
       mockSelectUsers.mockResolvedValue([]); // No users found
 
@@ -232,7 +252,7 @@ describe("trialEndingReminderHandler", () => {
     it("counts as skipped when email returns sent: false", async () => {
       const trialEndDate = new Date("2026-01-20T12:00:00Z");
       mockSelectTrials.mockResolvedValue([
-        { userId: "user-1", plan: "STARTER", currentPeriodEnd: trialEndDate },
+        { userId: "user-1", plan: "STARTER", nativeTrialEndsAt: trialEndDate },
       ]);
       mockSelectUsers.mockResolvedValue([
         { id: "user-1", email: "test@example.com", name: "Test" },
@@ -252,7 +272,7 @@ describe("trialEndingReminderHandler", () => {
     it("counts as error when email throws exception", async () => {
       const trialEndDate = new Date("2026-01-20T12:00:00Z");
       mockSelectTrials.mockResolvedValue([
-        { userId: "user-1", plan: "STARTER", currentPeriodEnd: trialEndDate },
+        { userId: "user-1", plan: "STARTER", nativeTrialEndsAt: trialEndDate },
       ]);
       mockSelectUsers.mockResolvedValue([
         { id: "user-1", email: "test@example.com", name: "Test" },
@@ -281,9 +301,9 @@ describe("trialEndingReminderHandler", () => {
     it("handles mixed results correctly", async () => {
       const trialEndDate = new Date("2026-01-20T12:00:00Z");
       mockSelectTrials.mockResolvedValue([
-        { userId: "user-1", plan: "STARTER", currentPeriodEnd: trialEndDate },
-        { userId: "user-2", plan: "STARTER", currentPeriodEnd: trialEndDate },
-        { userId: "user-3", plan: "STARTER", currentPeriodEnd: trialEndDate },
+        { userId: "user-1", plan: "STARTER", nativeTrialEndsAt: trialEndDate },
+        { userId: "user-2", plan: "STARTER", nativeTrialEndsAt: trialEndDate },
+        { userId: "user-3", plan: "STARTER", nativeTrialEndsAt: trialEndDate },
       ]);
       mockSelectUsers.mockResolvedValue([
         { id: "user-1", email: "user1@example.com", name: "User 1" },
@@ -316,7 +336,7 @@ describe("trialEndingReminderHandler", () => {
         {
           userId: "user-1",
           plan: "UNKNOWN_PLAN",
-          currentPeriodEnd: trialEndDate,
+          nativeTrialEndsAt: trialEndDate,
         },
       ]);
       mockSelectUsers.mockResolvedValue([
@@ -336,9 +356,9 @@ describe("trialEndingReminderHandler", () => {
       );
     });
 
-    it("uses 'soon' as fallback when currentPeriodEnd is null", async () => {
+    it("uses 'soon' as fallback when nativeTrialEndsAt is null", async () => {
       mockSelectTrials.mockResolvedValue([
-        { userId: "user-1", plan: "STARTER", currentPeriodEnd: null },
+        { userId: "user-1", plan: "STARTER", nativeTrialEndsAt: null },
       ]);
       mockSelectUsers.mockResolvedValue([
         { id: "user-1", email: "test@example.com", name: "Test" },
@@ -362,7 +382,7 @@ describe("trialEndingReminderHandler", () => {
       const trials = Array.from({ length: 10 }, (_, i) => ({
         userId: `user-${i}`,
         plan: "STARTER",
-        currentPeriodEnd: new Date("2026-01-20T12:00:00Z"),
+        nativeTrialEndsAt: new Date("2026-01-20T12:00:00Z"),
       }));
       mockSelectTrials.mockResolvedValue(trials);
       mockSelectUsers.mockResolvedValue(
@@ -388,7 +408,7 @@ describe("trialEndingReminderHandler", () => {
     it("formats date in human-readable format", async () => {
       const testDate = new Date("2026-01-20T12:00:00Z");
       mockSelectTrials.mockResolvedValue([
-        { userId: "user-1", plan: "STARTER", currentPeriodEnd: testDate },
+        { userId: "user-1", plan: "STARTER", nativeTrialEndsAt: testDate },
       ]);
       mockSelectUsers.mockResolvedValue([
         { id: "user-1", email: "test@example.com", name: "Test" },

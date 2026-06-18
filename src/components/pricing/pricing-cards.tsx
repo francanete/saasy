@@ -221,7 +221,7 @@ function PricingCard({
               isHighlighted ? "text-background/60" : "text-muted-foreground"
             )}
           >
-            {tier.trialDays}-day free trial
+            {tier.trialDays}-day native trial
           </p>
         )}
 

@@ -11,7 +11,7 @@ export function BlogCta() {
         </h2>
         <p className="text-primary-foreground/70 mx-auto mb-10 max-w-2xl text-lg md:text-xl">
           {appConfig.name} helps you capture, organize, and prioritize feature
-          requests — start your free trial today, cancel anytime.
+          requests — start your native trial today, cancel anytime.
         </p>
         <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Button
@@ -19,7 +19,7 @@ export function BlogCta() {
             className="bg-background text-foreground hover:bg-muted h-12 w-full px-8 font-semibold sm:w-auto"
             asChild
           >
-            <Link href="/pricing">Start Free Trial</Link>
+            <Link href="/pricing">Start Trial</Link>
           </Button>
           <Button
             size="lg"

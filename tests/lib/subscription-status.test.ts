@@ -104,6 +104,43 @@ describe("getSubscriptionStatus", () => {
     expect(result.status).toBe("TRIALING");
   });
 
+  it("returns active native trial with hasAccess true", async () => {
+    const now = new Date();
+    mockFindFirst.mockResolvedValue({
+      status: "ACTIVE",
+      plan: "FREE",
+      billingType: "none",
+      polarProductId: null,
+      currentPeriodEnd: null,
+      nativeTrialStartedAt: now,
+      nativeTrialEndsAt: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000),
+    });
+
+    const result = await getSubscriptionStatus("user-1");
+
+    expect(result.hasAccess).toBe(true);
+    expect(result.isNativeTrialActive).toBe(true);
+    expect(result.nativeTrialEndsAt).toBeInstanceOf(Date);
+  });
+
+  it("returns expired native trial with hasAccess false", async () => {
+    const now = new Date();
+    mockFindFirst.mockResolvedValue({
+      status: "ACTIVE",
+      plan: "STARTER",
+      billingType: "none",
+      polarProductId: null,
+      currentPeriodEnd: null,
+      nativeTrialStartedAt: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+      nativeTrialEndsAt: new Date(now.getTime() - 24 * 60 * 60 * 1000),
+    });
+
+    const result = await getSubscriptionStatus("user-1");
+
+    expect(result.hasAccess).toBe(false);
+    expect(result.isNativeTrialActive).toBe(false);
+  });
+
   it("returns CANCELED with hasAccess false (plan unchanged)", async () => {
     mockFindFirst.mockResolvedValue({
       status: "CANCELED",

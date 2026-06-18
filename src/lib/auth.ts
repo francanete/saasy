@@ -117,6 +117,48 @@ async function resolveOrCreateUser(customer: {
   return newUser.id;
 }
 
+async function grantNativeTrial(userId: string): Promise<void> {
+  if (!appConfig.pricing.allowNativeTrial) {
+    return;
+  }
+
+  const existing = await db.query.subscriptions.findFirst({
+    where: eq(subscriptions.userId, userId),
+    columns: { plan: true, nativeTrialEndsAt: true },
+  });
+
+  if (existing?.nativeTrialEndsAt || (existing && existing.plan !== "FREE")) {
+    return;
+  }
+
+  const now = new Date();
+  const trialEndsAt = new Date(
+    now.getTime() + appConfig.pricing.nativeTrialDays * 24 * 60 * 60 * 1000
+  );
+
+  await db
+    .insert(subscriptions)
+    .values({
+      userId,
+      plan: "STARTER",
+      billingType: "none",
+      status: "ACTIVE",
+      nativeTrialStartedAt: now,
+      nativeTrialEndsAt: trialEndsAt,
+    })
+    .onConflictDoUpdate({
+      target: subscriptions.userId,
+      set: {
+        plan: "STARTER",
+        billingType: "none",
+        status: "ACTIVE",
+        nativeTrialStartedAt: now,
+        nativeTrialEndsAt: trialEndsAt,
+        updatedAt: now,
+      },
+    });
+}
+
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
@@ -326,6 +368,7 @@ export const auth = betterAuth({
       if (isSignupPath) {
         const newSession = ctx.context.newSession;
         if (newSession) {
+          await grantNativeTrial(newSession.user.id);
           await inngest.send({
             name: "user/created",
             data: {
