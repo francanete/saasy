@@ -20,6 +20,8 @@ export type TierConfig = {
   originalPrices?: Record<BillingCycle, number>;
   /** Polar product IDs - get from Polar dashboard */
   polarProductIds: Record<BillingCycle, string>;
+  /** Whether Polar checkout for this tier includes a trial */
+  polarCheckoutHasTrial?: boolean;
   marketing: TierMarketing;
 };
 
@@ -130,11 +132,28 @@ const polarEnv = (
 ) as keyof typeof polarProductIdsByEnv;
 const polarIds = polarProductIdsByEnv[polarEnv];
 
+export type GeneralCta = {
+  label: string;
+  href: "/signup" | "/pricing";
+};
+
+export function getGeneralCta(config: AppConfig = appConfig): GeneralCta {
+  if (!config.pricing.requirePaidAccess) {
+    return { label: "Get Started", href: "/signup" };
+  }
+
+  if (config.pricing.allowNativeTrial) {
+    return { label: "Start Free Trial", href: "/signup" };
+  }
+
+  return { label: "Choose Plan", href: "/pricing" };
+}
+
 export const appConfig: AppConfig = {
   name: "Saasy",
   description: "The complete platform for building modern applications.",
   email: {
-    from: "noreply@simplesubscriber.com",
+    from: "noreply@app.plaudera.com",
   },
   team: { name: "Saasy" },
   socials: {
@@ -158,6 +177,7 @@ export const appConfig: AppConfig = {
         prices: { ltd: 6700, monthly: 2400, annual: 24000 },
         originalPrices: { ltd: 9900, monthly: 2400, annual: 28800 },
         polarProductIds: polarIds.STARTER,
+        polarCheckoutHasTrial: true,
         marketing: {
           name: "Starter",
           description: "For professionals and small teams",

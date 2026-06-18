@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { appConfig } from "@/lib/config";
+import { appConfig, getGeneralCta } from "@/lib/config";
 import { Button } from "@/components/ui/button";
 import { HeroDashboardMockup } from "./hero-dashboard-mockup";
 import { useIntersectionObserver } from "@/hooks/use-intersection-observer";
@@ -19,6 +19,7 @@ export function HeroSection({ className }: HeroSectionProps) {
     threshold: 0.1,
     triggerOnce: true,
   });
+  const generalCta = getGeneralCta();
 
   return (
     <section
@@ -110,8 +111,8 @@ export function HeroSection({ className }: HeroSectionProps) {
                 asChild
                 className="bg-primary text-primary-foreground shadow-primary/20 hover:bg-primary/90 hover:shadow-primary/30 h-12 rounded-full px-8 text-base font-semibold shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl"
               >
-                <Link href="/signup">
-                  Get Started
+                <Link href={generalCta.href}>
+                  {generalCta.label}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
@@ -143,9 +144,11 @@ export function HeroSection({ className }: HeroSectionProps) {
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="text-muted-foreground h-4 w-4" />
                 <span>
-                  {appConfig.pricing.allowNativeTrial
-                    ? `${appConfig.pricing.nativeTrialDays}-day native trial`
-                    : "No free trial"}
+                  {!appConfig.pricing.requirePaidAccess
+                    ? "Free plan available"
+                    : appConfig.pricing.allowNativeTrial
+                      ? `${appConfig.pricing.nativeTrialDays}-day free trial`
+                      : "Paid plans only"}
                 </span>
               </div>
             </div>

@@ -239,6 +239,7 @@ export type TierPricingDisplay = {
   features: string[];
   cta: string;
   trialDays?: number;
+  polarCheckoutHasTrial?: boolean;
   // Prices in formatted strings
   monthlyPrice: string;
   annualPrice: string;
@@ -293,15 +294,18 @@ export function getTierPricing(): TierPricingDisplay[] {
         ? formatPrice(originalPrices.ltd)
         : null;
 
+    const polarCheckoutHasTrial = config.polarCheckoutHasTrial;
+
     return {
       tier,
       name: marketing.name,
       description: marketing.description,
       features,
-      cta: marketing.cta,
+      cta: polarCheckoutHasTrial ? "Start trial" : "Start subscription",
       trialDays: appConfig.pricing.allowNativeTrial
         ? appConfig.pricing.nativeTrialDays
         : undefined,
+      polarCheckoutHasTrial,
       monthlyPrice: formatPrice(prices.monthly),
       annualPrice: formatPrice(prices.annual),
       ltdPrice: formatPrice(prices.ltd),

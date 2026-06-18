@@ -20,7 +20,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { appConfig } from "@/lib/config";
+import { appConfig, getGeneralCta } from "@/lib/config";
 import { useSession, signOut } from "@/lib/auth-client";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
@@ -49,6 +49,7 @@ export function Navbar() {
   const { data: session, isPending } = useSession();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const generalCta = getGeneralCta();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -172,10 +173,10 @@ export function Navbar() {
                       Sign in
                     </Link>
                     <Link
-                      href="/signup"
+                      href={generalCta.href}
                       className="bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-ring inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-medium shadow-sm transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:outline-none"
                     >
-                      Get Started
+                      {generalCta.label}
                     </Link>
                   </>
                 )}
@@ -280,11 +281,11 @@ export function Navbar() {
                   Sign in
                 </Link>
                 <Link
-                  href="/signup"
+                  href={generalCta.href}
                   className="bg-primary text-primary-foreground hover:bg-primary/90 block w-full rounded-lg px-3 py-3 text-center text-base font-medium shadow-md transition-colors"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  Get Started
+                  {generalCta.label}
                 </Link>
               </div>
             )}

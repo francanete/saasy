@@ -1,4 +1,4 @@
-import { generateSlug, parseSlug } from "@/lib/pricing";
+import { getTierPricing, generateSlug, parseSlug } from "@/lib/pricing";
 
 describe("generateSlug", () => {
   it("generates slug for monthly billing", () => {
@@ -11,6 +11,13 @@ describe("generateSlug", () => {
 
   it("generates slug for LTD billing", () => {
     expect(generateSlug("SCALE", "ltd")).toBe("scale-ltd");
+  });
+});
+
+describe("getTierPricing", () => {
+  it("uses Start trial when Polar checkout trial is configured", () => {
+    const tiers = getTierPricing();
+    expect(tiers[0]?.cta).toBe("Start trial");
   });
 });
 
