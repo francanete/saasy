@@ -33,10 +33,6 @@ vi.mock("better-auth", () => ({
   betterAuth: vi.fn((config) => config),
 }));
 
-vi.mock("better-auth/api", () => ({
-  createAuthMiddleware: vi.fn((handler) => handler),
-}));
-
 vi.mock("better-auth/plugins/magic-link", () => ({
   magicLink: vi.fn((config) => config),
 }));
@@ -106,8 +102,27 @@ vi.mock("@/lib/polar-client", () => ({
 
 import { auth } from "@/lib/auth";
 
-const runAfterHook = auth as unknown as {
-  hooks: { after: (ctx: { path: string; context: unknown }) => Promise<void> };
+const runUserCreateHook = auth as unknown as {
+  databaseHooks: {
+    user: {
+      create: {
+        after: (user: { id: string; email: string }) => Promise<void>;
+      };
+    };
+  };
+};
+
+const maybePathHookAuth = auth as unknown as {
+  hooks?: {
+    after?: (ctx: {
+      path: string;
+      context: {
+        newSession?: {
+          user: { id: string; email: string };
+        };
+      };
+    }) => Promise<void>;
+  };
 };
 
 describe("auth native trial grant hook", () => {
@@ -126,14 +141,10 @@ describe("auth native trial grant hook", () => {
     mockInngestSend.mockResolvedValue(undefined);
   });
 
-  it("grants a STARTER native trial for a new signup", async () => {
-    await runAfterHook.hooks.after({
-      path: "/sign-up/email",
-      context: {
-        newSession: {
-          user: { id: "user-1", email: "user@example.com" },
-        },
-      },
+  it("grants a STARTER native trial for a newly created user", async () => {
+    await runUserCreateHook.databaseHooks.user.create.after({
+      id: "user-1",
+      email: "user@example.com",
     });
 
     expect(mockInsert).toHaveBeenCalled();
@@ -160,13 +171,9 @@ describe("auth native trial grant hook", () => {
   it("does not grant a native trial when disabled", async () => {
     mockAppConfig.pricing.allowNativeTrial = false;
 
-    await runAfterHook.hooks.after({
-      path: "/sign-up/email",
-      context: {
-        newSession: {
-          user: { id: "user-1", email: "user@example.com" },
-        },
-      },
+    await runUserCreateHook.databaseHooks.user.create.after({
+      id: "user-1",
+      email: "user@example.com",
     });
 
     expect(mockInsert).not.toHaveBeenCalled();
@@ -185,13 +192,9 @@ describe("auth native trial grant hook", () => {
       nativeTrialEndsAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
     });
 
-    await runAfterHook.hooks.after({
-      path: "/magic-link/verify",
-      context: {
-        newSession: {
-          user: { id: "user-1", email: "user@example.com" },
-        },
-      },
+    await runUserCreateHook.databaseHooks.user.create.after({
+      id: "user-1",
+      email: "user@example.com",
     });
 
     expect(mockInsert).not.toHaveBeenCalled();
@@ -203,29 +206,42 @@ describe("auth native trial grant hook", () => {
       nativeTrialEndsAt: null,
     });
 
-    await runAfterHook.hooks.after({
-      path: "/callback/google",
-      context: {
-        newSession: {
-          user: { id: "user-1", email: "user@example.com" },
-        },
-      },
+    await runUserCreateHook.databaseHooks.user.create.after({
+      id: "user-1",
+      email: "user@example.com",
     });
 
     expect(mockInsert).not.toHaveBeenCalled();
   });
 
-  it("ignores non-signup paths", async () => {
-    await runAfterHook.hooks.after({
-      path: "/sign-in/email",
-      context: {
-        newSession: {
-          user: { id: "user-1", email: "user@example.com" },
-        },
-      },
-    });
+  it.each([
+    ["OAuth callback", "/callback/google"],
+    ["magic link verification", "/magic-link/verify"],
+  ])(
+    "does not grant a native trial to returning users on %s sign-ins",
+    async (_label, path) => {
+      const pathHook = maybePathHookAuth.hooks?.after;
 
-    expect(mockInsert).not.toHaveBeenCalled();
-    expect(mockInngestSend).not.toHaveBeenCalled();
+      if (pathHook) {
+        await pathHook({
+          path,
+          context: {
+            newSession: {
+              user: { id: "returning-user", email: "returning@example.com" },
+            },
+          },
+        });
+      }
+
+      expect(mockInsert).not.toHaveBeenCalled();
+      expect(mockInngestSend).not.toHaveBeenCalled();
+    }
+  );
+
+  it("registers work on user creation instead of path-based session hooks", () => {
+    expect(runUserCreateHook.databaseHooks.user.create.after).toBeTypeOf(
+      "function"
+    );
+    expect(maybePathHookAuth.hooks).toBeUndefined();
   });
 });
