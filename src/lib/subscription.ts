@@ -284,20 +284,29 @@ export async function syncWithPolar(userId: string): Promise<void> {
         status: "ACTIVE",
       });
     } else {
-      // Customer exists but no active subscription/order - mark as free
+      // Customer exists but no active subscription/order.
+      // Preserve an active native trial so sync does not downgrade it to FREE.
+      const currentSubscription = await db.query.subscriptions.findFirst({
+        where: eq(subscriptions.userId, userId),
+        columns: { nativeTrialEndsAt: true },
+      });
+      const now = new Date();
+      const isNativeTrialActive =
+        !!currentSubscription?.nativeTrialEndsAt &&
+        currentSubscription.nativeTrialEndsAt > now;
 
       await db
         .update(subscriptions)
         .set({
           polarCustomerId: customer.id,
           status: "ACTIVE",
-          plan: "FREE",
+          plan: isNativeTrialActive ? "STARTER" : "FREE",
           billingType: "none",
           polarSubscriptionId: null,
           polarOrderId: null,
           polarProductId: null,
-          lastSyncedAt: new Date(),
-          updatedAt: new Date(),
+          lastSyncedAt: now,
+          updatedAt: now,
         })
         .where(eq(subscriptions.userId, userId));
     }

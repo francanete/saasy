@@ -272,10 +272,51 @@ describe("syncWithPolar", () => {
     mockGetExternal.mockResolvedValue(customer);
     mockSubsList.mockResolvedValue({ result: { items: [] } });
     mockOrdersList.mockResolvedValue({ result: { items: [] } });
+    mockFindFirst.mockResolvedValue({
+      plan: "STARTER",
+      billingType: "none",
+      status: "ACTIVE",
+      polarCustomerId: "cust-1",
+      polarSubscriptionId: null,
+      polarOrderId: null,
+      polarProductId: null,
+      currentPeriodEnd: null,
+      nativeTrialEndsAt: null,
+    });
 
     await syncWithPolar("user-1");
 
     expect(mockUpdate).toHaveBeenCalled();
+  });
+
+  it("keeps native trial metadata when Polar has no entitlement", async () => {
+    const now = new Date();
+    mockGetExternal.mockResolvedValue(customer);
+    mockSubsList.mockResolvedValue({ result: { items: [] } });
+    mockOrdersList.mockResolvedValue({ result: { items: [] } });
+    mockFindFirst.mockResolvedValue({
+      plan: "STARTER",
+      billingType: "none",
+      status: "ACTIVE",
+      polarCustomerId: "cust-1",
+      polarSubscriptionId: null,
+      polarOrderId: null,
+      polarProductId: null,
+      currentPeriodEnd: null,
+      nativeTrialEndsAt: new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000),
+    });
+
+    await syncWithPolar("user-1");
+
+    expect(mockUpdate).toHaveBeenCalled();
+    const setArg = mockUpdate.mock.results[0]?.value.set.mock.calls[0][0];
+    expect(setArg).toEqual(
+      expect.objectContaining({
+        plan: "STARTER",
+        billingType: "none",
+        status: "ACTIVE",
+      })
+    );
   });
 
   it("marks synced on 404 (customer not found)", async () => {
