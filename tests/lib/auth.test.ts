@@ -186,6 +186,23 @@ describe("auth native trial grant hook", () => {
     });
   });
 
+  it("does not alter an existing subscription when disabled", async () => {
+    mockAppConfig.pricing.allowNativeTrial = false;
+    mockFindFirst.mockResolvedValue({
+      plan: "STARTER",
+      nativeTrialEndsAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    });
+
+    await runUserCreateHook.databaseHooks.user.create.after({
+      id: "user-1",
+      email: "user@example.com",
+    });
+
+    expect(mockFindFirst).not.toHaveBeenCalled();
+    expect(mockInsert).not.toHaveBeenCalled();
+    expect(mockOnConflictDoUpdate).not.toHaveBeenCalled();
+  });
+
   it("does not reset a user who already has a native trial", async () => {
     mockFindFirst.mockResolvedValue({
       plan: "STARTER",

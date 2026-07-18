@@ -287,6 +287,38 @@ describe("syncWithPolar", () => {
     await syncWithPolar("user-1");
 
     expect(mockUpdate).toHaveBeenCalled();
+    const setArg = mockUpdate.mock.results[0]?.value.set.mock.calls[0][0];
+    expect(setArg).toEqual(
+      expect.objectContaining({
+        plan: "FREE",
+        billingType: "none",
+        status: "ACTIVE",
+      })
+    );
+  });
+
+  it("downgrades an expired native trial to FREE during Polar sync", async () => {
+    const now = new Date();
+    mockGetExternal.mockResolvedValue(customer);
+    mockSubsList.mockResolvedValue({ result: { items: [] } });
+    mockOrdersList.mockResolvedValue({ result: { items: [] } });
+    mockFindFirst.mockResolvedValue({
+      plan: "STARTER",
+      billingType: "none",
+      status: "ACTIVE",
+      nativeTrialEndsAt: new Date(now.getTime() - 60 * 60 * 1000),
+    });
+
+    await syncWithPolar("user-1");
+
+    const setArg = mockUpdate.mock.results[0]?.value.set.mock.calls[0][0];
+    expect(setArg).toEqual(
+      expect.objectContaining({
+        plan: "FREE",
+        billingType: "none",
+        status: "ACTIVE",
+      })
+    );
   });
 
   it("keeps native trial metadata when Polar has no entitlement", async () => {
