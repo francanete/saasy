@@ -51,7 +51,8 @@ export type AppConfig = {
   pricing: {
     mode: "subscription" | "ltd";
     requirePaidAccess: boolean;
-    trialDays?: number;
+    allowNativeTrial: boolean;
+    nativeTrialDays: number;
     tiers: Record<PaidTier, TierConfig>;
     freeMarketing: TierMarketing;
     ltdExtraFeatures: string[];
@@ -129,11 +130,28 @@ const polarEnv = (
 ) as keyof typeof polarProductIdsByEnv;
 const polarIds = polarProductIdsByEnv[polarEnv];
 
+export type GeneralCta = {
+  label: string;
+  href: "/signup" | "/pricing";
+};
+
+export function getGeneralCta(config: AppConfig = appConfig): GeneralCta {
+  if (!config.pricing.requirePaidAccess) {
+    return { label: "Get Started", href: "/signup" };
+  }
+
+  if (config.pricing.allowNativeTrial) {
+    return { label: "Start Free Trial", href: "/signup" };
+  }
+
+  return { label: "Choose Plan", href: "/pricing" };
+}
+
 export const appConfig: AppConfig = {
   name: "Saasy",
   description: "The complete platform for building modern applications.",
   email: {
-    from: "noreply@simplesubscriber.com",
+    from: "noreply@app.plaudera.com",
   },
   team: { name: "Saasy" },
   socials: {
@@ -149,7 +167,8 @@ export const appConfig: AppConfig = {
   pricing: {
     mode: "subscription" as const, // "subscription" | "ltd"
     requirePaidAccess: true, // Require paid plan to access dashboard
-    trialDays: 5,
+    allowNativeTrial: true,
+    nativeTrialDays: 5,
     tiers: {
       STARTER: {
         enabled: true,

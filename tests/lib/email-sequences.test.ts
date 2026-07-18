@@ -192,7 +192,6 @@ describe("sendTransactionalEmail", () => {
     templateData: {
       planName: "Starter",
       endDate: "January 15, 2025",
-      price: "$9/month",
     },
   };
 
@@ -287,14 +286,14 @@ describe("sendTransactionalEmail", () => {
       expect(emailCall.html).toContain("January 15, 2025");
     });
 
-    it("includes price in email body", async () => {
+    it("includes checkout instruction in email body", async () => {
       mockFindFirstEmailsSent.mockResolvedValue(null);
       mockFindFirstUsers.mockResolvedValue({ id: "user-123" });
 
       await sendTransactionalEmail(defaultParams);
 
       const emailCall = mockSendEmail.mock.calls[0][0];
-      expect(emailCall.html).toContain("$9/month");
+      expect(emailCall.html).toContain("choose a plan and complete checkout");
     });
 
     it("uses fallback name when name is null", async () => {

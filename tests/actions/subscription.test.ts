@@ -44,7 +44,7 @@ describe("syncSubscriptionAction", () => {
 
     expect(result).toEqual({
       success: false,
-      canAccessDashboard: false,
+      paymentConfirmed: false,
       error: "Not authenticated",
     });
   });
@@ -63,14 +63,14 @@ describe("syncSubscriptionAction", () => {
     );
   });
 
-  it("with token success: returns canAccessDashboard true", async () => {
+  it("with token success: returns paymentConfirmed true", async () => {
     mockGetCurrentSession.mockResolvedValue(mockSession);
     mockSyncWithCustomerToken.mockResolvedValue(undefined);
     mockHasPaidAccess.mockResolvedValue(true);
 
     const result = await syncSubscriptionAction("session-token-abc");
 
-    expect(result).toEqual({ success: true, canAccessDashboard: true });
+    expect(result).toEqual({ success: true, paymentConfirmed: true });
   });
 
   it("token fails → falls back to syncWithRetries", async () => {
@@ -84,7 +84,7 @@ describe("syncSubscriptionAction", () => {
 
     expect(mockSyncWithCustomerToken).toHaveBeenCalled();
     expect(mockSyncWithPolar).toHaveBeenCalledWith("user-123");
-    expect(result.canAccessDashboard).toBe(true);
+    expect(result.paymentConfirmed).toBe(true);
   });
 
   it("without token: goes directly to retry path", async () => {
@@ -96,10 +96,10 @@ describe("syncSubscriptionAction", () => {
 
     expect(mockSyncWithCustomerToken).not.toHaveBeenCalled();
     expect(mockSyncWithPolar).toHaveBeenCalledWith("user-123");
-    expect(result).toEqual({ success: true, canAccessDashboard: false });
+    expect(result).toEqual({ success: true, paymentConfirmed: false });
   });
 
-  it("sync fails but hasPaidAccess returns true → canAccessDashboard true", async () => {
+  it("sync fails but paid access arrived → paymentConfirmed true", async () => {
     mockGetCurrentSession.mockResolvedValue(mockSession);
     mockSyncWithPolar.mockRejectedValue(new Error("API down"));
     mockHasPaidAccess.mockResolvedValue(true);
@@ -109,7 +109,7 @@ describe("syncSubscriptionAction", () => {
 
     expect(result).toEqual({
       success: false,
-      canAccessDashboard: true,
+      paymentConfirmed: true,
       error: "Sync failed after retries",
     });
   });

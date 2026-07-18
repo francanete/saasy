@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { appConfig } from "@/lib/config";
+import { appConfig, getGeneralCta } from "@/lib/config";
 
 export function BlogCta() {
+  const generalCta = getGeneralCta();
+
   return (
     <section className="bg-primary text-primary-foreground py-24">
       <div className="container mx-auto max-w-4xl px-4 text-center">
@@ -11,7 +13,7 @@ export function BlogCta() {
         </h2>
         <p className="text-primary-foreground/70 mx-auto mb-10 max-w-2xl text-lg md:text-xl">
           {appConfig.name} helps you capture, organize, and prioritize feature
-          requests — start your free trial today, cancel anytime.
+          requests — start your native trial today, cancel anytime.
         </p>
         <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Button
@@ -19,7 +21,7 @@ export function BlogCta() {
             className="bg-background text-foreground hover:bg-muted h-12 w-full px-8 font-semibold sm:w-auto"
             asChild
           >
-            <Link href="/pricing">Start Free Trial</Link>
+            <Link href={generalCta.href}>{generalCta.label}</Link>
           </Button>
           <Button
             size="lg"

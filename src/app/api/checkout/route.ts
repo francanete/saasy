@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
-import { getPolarProducts } from "@/lib/pricing";
 import { getCurrentSession } from "@/lib/dal";
-import { polarClient } from "@/lib/polar-client";
-import { trackEvent } from "@/lib/openpanel";
+import { createCheckout, getCheckoutProduct } from "@/lib/checkout";
 
 export async function POST(request: Request) {
   try {
@@ -24,29 +22,17 @@ export async function POST(request: Request) {
       );
     }
 
-    // Find product
-    const products = getPolarProducts();
-    const product = products.find((p) => p.slug === slug);
-
-    if (!product) {
+    if (!getCheckoutProduct(slug)) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    const checkout = await polarClient.checkouts.create({
-      products: [product.productId],
-      successUrl: `${process.env.NEXT_PUBLIC_APP_URL}/checkout/success`,
-      // Only trust authenticated session data for checkout identity.
-      customerEmail: session.user.email,
-      externalCustomerId: session.user.id,
+    const url = await createCheckout({
+      slug,
+      userId: session.user.id,
+      email: session.user.email,
     });
 
-    // Fire-and-forget: don't slow down checkout redirect
-    trackEvent("checkout_started", {
-      profileId: session.user.id,
-      productSlug: slug,
-    });
-
-    return NextResponse.json({ url: checkout.url });
+    return NextResponse.json({ url });
   } catch (error) {
     console.error("Checkout error:", error);
     return NextResponse.json(

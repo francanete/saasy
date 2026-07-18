@@ -33,7 +33,10 @@ export async function PaidAccessGate({
 
   const subscription = await getSubscriptionStatus(session.user.id);
 
-  if (!hasRequiredPlan(subscription.plan, requiredPlan)) {
+  if (
+    !subscription.hasAccess ||
+    !hasRequiredPlan(subscription.plan, requiredPlan)
+  ) {
     return (
       <>
         {fallback ?? (

@@ -154,6 +154,10 @@ export const subscriptions = pgTable(
     currentPeriodEnd: timestamp("current_period_end"),
     cancelAtPeriodEnd: boolean("cancel_at_period_end").default(false),
 
+    // App-native trial
+    nativeTrialStartedAt: timestamp("native_trial_started_at"),
+    nativeTrialEndsAt: timestamp("native_trial_ends_at"),
+
     // Sync tracking (for API fallback when webhooks fail)
     lastSyncedAt: timestamp("last_synced_at"),
 

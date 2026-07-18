@@ -2,9 +2,7 @@
 
 import * as React from "react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
-import { useSession } from "@/lib/auth-client";
 import type { TierPricingDisplay, PricingMode } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 import { useIntersectionObserver } from "@/hooks/use-intersection-observer";
@@ -213,18 +211,6 @@ function PricingCard({
           />
         </button>
 
-        {/* Trial days text */}
-        {!isLtd && tier.trialDays && tier.trialDays > 0 && (
-          <p
-            className={cn(
-              "mt-3 text-center text-xs font-medium",
-              isHighlighted ? "text-background/60" : "text-muted-foreground"
-            )}
-          >
-            {tier.trialDays}-day free trial
-          </p>
-        )}
-
         {/* Guarantee text */}
         {isLtd && (
           <p
@@ -247,9 +233,6 @@ function PricingCard({
 
 export function PricingCards({ tiers, mode }: PricingCardsProps) {
   const [loadingSlug, setLoadingSlug] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const { data: session } = useSession();
-  const router = useRouter();
 
   const ref = React.useRef<HTMLElement>(null);
   const isInView = useIntersectionObserver(ref, {
@@ -257,38 +240,11 @@ export function PricingCards({ tiers, mode }: PricingCardsProps) {
     triggerOnce: true,
   });
 
-  async function handleCheckout(slug: string) {
-    if (!session) {
-      router.push(`/login?redirect=/pricing`);
-      return;
-    }
-
+  function handleCheckout(slug: string) {
     setLoadingSlug(slug);
-    setError(null);
-
-    try {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Checkout failed");
-      }
-
-      if (!data.url) {
-        throw new Error("No checkout URL received");
-      }
-
-      window.location.href = data.url;
-    } catch (err) {
-      console.error("Checkout error:", err);
-      setError("Failed to start checkout. Please try again.");
-      setLoadingSlug(null);
-    }
+    window.location.assign(
+      `/checkout/continue?slug=${encodeURIComponent(slug)}`
+    );
   }
 
   const isLtdMode = mode === "ltd";
@@ -340,13 +296,6 @@ export function PricingCards({ tiers, mode }: PricingCardsProps) {
               : "Choose monthly flexibility or save with annual billing."}
           </p>
         </div>
-
-        {/* Error message */}
-        {error && (
-          <div className="bg-destructive/10 text-destructive mb-8 rounded-xl p-4 text-center">
-            {error}
-          </div>
-        )}
 
         {/* Pricing cards */}
         {tiers.map((tier, tierIndex) => (

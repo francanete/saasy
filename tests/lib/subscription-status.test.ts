@@ -84,6 +84,7 @@ describe("getSubscriptionStatus", () => {
     const result = await getSubscriptionStatus("user-1");
 
     expect(result.hasAccess).toBe(true);
+    expect(result.hasPaidAccess).toBe(true);
     expect(result.plan).toBe("STARTER");
     expect(result.isLifetime).toBe(false);
   });
@@ -102,6 +103,44 @@ describe("getSubscriptionStatus", () => {
     expect(result.hasAccess).toBe(true);
     expect(result.plan).toBe("GROWTH");
     expect(result.status).toBe("TRIALING");
+  });
+
+  it("returns active native trial with hasAccess true", async () => {
+    const now = new Date();
+    mockFindFirst.mockResolvedValue({
+      status: "ACTIVE",
+      plan: "STARTER",
+      billingType: "none",
+      polarProductId: null,
+      currentPeriodEnd: null,
+      nativeTrialStartedAt: now,
+      nativeTrialEndsAt: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000),
+    });
+
+    const result = await getSubscriptionStatus("user-1");
+
+    expect(result.hasAccess).toBe(true);
+    expect(result.hasPaidAccess).toBe(false);
+    expect(result.isNativeTrialActive).toBe(true);
+    expect(result.nativeTrialEndsAt).toBeInstanceOf(Date);
+  });
+
+  it("returns expired native trial with hasAccess false", async () => {
+    const now = new Date();
+    mockFindFirst.mockResolvedValue({
+      status: "ACTIVE",
+      plan: "STARTER",
+      billingType: "none",
+      polarProductId: null,
+      currentPeriodEnd: null,
+      nativeTrialStartedAt: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+      nativeTrialEndsAt: new Date(now.getTime() - 24 * 60 * 60 * 1000),
+    });
+
+    const result = await getSubscriptionStatus("user-1");
+
+    expect(result.hasAccess).toBe(false);
+    expect(result.isNativeTrialActive).toBe(false);
   });
 
   it("returns CANCELED with hasAccess false (plan unchanged)", async () => {
@@ -235,10 +274,83 @@ describe("syncWithPolar", () => {
     mockGetExternal.mockResolvedValue(customer);
     mockSubsList.mockResolvedValue({ result: { items: [] } });
     mockOrdersList.mockResolvedValue({ result: { items: [] } });
+    mockFindFirst.mockResolvedValue({
+      plan: "STARTER",
+      billingType: "none",
+      status: "ACTIVE",
+      polarCustomerId: "cust-1",
+      polarSubscriptionId: null,
+      polarOrderId: null,
+      polarProductId: null,
+      currentPeriodEnd: null,
+      nativeTrialEndsAt: null,
+    });
 
     await syncWithPolar("user-1");
 
     expect(mockUpdate).toHaveBeenCalled();
+    const setArg = mockUpdate.mock.results[0]?.value.set.mock.calls[0][0];
+    expect(setArg).toEqual(
+      expect.objectContaining({
+        plan: "FREE",
+        billingType: "none",
+        status: "ACTIVE",
+      })
+    );
+  });
+
+  it("downgrades an expired native trial to FREE during Polar sync", async () => {
+    const now = new Date();
+    mockGetExternal.mockResolvedValue(customer);
+    mockSubsList.mockResolvedValue({ result: { items: [] } });
+    mockOrdersList.mockResolvedValue({ result: { items: [] } });
+    mockFindFirst.mockResolvedValue({
+      plan: "STARTER",
+      billingType: "none",
+      status: "ACTIVE",
+      nativeTrialEndsAt: new Date(now.getTime() - 60 * 60 * 1000),
+    });
+
+    await syncWithPolar("user-1");
+
+    const setArg = mockUpdate.mock.results[0]?.value.set.mock.calls[0][0];
+    expect(setArg).toEqual(
+      expect.objectContaining({
+        plan: "FREE",
+        billingType: "none",
+        status: "ACTIVE",
+      })
+    );
+  });
+
+  it("keeps native trial metadata when Polar has no entitlement", async () => {
+    const now = new Date();
+    mockGetExternal.mockResolvedValue(customer);
+    mockSubsList.mockResolvedValue({ result: { items: [] } });
+    mockOrdersList.mockResolvedValue({ result: { items: [] } });
+    mockFindFirst.mockResolvedValue({
+      plan: "STARTER",
+      billingType: "none",
+      status: "ACTIVE",
+      polarCustomerId: "cust-1",
+      polarSubscriptionId: null,
+      polarOrderId: null,
+      polarProductId: null,
+      currentPeriodEnd: null,
+      nativeTrialEndsAt: new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000),
+    });
+
+    await syncWithPolar("user-1");
+
+    expect(mockUpdate).toHaveBeenCalled();
+    const setArg = mockUpdate.mock.results[0]?.value.set.mock.calls[0][0];
+    expect(setArg).toEqual(
+      expect.objectContaining({
+        plan: "STARTER",
+        billingType: "none",
+        status: "ACTIVE",
+      })
+    );
   });
 
   it("marks synced on 404 (customer not found)", async () => {
@@ -285,6 +397,21 @@ describe("hasPaidAccess", () => {
       billingType: "none",
       polarProductId: null,
       currentPeriodEnd: null,
+    });
+
+    expect(await hasPaidAccess("user-1")).toBe(false);
+  });
+
+  it("returns false for an active native trial", async () => {
+    const now = new Date();
+    mockFindFirst.mockResolvedValue({
+      status: "ACTIVE",
+      plan: "STARTER",
+      billingType: "none",
+      polarProductId: null,
+      currentPeriodEnd: null,
+      nativeTrialStartedAt: now,
+      nativeTrialEndsAt: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000),
     });
 
     expect(await hasPaidAccess("user-1")).toBe(false);

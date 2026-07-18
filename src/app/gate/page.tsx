@@ -40,5 +40,33 @@ export default async function GatePage() {
     redirect("/dashboard");
   }
 
-  return <PricingSection />;
+  const nativeTrialEndsAt = subscription.nativeTrialEndsAt
+    ? new Date(subscription.nativeTrialEndsAt)
+    : null;
+  const hasExpiredNativeTrial = Boolean(
+    subscription.nativeTrialStartedAt &&
+    nativeTrialEndsAt &&
+    !subscription.isNativeTrialActive &&
+    nativeTrialEndsAt <= new Date()
+  );
+
+  return (
+    <>
+      {hasExpiredNativeTrial && nativeTrialEndsAt && (
+        <div className="mx-auto max-w-3xl px-4 pt-12 text-center">
+          <h1 className="text-3xl font-bold">Your free trial has ended</h1>
+          <p className="text-muted-foreground mt-3">
+            Your trial ended on{" "}
+            {nativeTrialEndsAt.toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+            . Choose a plan to continue using your dashboard.
+          </p>
+        </div>
+      )}
+      <PricingSection />
+    </>
+  );
 }

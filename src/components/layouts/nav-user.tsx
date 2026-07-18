@@ -40,6 +40,7 @@ interface NavUserProps {
   plan: "FREE" | "STARTER" | "GROWTH" | "SCALE";
   subscriptionStatus?: SubscriptionStatus;
   expiresAt?: Date | null;
+  isNativeTrialActive?: boolean;
 }
 
 function formatPlanName(plan: string): string {
@@ -55,6 +56,7 @@ export function NavUser({
   plan,
   subscriptionStatus,
   expiresAt,
+  isNativeTrialActive,
 }: NavUserProps) {
   const router = useRouter();
   const { resolvedTheme, setTheme } = useTheme();
@@ -67,8 +69,8 @@ export function NavUser({
         .slice(0, 2)
     : user.email.slice(0, 2).toUpperCase();
 
-  const isTrialing = subscriptionStatus === "TRIALING";
   const trialDaysRemaining = expiresAt ? getTrialDaysRemaining(expiresAt) : 0;
+  const isTrialing = isNativeTrialActive || subscriptionStatus === "TRIALING";
 
   const getPlanDisplay = () => {
     if (isTrialing && expiresAt) {

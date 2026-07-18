@@ -238,7 +238,6 @@ export type TierPricingDisplay = {
   description: string;
   features: string[];
   cta: string;
-  trialDays?: number;
   // Prices in formatted strings
   monthlyPrice: string;
   annualPrice: string;
@@ -259,7 +258,9 @@ export type TierPricingDisplay = {
  * Get tier pricing data for toggle UI. Returns all price options per tier so
  * client can toggle without refetch.
  */
-export function getTierPricing(): TierPricingDisplay[] {
+export function getTierPricing(
+  mode: PricingMode = pricingMode
+): TierPricingDisplay[] {
   const enabledTiers = getEnabledTiers();
 
   return enabledTiers.map((tier) => {
@@ -275,7 +276,7 @@ export function getTierPricing(): TierPricingDisplay[] {
 
     // Get features - add LTD extras if in LTD mode
     const features =
-      pricingMode === "ltd"
+      mode === "ltd"
         ? [...marketing.features, ...appConfig.pricing.ltdExtraFeatures]
         : [...marketing.features];
 
@@ -293,13 +294,14 @@ export function getTierPricing(): TierPricingDisplay[] {
         ? formatPrice(originalPrices.ltd)
         : null;
 
+    const cta = mode === "ltd" ? "Get lifetime access" : "Subscribe";
+
     return {
       tier,
       name: marketing.name,
       description: marketing.description,
       features,
-      cta: marketing.cta,
-      trialDays: appConfig.pricing.trialDays,
+      cta,
       monthlyPrice: formatPrice(prices.monthly),
       annualPrice: formatPrice(prices.annual),
       ltdPrice: formatPrice(prices.ltd),

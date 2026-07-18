@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { appConfig } from "@/lib/config";
+import { appConfig, getGeneralCta } from "@/lib/config";
 import { seo } from "@/lib/seo";
 import {
   OrganizationJsonLd,
@@ -22,6 +22,8 @@ export const metadata: Metadata = seo.page({
 });
 
 export default function HomePage() {
+  const generalCta = getGeneralCta();
+
   return (
     <>
       <OrganizationJsonLd />
@@ -63,7 +65,7 @@ export default function HomePage() {
               Join thousands of developers building with {appConfig.name}.
             </p>
             <Button size="lg" asChild>
-              <Link href="/signup">Start Building Today</Link>
+              <Link href={generalCta.href}>{generalCta.label}</Link>
             </Button>
           </div>
         </section>

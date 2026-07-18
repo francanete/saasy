@@ -72,7 +72,7 @@ Current behavior:
 
 ## Key Risks / Gaps
 
-### 1. Guest checkout is architecturally inconsistent
+### 1. Guest checkout is architecturally inconsistent - ✅ Implemented
 
 `src/app/api/checkout/route.ts` supports guest checkout, but `src/proxy.ts` protects `/checkout/success`.
 

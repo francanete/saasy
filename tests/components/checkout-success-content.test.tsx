@@ -25,10 +25,10 @@ describe("CheckoutSuccessContent", () => {
     expect(screen.getByText("Confirming your payment...")).toBeInTheDocument();
   });
 
-  it("shows 'Go to Dashboard' on success with token", async () => {
+  it("shows payment success only when payment is confirmed", async () => {
     mockSyncSubscriptionAction.mockResolvedValue({
       success: true,
-      canAccessDashboard: true,
+      paymentConfirmed: true,
     });
 
     await act(async () => {
@@ -41,16 +41,17 @@ describe("CheckoutSuccessContent", () => {
       });
     });
 
+    expect(screen.getByText("Payment Successful!")).toBeInTheDocument();
     expect(
       screen.queryByText("Already have an account?")
     ).not.toBeInTheDocument();
     expect(screen.queryByText("Check your email")).not.toBeInTheDocument();
   });
 
-  it("shows 'Check Again' button in processing state", async () => {
+  it("does not claim payment succeeded when payment is unconfirmed", async () => {
     mockSyncSubscriptionAction.mockResolvedValue({
       success: true,
-      canAccessDashboard: false,
+      paymentConfirmed: false,
     });
 
     await act(async () => {
@@ -64,15 +65,47 @@ describe("CheckoutSuccessContent", () => {
     });
 
     expect(
+      screen.getByText("Payment confirmation pending")
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Payment Successful!")).not.toBeInTheDocument();
+    expect(screen.queryByText("Payment Received!")).not.toBeInTheDocument();
+    expect(
       screen.queryByText("Already have an account?")
     ).not.toBeInTheDocument();
     expect(screen.queryByText("Check your email")).not.toBeInTheDocument();
   });
 
+  it("keeps tokenless checkout pending when retries find no payment", async () => {
+    vi.useFakeTimers();
+    mockSyncSubscriptionAction.mockResolvedValue({
+      success: true,
+      paymentConfirmed: false,
+    });
+
+    try {
+      await act(async () => {
+        render(<CheckoutSuccessContent />);
+      });
+
+      await act(async () => {
+        await vi.runAllTimersAsync();
+      });
+
+      expect(mockSyncSubscriptionAction).toHaveBeenCalledTimes(5);
+      expect(
+        screen.getByText("Payment confirmation pending")
+      ).toBeInTheDocument();
+      expect(screen.queryByText("Payment Successful!")).not.toBeInTheDocument();
+      expect(screen.queryByText("Payment Received!")).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("passes customerSessionToken to action", async () => {
     mockSyncSubscriptionAction.mockResolvedValue({
       success: true,
-      canAccessDashboard: true,
+      paymentConfirmed: true,
     });
 
     await act(async () => {
@@ -89,7 +122,7 @@ describe("CheckoutSuccessContent", () => {
   it("'Check Again' button re-triggers sync", async () => {
     mockSyncSubscriptionAction.mockResolvedValue({
       success: true,
-      canAccessDashboard: false,
+      paymentConfirmed: false,
     });
 
     await act(async () => {
@@ -104,7 +137,7 @@ describe("CheckoutSuccessContent", () => {
 
     mockSyncSubscriptionAction.mockResolvedValue({
       success: true,
-      canAccessDashboard: true,
+      paymentConfirmed: true,
     });
 
     fireEvent.click(screen.getByText("Check Again"));

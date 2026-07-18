@@ -1,4 +1,4 @@
-import { generateSlug, parseSlug } from "@/lib/pricing";
+import { getTierPricing, generateSlug, parseSlug } from "@/lib/pricing";
 
 describe("generateSlug", () => {
   it("generates slug for monthly billing", () => {
@@ -11,6 +11,21 @@ describe("generateSlug", () => {
 
   it("generates slug for LTD billing", () => {
     expect(generateSlug("SCALE", "ltd")).toBe("scale-ltd");
+  });
+});
+
+describe("getTierPricing", () => {
+  it("uses the subscription CTA without trial messaging", () => {
+    const tiers = getTierPricing();
+
+    expect(tiers[0]?.cta).toBe("Subscribe");
+    expect(tiers[0]).not.toHaveProperty("trialDays");
+  });
+
+  it("uses the lifetime CTA in LTD mode", () => {
+    const tiers = getTierPricing("ltd");
+
+    expect(tiers[0]?.cta).toBe("Get lifetime access");
   });
 });
 

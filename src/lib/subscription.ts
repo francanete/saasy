@@ -13,12 +13,16 @@ export type SubscriptionStatusType =
 
 export type SubscriptionStatus = {
   hasAccess: boolean;
+  hasPaidAccess: boolean;
   status: SubscriptionStatusType | "NONE";
   billingType: BillingType | null;
   isLifetime: boolean;
   polarProductId: string | null;
   expiresAt: Date | null;
   plan: Plan;
+  nativeTrialStartedAt: Date | null;
+  nativeTrialEndsAt: Date | null;
+  isNativeTrialActive: boolean;
 };
 
 // Plan tier hierarchy for comparison (higher tier wins)
@@ -56,6 +60,8 @@ export async function upsertSubscription(
       currentPeriodEnd: data.currentPeriodEnd,
       cancelAtPeriodEnd: data.cancelAtPeriodEnd ?? false,
       plan,
+      nativeTrialStartedAt: undefined,
+      nativeTrialEndsAt: undefined,
       lastSyncedAt: new Date(),
     })
     .onConflictDoUpdate({
@@ -70,6 +76,8 @@ export async function upsertSubscription(
         currentPeriodEnd: data.currentPeriodEnd,
         cancelAtPeriodEnd: data.cancelAtPeriodEnd ?? false,
         plan,
+        nativeTrialStartedAt: null,
+        nativeTrialEndsAt: null,
         lastSyncedAt: new Date(),
         updatedAt: new Date(),
       },
@@ -92,6 +100,8 @@ export async function updateSubscriptionStatus(
       status: data.status,
       currentPeriodEnd: data.currentPeriodEnd,
       cancelAtPeriodEnd: data.cancelAtPeriodEnd,
+      nativeTrialStartedAt: null,
+      nativeTrialEndsAt: null,
       lastSyncedAt: new Date(),
       updatedAt: new Date(),
     })
@@ -275,20 +285,29 @@ export async function syncWithPolar(userId: string): Promise<void> {
         status: "ACTIVE",
       });
     } else {
-      // Customer exists but no active subscription/order - mark as free
+      // Customer exists but no active subscription/order.
+      // Preserve an active native trial so sync does not downgrade it to FREE.
+      const currentSubscription = await db.query.subscriptions.findFirst({
+        where: eq(subscriptions.userId, userId),
+        columns: { nativeTrialEndsAt: true },
+      });
+      const now = new Date();
+      const isNativeTrialActive =
+        !!currentSubscription?.nativeTrialEndsAt &&
+        currentSubscription.nativeTrialEndsAt > now;
 
       await db
         .update(subscriptions)
         .set({
           polarCustomerId: customer.id,
           status: "ACTIVE",
-          plan: "FREE",
+          plan: isNativeTrialActive ? "STARTER" : "FREE",
           billingType: "none",
           polarSubscriptionId: null,
           polarOrderId: null,
           polarProductId: null,
-          lastSyncedAt: new Date(),
-          updatedAt: new Date(),
+          lastSyncedAt: now,
+          updatedAt: now,
         })
         .where(eq(subscriptions.userId, userId));
     }
@@ -316,7 +335,7 @@ export async function syncWithPolar(userId: string): Promise<void> {
  */
 export async function hasPaidAccess(userId: string): Promise<boolean> {
   const status = await getSubscriptionStatus(userId);
-  return status.hasAccess;
+  return status.hasPaidAccess;
 }
 
 /**
@@ -353,28 +372,41 @@ export async function getSubscriptionStatus(
   if (!subscription) {
     return {
       hasAccess: false,
+      hasPaidAccess: false,
       status: "NONE" as const,
       billingType: null,
       isLifetime: false,
       polarProductId: null,
       expiresAt: null,
       plan: "FREE" as Plan,
+      nativeTrialStartedAt: null,
+      nativeTrialEndsAt: null,
+      isNativeTrialActive: false,
     };
   }
 
-  // Just return what's in DB - no sync logic here
-  // hasAccess = active/trialing AND on a paid plan (not FREE)
+  const now = new Date();
   const isActiveStatus =
     subscription.status === "ACTIVE" || subscription.status === "TRIALING";
-  const hasAccess = isActiveStatus && subscription.plan !== "FREE";
+  const hasPaidAccess =
+    isActiveStatus &&
+    subscription.plan !== "FREE" &&
+    subscription.billingType !== "none";
+  const isNativeTrialActive =
+    !!subscription.nativeTrialEndsAt && subscription.nativeTrialEndsAt > now;
+  const hasAccess = hasPaidAccess || isNativeTrialActive;
 
   return {
     hasAccess,
+    hasPaidAccess,
     status: subscription.status as SubscriptionStatusType,
     billingType: subscription.billingType as BillingType | null,
     isLifetime: subscription.billingType === "one_time",
     polarProductId: subscription.polarProductId,
     expiresAt: subscription.currentPeriodEnd,
     plan: subscription.plan as Plan,
+    nativeTrialStartedAt: subscription.nativeTrialStartedAt ?? null,
+    nativeTrialEndsAt: subscription.nativeTrialEndsAt ?? null,
+    isNativeTrialActive,
   };
 }
