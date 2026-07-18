@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { appConfig } from "@/lib/config";
+import { appConfig, getGeneralCta } from "@/lib/config";
 
 export function BlogCta() {
+  const generalCta = getGeneralCta();
+
   return (
     <section className="bg-primary text-primary-foreground py-24">
       <div className="container mx-auto max-w-4xl px-4 text-center">
@@ -19,7 +21,7 @@ export function BlogCta() {
             className="bg-background text-foreground hover:bg-muted h-12 w-full px-8 font-semibold sm:w-auto"
             asChild
           >
-            <Link href="/pricing">Start Trial</Link>
+            <Link href={generalCta.href}>{generalCta.label}</Link>
           </Button>
           <Button
             size="lg"
