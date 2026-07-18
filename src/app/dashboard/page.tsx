@@ -18,7 +18,8 @@ export default async function DashboardPage() {
     .limit(1);
 
   const isNativeTrialActive =
-    !!subscription?.nativeTrialEndsAt && subscription.nativeTrialEndsAt > new Date();
+    !!subscription?.nativeTrialEndsAt &&
+    subscription.nativeTrialEndsAt > new Date();
 
   const stats = [
     {
