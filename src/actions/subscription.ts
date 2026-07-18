@@ -9,7 +9,7 @@ import {
 
 export type SyncSubscriptionResult = {
   success: boolean;
-  canAccessDashboard: boolean;
+  paymentConfirmed: boolean;
   error?: string;
 };
 
@@ -26,7 +26,7 @@ export async function syncSubscriptionAction(
   if (!session?.user) {
     return {
       success: false,
-      canAccessDashboard: false,
+      paymentConfirmed: false,
       error: "Not authenticated",
     };
   }
@@ -38,8 +38,8 @@ export async function syncSubscriptionAction(
   if (customerSessionToken) {
     try {
       await syncWithCustomerToken(userId, userEmail, customerSessionToken);
-      const canAccess = await hasPaidAccess(userId);
-      return { success: true, canAccessDashboard: canAccess };
+      const paymentConfirmed = await hasPaidAccess(userId);
+      return { success: true, paymentConfirmed };
     } catch (error) {
       console.error(
         "Customer token sync failed, falling back to admin API:",
@@ -53,14 +53,14 @@ export async function syncSubscriptionAction(
   // TODO(human): implement syncWithRetries
   try {
     await syncWithRetries(userId);
-    const canAccess = await hasPaidAccess(userId);
-    return { success: true, canAccessDashboard: canAccess };
+    const paymentConfirmed = await hasPaidAccess(userId);
+    return { success: true, paymentConfirmed };
   } catch {
-    // Check if they have access anyway (webhook might have arrived)
-    const canAccess = await hasPaidAccess(userId);
+    // Check if paid access arrived through a webhook despite the sync failure.
+    const paymentConfirmed = await hasPaidAccess(userId);
     return {
       success: false,
-      canAccessDashboard: canAccess,
+      paymentConfirmed,
       error: "Sync failed after retries",
     };
   }

@@ -3,8 +3,8 @@ import { CheckoutSuccessContent } from "@/components/checkout-success-content";
 import { appConfig } from "@/lib/config";
 
 export const metadata: Metadata = {
-  title: `Payment Successful | ${appConfig.name}`,
-  description: "Thank you for your purchase",
+  title: `Confirming Payment | ${appConfig.name}`,
+  description: "Confirming your payment status",
 };
 
 export default async function CheckoutSuccessPage({

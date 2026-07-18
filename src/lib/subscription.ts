@@ -13,6 +13,7 @@ export type SubscriptionStatusType =
 
 export type SubscriptionStatus = {
   hasAccess: boolean;
+  hasPaidAccess: boolean;
   status: SubscriptionStatusType | "NONE";
   billingType: BillingType | null;
   isLifetime: boolean;
@@ -334,7 +335,7 @@ export async function syncWithPolar(userId: string): Promise<void> {
  */
 export async function hasPaidAccess(userId: string): Promise<boolean> {
   const status = await getSubscriptionStatus(userId);
-  return status.hasAccess;
+  return status.hasPaidAccess;
 }
 
 /**
@@ -371,6 +372,7 @@ export async function getSubscriptionStatus(
   if (!subscription) {
     return {
       hasAccess: false,
+      hasPaidAccess: false,
       status: "NONE" as const,
       billingType: null,
       isLifetime: false,
@@ -396,6 +398,7 @@ export async function getSubscriptionStatus(
 
   return {
     hasAccess,
+    hasPaidAccess,
     status: subscription.status as SubscriptionStatusType,
     billingType: subscription.billingType as BillingType | null,
     isLifetime: subscription.billingType === "one_time",

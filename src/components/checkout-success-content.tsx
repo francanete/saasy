@@ -21,7 +21,6 @@ export function CheckoutSuccessContent({
   customerSessionToken?: string;
 }) {
   const [syncState, setSyncState] = useState<SyncState>("loading");
-  const [canAccessDashboard, setCanAccessDashboard] = useState(false);
   const hasStarted = useRef(false);
 
   const runSync = async (useToken: boolean, isRetry = false) => {
@@ -31,8 +30,7 @@ export function CheckoutSuccessContent({
       // With token: single attempt — Customer Portal API returns data instantly
       try {
         const result = await syncSubscriptionAction(customerSessionToken);
-        if (result.canAccessDashboard) {
-          setCanAccessDashboard(true);
+        if (result.paymentConfirmed) {
           setSyncState("success");
           return;
         }
@@ -48,8 +46,7 @@ export function CheckoutSuccessContent({
       try {
         const result = await syncSubscriptionAction();
 
-        if (result.canAccessDashboard) {
-          setCanAccessDashboard(true);
+        if (result.paymentConfirmed) {
           setSyncState("success");
           return;
         }
@@ -88,12 +85,12 @@ export function CheckoutSuccessContent({
     return (
       <div className="text-center">
         <div className="mb-6 flex justify-center">
-          <CheckCircle className="text-success h-16 w-16" />
+          <RefreshCw className="text-muted-foreground h-16 w-16" />
         </div>
-        <h1 className="text-2xl font-bold">Payment Received!</h1>
+        <h1 className="text-2xl font-bold">Payment confirmation pending</h1>
         <p className="text-muted-foreground mt-2">
-          Your subscription is being activated. This usually takes a few
-          seconds.
+          We haven&apos;t confirmed your payment yet. If you just completed
+          checkout, activation may take a few seconds.
         </p>
         <div className="mt-8">
           <Button
@@ -120,13 +117,11 @@ export function CheckoutSuccessContent({
       <h1 className="text-2xl font-bold">Payment Successful!</h1>
       <p className="text-muted-foreground mt-2">Thank you for your purchase.</p>
 
-      {canAccessDashboard ? (
-        <div className="mt-8">
-          <Button asChild size="lg">
-            <Link href="/dashboard">Go to Dashboard</Link>
-          </Button>
-        </div>
-      ) : null}
+      <div className="mt-8">
+        <Button asChild size="lg">
+          <Link href="/dashboard">Go to Dashboard</Link>
+        </Button>
+      </div>
     </div>
   );
 }

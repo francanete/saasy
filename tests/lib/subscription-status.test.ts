@@ -84,6 +84,7 @@ describe("getSubscriptionStatus", () => {
     const result = await getSubscriptionStatus("user-1");
 
     expect(result.hasAccess).toBe(true);
+    expect(result.hasPaidAccess).toBe(true);
     expect(result.plan).toBe("STARTER");
     expect(result.isLifetime).toBe(false);
   });
@@ -108,7 +109,7 @@ describe("getSubscriptionStatus", () => {
     const now = new Date();
     mockFindFirst.mockResolvedValue({
       status: "ACTIVE",
-      plan: "FREE",
+      plan: "STARTER",
       billingType: "none",
       polarProductId: null,
       currentPeriodEnd: null,
@@ -119,6 +120,7 @@ describe("getSubscriptionStatus", () => {
     const result = await getSubscriptionStatus("user-1");
 
     expect(result.hasAccess).toBe(true);
+    expect(result.hasPaidAccess).toBe(false);
     expect(result.isNativeTrialActive).toBe(true);
     expect(result.nativeTrialEndsAt).toBeInstanceOf(Date);
   });
@@ -395,6 +397,21 @@ describe("hasPaidAccess", () => {
       billingType: "none",
       polarProductId: null,
       currentPeriodEnd: null,
+    });
+
+    expect(await hasPaidAccess("user-1")).toBe(false);
+  });
+
+  it("returns false for an active native trial", async () => {
+    const now = new Date();
+    mockFindFirst.mockResolvedValue({
+      status: "ACTIVE",
+      plan: "STARTER",
+      billingType: "none",
+      polarProductId: null,
+      currentPeriodEnd: null,
+      nativeTrialStartedAt: now,
+      nativeTrialEndsAt: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000),
     });
 
     expect(await hasPaidAccess("user-1")).toBe(false);
