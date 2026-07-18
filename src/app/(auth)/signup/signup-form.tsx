@@ -12,7 +12,11 @@ const emailSchema = z.object({
   email: z.string().email("Please enter a valid email"),
 });
 
-export function SignupForm() {
+export function SignupForm({
+  callbackUrl = "/dashboard",
+}: {
+  callbackUrl?: string;
+}) {
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -32,7 +36,7 @@ export function SignupForm() {
     try {
       await authClient.signIn.magicLink({
         email,
-        callbackURL: "/dashboard",
+        callbackURL: callbackUrl,
       });
       setSent(true);
     } catch (err) {
@@ -50,7 +54,7 @@ export function SignupForm() {
     try {
       await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/dashboard",
+        callbackURL: callbackUrl,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Google sign-in failed");
@@ -140,7 +144,11 @@ export function SignupForm() {
       <p className="text-muted-foreground mt-6 text-center text-sm">
         Already have an account?{" "}
         <Link
-          href="/login"
+          href={
+            callbackUrl === "/dashboard"
+              ? "/login"
+              : `/login?callbackUrl=${encodeURIComponent(callbackUrl)}`
+          }
           className="text-foreground underline underline-offset-4 hover:opacity-80"
         >
           Sign in

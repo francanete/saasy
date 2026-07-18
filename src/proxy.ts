@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getSubscriptionStatus } from "@/lib/subscription";
 import { appConfig } from "@/lib/config";
+import { getSafeAuthCallback } from "@/lib/auth-redirect";
 
 // Route definitions
-const protectedRoutes = ["/dashboard", "/checkout/success"];
+const protectedRoutes = ["/dashboard"];
+const authenticatedRoutes = ["/checkout/continue", "/checkout/success"];
 const authRoutes = ["/login"];
 const gateRoute = "/gate";
 
@@ -17,6 +19,9 @@ export async function proxy(req: NextRequest) {
   const isProtectedRoute = protectedRoutes.some((route) =>
     path.startsWith(route)
   );
+  const isAuthenticatedRoute = authenticatedRoutes.some((route) =>
+    path.startsWith(route)
+  );
   const isAuthRoute = authRoutes.some((route) => path.startsWith(route));
   const isGateRoute = path.startsWith(gateRoute);
 
@@ -26,7 +31,12 @@ export async function proxy(req: NextRequest) {
   sanitizedHeaders.delete("x-user-id");
 
   // Skip public routes (no checks needed)
-  if (!isProtectedRoute && !isAuthRoute && !isGateRoute) {
+  if (
+    !isProtectedRoute &&
+    !isAuthenticatedRoute &&
+    !isAuthRoute &&
+    !isGateRoute
+  ) {
     return NextResponse.next({
       request: { headers: sanitizedHeaders },
     });
@@ -40,7 +50,24 @@ export async function proxy(req: NextRequest) {
   // === Auth Route Logic ===
   // Redirect authenticated users away from login
   if (isAuthRoute && session) {
-    return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
+    const callbackUrl = getSafeAuthCallback(
+      req.nextUrl.searchParams.get("callbackUrl") ?? undefined
+    );
+    return NextResponse.redirect(new URL(callbackUrl, req.nextUrl));
+  }
+
+  // === Authenticated Route Logic ===
+  if (isAuthenticatedRoute && !session) {
+    const loginUrl = new URL("/login", req.nextUrl);
+    const callbackUrl = `${path}${req.nextUrl.search}`;
+    loginUrl.searchParams.set("callbackUrl", callbackUrl);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  if (isAuthenticatedRoute) {
+    return NextResponse.next({
+      request: { headers: sanitizedHeaders },
+    });
   }
 
   // === Protected Route Logic ===

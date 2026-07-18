@@ -238,7 +238,6 @@ export type TierPricingDisplay = {
   description: string;
   features: string[];
   cta: string;
-  trialDays?: number;
   // Prices in formatted strings
   monthlyPrice: string;
   annualPrice: string;
@@ -295,7 +294,7 @@ export function getTierPricing(
         ? formatPrice(originalPrices.ltd)
         : null;
 
-    const cta = mode === "ltd" ? "Get lifetime access" : "Start subscription";
+    const cta = mode === "ltd" ? "Get lifetime access" : "Subscribe";
 
     return {
       tier,
@@ -303,9 +302,6 @@ export function getTierPricing(
       description: marketing.description,
       features,
       cta,
-      trialDays: appConfig.pricing.allowNativeTrial
-        ? appConfig.pricing.nativeTrialDays
-        : undefined,
       monthlyPrice: formatPrice(prices.monthly),
       annualPrice: formatPrice(prices.annual),
       ltdPrice: formatPrice(prices.ltd),

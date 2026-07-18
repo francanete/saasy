@@ -15,11 +15,11 @@ describe("generateSlug", () => {
 });
 
 describe("getTierPricing", () => {
-  it("uses the subscription CTA and native trial duration", () => {
+  it("uses the subscription CTA without trial messaging", () => {
     const tiers = getTierPricing();
 
-    expect(tiers[0]?.cta).toBe("Start subscription");
-    expect(tiers[0]?.trialDays).toBe(5);
+    expect(tiers[0]?.cta).toBe("Subscribe");
+    expect(tiers[0]).not.toHaveProperty("trialDays");
   });
 
   it("uses the lifetime CTA in LTD mode", () => {
