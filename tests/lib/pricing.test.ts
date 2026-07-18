@@ -15,9 +15,17 @@ describe("generateSlug", () => {
 });
 
 describe("getTierPricing", () => {
-  it("uses Start trial when Polar checkout trial is configured", () => {
+  it("uses the subscription CTA and native trial duration", () => {
     const tiers = getTierPricing();
-    expect(tiers[0]?.cta).toBe("Start trial");
+
+    expect(tiers[0]?.cta).toBe("Start subscription");
+    expect(tiers[0]?.trialDays).toBe(5);
+  });
+
+  it("uses the lifetime CTA in LTD mode", () => {
+    const tiers = getTierPricing("ltd");
+
+    expect(tiers[0]?.cta).toBe("Get lifetime access");
   });
 });
 

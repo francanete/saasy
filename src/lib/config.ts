@@ -20,8 +20,6 @@ export type TierConfig = {
   originalPrices?: Record<BillingCycle, number>;
   /** Polar product IDs - get from Polar dashboard */
   polarProductIds: Record<BillingCycle, string>;
-  /** Whether Polar checkout for this tier includes a trial */
-  polarCheckoutHasTrial?: boolean;
   marketing: TierMarketing;
 };
 
@@ -177,7 +175,6 @@ export const appConfig: AppConfig = {
         prices: { ltd: 6700, monthly: 2400, annual: 24000 },
         originalPrices: { ltd: 9900, monthly: 2400, annual: 28800 },
         polarProductIds: polarIds.STARTER,
-        polarCheckoutHasTrial: true,
         marketing: {
           name: "Starter",
           description: "For professionals and small teams",

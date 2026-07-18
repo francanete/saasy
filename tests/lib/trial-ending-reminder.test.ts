@@ -34,7 +34,6 @@ vi.mock("@/lib/config", () => ({
       tiers: {
         STARTER: {
           marketing: { name: "Starter" },
-          prices: { monthly: 2400 },
         },
       },
     },
@@ -51,7 +50,6 @@ vi.mock("../helpers", () => ({
     return out;
   },
   delay: vi.fn().mockResolvedValue(undefined),
-  formatPrice: vi.fn(() => "$24"),
   formatDate: vi.fn((date: Date) => date.toISOString()),
 }));
 

@@ -171,7 +171,6 @@ describe("trialEndingReminderHandler", () => {
           emailKey: "trial_ending_24h",
           templateData: expect.objectContaining({
             planName: "Starter",
-            price: "$24/month",
           }),
         })
       );
@@ -350,7 +349,6 @@ describe("trialEndingReminderHandler", () => {
         expect.objectContaining({
           templateData: expect.objectContaining({
             planName: "UNKNOWN_PLAN",
-            price: "your subscription price",
           }),
         })
       );

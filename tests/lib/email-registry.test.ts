@@ -44,8 +44,17 @@ describe("email registry", () => {
     expect(getTransactionalTemplate("nonexistent")).toBeUndefined();
   });
 
-  it("transactional templates have requiredFields defined", () => {
+  it("renders native trial copy without automatic billing claims", () => {
     const template = getTransactionalTemplate("trial_ending_24h");
-    expect(template!.requiredFields).toEqual(["planName", "endDate", "price"]);
+    const html = template!.html({
+      name: "Test User",
+      planName: "Starter",
+      endDate: "January 15, 2025",
+    });
+
+    expect(template!.requiredFields).toEqual(["planName", "endDate"]);
+    expect(html).toContain("choose a plan and complete checkout");
+    expect(html).not.toContain("automatically charged");
+    expect(html).not.toContain("automatically start");
   });
 });

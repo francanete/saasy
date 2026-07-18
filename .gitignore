@@ -45,3 +45,4 @@ next-env.d.ts
 # Coding agents
 .claude/
 .agents/
+.pi-subagents

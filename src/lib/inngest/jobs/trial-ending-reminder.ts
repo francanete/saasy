@@ -9,7 +9,6 @@ import {
   DELAY_BETWEEN_BATCHES_MS,
   chunkArray,
   delay,
-  formatPrice,
   formatDate,
 } from "../helpers";
 
@@ -84,11 +83,8 @@ export async function trialEndingReminderHandler(step: InngestStepLike) {
           }
 
           const planKey = trial.plan as PaidTier;
-          const tierConfig = appConfig.pricing.tiers[planKey];
-          const planName = tierConfig?.marketing.name || trial.plan;
-          const price = tierConfig
-            ? formatPrice(tierConfig.prices.monthly, "monthly")
-            : "your subscription price";
+          const planName =
+            appConfig.pricing.tiers[planKey]?.marketing.name || trial.plan;
 
           const endDate = trial.nativeTrialEndsAt
             ? formatDate(new Date(trial.nativeTrialEndsAt))
@@ -102,7 +98,6 @@ export async function trialEndingReminderHandler(step: InngestStepLike) {
             templateData: {
               planName,
               endDate,
-              price,
             },
           });
 

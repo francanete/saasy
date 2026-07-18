@@ -239,7 +239,6 @@ export type TierPricingDisplay = {
   features: string[];
   cta: string;
   trialDays?: number;
-  polarCheckoutHasTrial?: boolean;
   // Prices in formatted strings
   monthlyPrice: string;
   annualPrice: string;
@@ -260,7 +259,9 @@ export type TierPricingDisplay = {
  * Get tier pricing data for toggle UI. Returns all price options per tier so
  * client can toggle without refetch.
  */
-export function getTierPricing(): TierPricingDisplay[] {
+export function getTierPricing(
+  mode: PricingMode = pricingMode
+): TierPricingDisplay[] {
   const enabledTiers = getEnabledTiers();
 
   return enabledTiers.map((tier) => {
@@ -276,7 +277,7 @@ export function getTierPricing(): TierPricingDisplay[] {
 
     // Get features - add LTD extras if in LTD mode
     const features =
-      pricingMode === "ltd"
+      mode === "ltd"
         ? [...marketing.features, ...appConfig.pricing.ltdExtraFeatures]
         : [...marketing.features];
 
@@ -294,18 +295,17 @@ export function getTierPricing(): TierPricingDisplay[] {
         ? formatPrice(originalPrices.ltd)
         : null;
 
-    const polarCheckoutHasTrial = config.polarCheckoutHasTrial;
+    const cta = mode === "ltd" ? "Get lifetime access" : "Start subscription";
 
     return {
       tier,
       name: marketing.name,
       description: marketing.description,
       features,
-      cta: polarCheckoutHasTrial ? "Start trial" : "Start subscription",
+      cta,
       trialDays: appConfig.pricing.allowNativeTrial
         ? appConfig.pricing.nativeTrialDays
         : undefined,
-      polarCheckoutHasTrial,
       monthlyPrice: formatPrice(prices.monthly),
       annualPrice: formatPrice(prices.annual),
       ltdPrice: formatPrice(prices.ltd),
