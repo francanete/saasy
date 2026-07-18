@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -34,6 +35,28 @@ const statusColors = {
 export function BillingSection({ subscription }: BillingSectionProps) {
   const plan = subscription?.plan || "FREE";
   const status = subscription?.status || "ACTIVE";
+  const nativeTrialEndsAt = subscription?.nativeTrialEndsAt;
+  const isNativeTrial = Boolean(
+    subscription?.billingType === "none" &&
+    subscription.nativeTrialStartedAt &&
+    nativeTrialEndsAt
+  );
+  const isNativeTrialActive = Boolean(
+    isNativeTrial && nativeTrialEndsAt && nativeTrialEndsAt > new Date()
+  );
+  const hasPaidBilling =
+    plan !== "FREE" &&
+    (subscription?.billingType === "recurring" ||
+      subscription?.billingType === "one_time");
+  const displayStatus = isNativeTrial
+    ? isNativeTrialActive
+      ? "TRIAL ACTIVE"
+      : "TRIAL EXPIRED"
+    : hasPaidBilling
+      ? status
+      : "NO SUBSCRIPTION";
+  const statusVariant =
+    isNativeTrial || !hasPaidBilling ? "secondary" : statusColors[status];
 
   async function handleManageBilling() {
     await customer.portal();
@@ -44,7 +67,7 @@ export function BillingSection({ subscription }: BillingSectionProps) {
       <CardHeader>
         <CardTitle>Billing</CardTitle>
         <CardDescription>
-          Manage your subscription and billing information.
+          Review your plan and billing information.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -55,11 +78,31 @@ export function BillingSection({ subscription }: BillingSectionProps) {
             </p>
             <div className="mt-1 flex items-center gap-2">
               <span className="text-2xl font-bold">{plan}</span>
-              <Badge variant={planColors[plan]}>{plan}</Badge>
+              <Badge variant={planColors[plan]}>
+                {isNativeTrial ? "Free trial" : plan}
+              </Badge>
             </div>
           </div>
-          <Badge variant={statusColors[status]}>{status}</Badge>
+          <Badge variant={statusVariant}>{displayStatus}</Badge>
         </div>
+
+        {isNativeTrial && nativeTrialEndsAt && (
+          <>
+            <Separator />
+            <div>
+              <p className="text-muted-foreground text-sm font-medium">
+                {isNativeTrialActive ? "Trial ends" : "Trial ended"}
+              </p>
+              <p className="mt-1">
+                {nativeTrialEndsAt.toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </p>
+            </div>
+          </>
+        )}
 
         {subscription?.currentPeriodEnd && (
           <>
@@ -104,7 +147,13 @@ export function BillingSection({ subscription }: BillingSectionProps) {
         <Separator />
 
         <div className="flex gap-3">
-          <Button onClick={handleManageBilling}>Manage Billing</Button>
+          {hasPaidBilling ? (
+            <Button onClick={handleManageBilling}>Manage Billing</Button>
+          ) : (
+            <Button asChild>
+              <Link href="/pricing">Choose a Plan</Link>
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>
