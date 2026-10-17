@@ -1,0 +1,6 @@
+FROM node:24-alpine
+
+RUN mkdir -p /workspace/node_modules /workspace/.next && chown -R node:node /workspace
+
+USER node
+WORKDIR /workspace

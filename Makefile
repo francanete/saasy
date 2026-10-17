@@ -1,24 +1,29 @@
-.PHONY: restart db dev db-fresh check-node studio
+COMPOSE := docker compose --env-file .env.local
 
-check-node: ## Ensure local Node matches Vercel runtime
-	@node -e 'const major = Number(process.versions.node.split(".")[0]); if (major !== 24) { console.error("Node 24 required. Current: v" + process.versions.node + ". Run: nvm install 24 && nvm use 24"); process.exit(1); }'
+.PHONY: up dev logs status restart rebuild down db-reset studio
 
-dev: check-node ## Start local DB, run migrations, and start dev
-	npm run db:dev:up
-	npm run db:migrate
-	npm run dev
+up: ## Start the one private local development stack
+	$(COMPOSE) up -d --build --wait
 
-db-fresh:   ## Delete Polar sandbox customers, reset local DB, and run migrations
-	npm run db:fresh
+dev: up
 
-restart: check-node ## Stop dev + start dev
-	@lsof -ti:3000,8288 | xargs kill -9 2>/dev/null || true
-	npm run dev
+logs: ## Follow app, Inngest, and database logs
+	$(COMPOSE) logs -f app inngest db
 
-studio:     ## Start local DB and open Drizzle Studio
-	npm run db:dev:up
+status: ## Show service health
+	$(COMPOSE) ps
+
+restart: ## Recreate app and Inngest after environment changes
+	$(COMPOSE) up -d --force-recreate --wait app inngest
+
+rebuild: ## Rebuild and recreate app and Inngest
+	$(COMPOSE) up -d --build --force-recreate --wait app inngest
+
+down: ## Stop services but preserve data
+	$(COMPOSE) down
+
+db-reset: ## Destructively delete Saasy development volumes
+	npm run db:dev:reset
+
+studio: ## Run optional host-side Drizzle Studio (check port 4983 first)
 	npm run db:studio
-
-db:         ## Reset DB + open studio
-	@lsof -ti:4983 | xargs kill -9 2>/dev/null || true
-	npm run db:dev:reset && npm run db:studio

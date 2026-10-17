@@ -1,37 +1,94 @@
-services:
-  # app:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "3000:3000"
-  #   volumes:
-  #     - .:/app
-  #     - /app/node_modules
-  #     - /app/.next
-  #   env_file:
-  #     - .env.local
-  #   environment:
-  #     - WATCHPACK_POLLING=true
-  #     - CHOKIDAR_USEPOLLING=true
+name: saasy
 
+services:
   db:
     image: postgres:17
-    container_name: ${DB_CONTAINER_NAME:-saasy-db}
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: ${POSTGRES_DB:-saasy}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in .env.local}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.local}
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in .env.local}
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "127.0.0.1:5435:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
 
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    restart: unless-stopped
+    working_dir: /workspace
+    env_file:
+      - .env.local
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      INNGEST_DEV: "1"
+      INNGEST_BASE_URL: http://inngest:8288
+    command:
+      - sh
+      - -c
+      - >-
+        npm install --no-audit --no-fund &&
+        npm run db:migrate:deploy &&
+        exec npm run dev:next -- --hostname 0.0.0.0 --port 3300
+    ports:
+      - "127.0.0.1:3300:3300"
+    volumes:
+      - .:/workspace
+      - node_modules:/workspace/node_modules
+      - next_cache:/workspace/.next
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3300/api/inngest').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+
+  inngest:
+    image: inngest/inngest:v1.45.1@sha256:b251da91bd014d56816c3159c606f470d6e423be9a12fbed45808636160aa92c
+    restart: unless-stopped
+    command:
+      - inngest
+      - dev
+      - --no-discovery
+      - -u
+      - http://app:3300/api/inngest
+    ports:
+      - "127.0.0.1:8292:8288"
+    depends_on:
+      app:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "inngest",
+          "alpha",
+          "doctor",
+          "healthcheck",
+          "--skip-connect-gateway",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
 volumes:
   db_data:
-    name: ${DB_VOLUME_NAME:-saasy_db_data}
+  node_modules:
+  next_cache:

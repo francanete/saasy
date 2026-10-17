@@ -166,7 +166,7 @@ export const appConfig: AppConfig = {
   },
   pricing: {
     mode: "subscription" as const, // "subscription" | "ltd"
-    requirePaidAccess: true, // Require paid plan to access dashboard
+    requirePaidAccess: false, // Require paid plan to access dashboard
     allowNativeTrial: true,
     nativeTrialDays: 5,
     tiers: {

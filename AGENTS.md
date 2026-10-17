@@ -30,11 +30,10 @@ configuration and copy, then add domain-specific features only where needed.
 Use npm. This repo has `package-lock.json`.
 
 ```bash
-npm run dev              # Next.js + Inngest + ngrok
-npm run dev:next         # Next.js only
-npm run dev:inngest      # Inngest dev server only
-npm run dev:ngrok        # ngrok tunnel for webhooks
-npm run dev:full         # local Postgres + full dev stack
+npm run dev              # canonical private Docker Compose stack
+npm run dev:next         # Next.js inside the Compose app only
+npm run dev:inngest      # start Compose Inngest (and dependencies)
+npm run dev:full         # alias for npm run dev
 
 npm run build            # migrations + Next build
 npm run start            # production server
@@ -44,7 +43,7 @@ npm run lint:fix         # ESLint fix
 npm run format           # Prettier write
 npm run format:check     # Prettier check
 
-npm run db:dev:up        # start local Postgres
+npm run db:dev:up        # start Compose Postgres
 npm run db:dev:down      # stop local Postgres
 npm run db:dev:reset     # reset local DB volume and migrate
 npm run db:generate      # generate Drizzle migrations
@@ -60,8 +59,12 @@ npm run test:coverage    # coverage
 Makefile shortcuts:
 
 ```bash
-make restart             # kill common dev ports and run npm run dev
-make db                  # reset DB and open Drizzle Studio
+make up                  # build/start and health-check the full Compose stack
+make restart             # recreate app and worker without touching the database
+make status              # inspect health
+make logs                # inspect app, worker and DB logs
+make down                # stop without deleting data
+make db-reset            # destructive volume reset, never a normal restart
 ```
 
 ## Product Customization Checklist
@@ -143,7 +146,12 @@ piece of brand, plan, legal, SEO, or product copy will be reused, put it in
 - Do not hand-edit generated migration snapshots unless repairing a known
   migration issue.
 - Use `npm run db:migrate` for local migration application.
-- Local Postgres is available through `docker-compose.yml`.
+- Local Postgres is available through `docker-compose.yml`. The one canonical
+  development runtime also owns Next.js and Inngest; do not run host `next dev`,
+  host Inngest, ngrok, or old restart commands against shared ports. The app,
+  DB and Inngest bind only to host loopback; Tailscale Serve privately exposes
+  app HTTPS 8455 and Inngest HTTPS 8456. See README.md for exact lifecycle,
+  origin, and credentials/callback caveats. Never display `.env.local` values.
 - Do not run destructive DB reset commands unless explicitly requested or
   clearly safe for the current task.
 

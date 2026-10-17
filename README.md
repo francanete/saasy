@@ -2,86 +2,40 @@
 
 Reusable SaaS starter built with Next.js, Better Auth, Drizzle, Polar, Inngest, Resend, and Tailwind CSS.
 
-## Local Runtime
+## Private development on the homelab
 
-This project targets Node 24 to match Vercel.
+The canonical local runtime is one Docker Compose stack: Node 24/Next.js, Postgres 17 and Inngest. Docker and Tailscale are required; do not launch a second host `next dev` or Inngest instance. This project targets Node 24 (`.nvmrc` and `package.json`) for optional host-side commands as well as the dev container.
 
-```bash
-nvm install 24
-nvm use
-npm install
-```
-
-The repo includes `.nvmrc`, so after Node 24 is installed you can usually run:
+The ignored `.env.local` must have a unique local database password, a matching host-side `DATABASE_URL` using `127.0.0.1:5435`, a unique `BETTER_AUTH_SECRET`, and `NEXT_PUBLIC_APP_URL=https://omarchy-home.tailcb326a.ts.net:8455`. Copy `.env.example` in a new checkout and set these values without committing them. Compose overrides only the app container's `DATABASE_URL` to the internal `db:5432` address; host Drizzle tooling uses the loopback URL. The app and Inngest use Compose DNS names to communicate. A change to `.env.local` needs `make restart`, not a plain container restart.
 
 ```bash
-nvm use
+make up       # build/start the stack, apply migrations and wait for health
+make status   # inspect services
+make logs     # follow app, Inngest and database logs
+make restart  # recreate app and Inngest after env changes, preserving data
+make rebuild  # rebuild/recreate app and Inngest, preserving data
+make down     # stop without deleting volumes
 ```
 
-## Main Development Commands
+`make dev` and `npm run dev` are aliases for the idempotent Compose start. App dependencies are refreshed from `package-lock.json` at container startup. Source is bind-mounted for hot reload; `node_modules` and `.next` live in named volumes and the app runs as the checkout's non-root owner (UID 1000 on this host). The local-only bindings are app `127.0.0.1:3300`, database `127.0.0.1:5435`, and Inngest `127.0.0.1:8292`; they are not LAN-exposed.
 
-### Start the full local app stack
+## Tailnet URLs
 
-Use this for normal product development:
+- [Saasy app](https://omarchy-home.tailcb326a.ts.net:8455/)
+- [Saasy sign-in](https://omarchy-home.tailcb326a.ts.net:8455/login)
+- [Inngest dev UI](https://omarchy-home.tailcb326a.ts.net:8456/)
+
+These private Serve mappings are host configuration, not created by Compose:
 
 ```bash
-make dev
+tailscale serve --bg --https=8455 http://127.0.0.1:3300
+tailscale serve --bg --https=8456 http://127.0.0.1:8292
+tailscale serve status
 ```
 
-This will:
+The browser-visible origin must match `NEXT_PUBLIC_APP_URL`; the hostname is also permitted in `allowedDevOrigins` for Next.js hydration/HMR. Google OAuth requires its provider settings to allow `https://omarchy-home.tailcb326a.ts.net:8455/api/auth/callback/google`. The Resend key alone does not prove outgoing email works: the configured sender in `src/lib/config.ts` must be verified in Resend. Polar is configured for sandbox; a working homepage does not establish that sandbox checkout, signed webhooks or new-signup customer creation works. No public webhook tunnel starts: external providers cannot reach the tailnet-only instance. The Inngest dev UI is not protected by Saasy's login, so keep its Serve route private.
 
-1. Start local Postgres with Docker Compose.
-2. Run local Drizzle migrations.
-3. Start the dev stack:
-   - Next.js app on `http://localhost:3000`
-   - Inngest dev server
-   - ngrok tunnel for webhook testing
-
-`make dev` checks that Node 24 is active before starting. If it fails, run:
-
-```bash
-nvm install 24
-nvm use
-make dev
-```
-
-### Restart the app stack
-
-Use this when ports are stuck or you want a clean app restart without touching the database:
-
-```bash
-make restart
-```
-
-This kills common dev ports and starts the app stack again.
-
-### Open Drizzle Studio
-
-Use this when you want to inspect or edit local database data without resetting it:
-
-```bash
-make studio
-```
-
-Run this in a second terminal while `make dev` is running.
-
-### Reset local database and open Drizzle Studio
-
-Use this only when you intentionally want a fresh local database:
-
-```bash
-make db
-```
-
-This resets the local DB volume, applies migrations, and opens Drizzle Studio.
-
-### Fresh local database plus Polar sandbox cleanup
-
-Use this when you need to clear both local database state and Polar sandbox customers:
-
-```bash
-npm run db:fresh
-```
+`make studio` starts host-side Drizzle Studio; check its default port 4983 first. `make db-reset` destroys Saasy's development volumes, including its database. `npm run db:fresh` also resets Polar **sandbox** customers and must not be used as an ordinary restart.
 
 ## Other Useful Commands
 

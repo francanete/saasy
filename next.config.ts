@@ -20,6 +20,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ["omarchy-home.tailcb326a.ts.net"],
   // Enable React strict mode for better development experience
   reactStrictMode: true,
 
