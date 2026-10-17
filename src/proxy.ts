@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { getSubscriptionStatus } from "@/lib/subscription";
+import { getOrganizationSubscriptionStatus } from "@/lib/subscription";
+import { getOrganizationForUser } from "@/lib/organization";
 import { appConfig } from "@/lib/config";
 import { getSafeAuthCallback } from "@/lib/auth-redirect";
 
 // Route definitions
 const protectedRoutes = ["/dashboard"];
-const authenticatedRoutes = ["/checkout/continue", "/checkout/success"];
+const authenticatedRoutes = [
+  "/checkout/continue",
+  "/checkout/success",
+  "/organizations/new",
+  "/invitations/",
+];
 const authRoutes = ["/login"];
 const gateRoute = "/gate";
 
@@ -29,6 +35,8 @@ export async function proxy(req: NextRequest) {
   const sanitizedHeaders = new Headers(req.headers);
   sanitizedHeaders.delete("x-subscription-status");
   sanitizedHeaders.delete("x-user-id");
+  sanitizedHeaders.delete("x-organization-id");
+  sanitizedHeaders.delete("x-organization-role");
 
   // Skip public routes (no checks needed)
   if (
@@ -79,8 +87,14 @@ export async function proxy(req: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    // Query subscription (single DB query per request)
-    const subscription = await getSubscriptionStatus(session.user.id);
+    const organization = await getOrganizationForUser(session.user.id);
+    if (!organization) {
+      return NextResponse.redirect(new URL("/organizations/new", req.nextUrl));
+    }
+
+    const subscription = await getOrganizationSubscriptionStatus(
+      organization.id
+    );
 
     // Check paid access requirement
     if (REQUIRE_PAID_ACCESS && !subscription.hasAccess) {
@@ -90,6 +104,8 @@ export async function proxy(req: NextRequest) {
     // Pass subscription to Server Components via header (on sanitized headers)
     sanitizedHeaders.set("x-subscription-status", JSON.stringify(subscription));
     sanitizedHeaders.set("x-user-id", session.user.id);
+    sanitizedHeaders.set("x-organization-id", organization.id);
+    sanitizedHeaders.set("x-organization-role", organization.role);
 
     return NextResponse.next({
       request: { headers: sanitizedHeaders },
@@ -103,7 +119,13 @@ export async function proxy(req: NextRequest) {
       return NextResponse.redirect(new URL("/login", req.nextUrl));
     }
 
-    const subscription = await getSubscriptionStatus(session.user.id);
+    const organization = await getOrganizationForUser(session.user.id);
+    if (!organization) {
+      return NextResponse.redirect(new URL("/organizations/new", req.nextUrl));
+    }
+    const subscription = await getOrganizationSubscriptionStatus(
+      organization.id
+    );
 
     // Paid users shouldn't see gate - redirect to dashboard
     if (!REQUIRE_PAID_ACCESS || subscription.hasAccess) {
@@ -113,6 +135,8 @@ export async function proxy(req: NextRequest) {
     // Pass subscription for gate page UI (on sanitized headers)
     sanitizedHeaders.set("x-subscription-status", JSON.stringify(subscription));
     sanitizedHeaders.set("x-user-id", session.user.id);
+    sanitizedHeaders.set("x-organization-id", organization.id);
+    sanitizedHeaders.set("x-organization-role", organization.role);
 
     return NextResponse.next({
       request: { headers: sanitizedHeaders },

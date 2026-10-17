@@ -15,19 +15,24 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileForm } from "@/components/settings/profile-form";
 import { BillingSection } from "@/components/settings/billing-section";
+import { getOrganizationForUser } from "@/lib/organization";
+import { redirect } from "next/navigation";
 
 export default async function SettingsPage() {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
 
+  if (!session) redirect("/login");
+  const organization = await getOrganizationForUser(session.user.id);
+  if (!organization) redirect("/organizations/new");
   const [subscription] = await db
     .select()
     .from(subscriptions)
-    .where(eq(subscriptions.userId, session!.user.id))
+    .where(eq(subscriptions.organizationId, organization.id))
     .limit(1);
 
-  const user = session!.user;
+  const user = session.user;
   const initials = user.name
     ? user.name
         .split(" ")
@@ -97,7 +102,10 @@ export default async function SettingsPage() {
 
         <TabsContent value="billing" className="space-y-6">
           <div id="tour-settings-billing">
-            <BillingSection subscription={subscription} />
+            <BillingSection
+              subscription={subscription}
+              canManage={organization.role === "owner"}
+            />
           </div>
         </TabsContent>
       </Tabs>

@@ -4,6 +4,10 @@ import { vi, describe, it, expect, beforeEach } from "vitest";
 
 const mockGetCurrentSession = vi.fn();
 const mockGetSubscriptionStatus = vi.fn();
+const mockGetOrganization = vi.fn();
+vi.mock("@/lib/organization", () => ({
+  getOrganizationForUser: (...args: unknown[]) => mockGetOrganization(...args),
+}));
 const mockCheckAIRateLimit = vi.fn();
 const mockHandleApiError = vi.fn();
 
@@ -20,7 +24,7 @@ vi.mock("react", () => ({
 }));
 
 vi.mock("@/lib/subscription", () => ({
-  getSubscriptionStatus: (...args: unknown[]) =>
+  getOrganizationSubscriptionStatus: (...args: unknown[]) =>
     mockGetSubscriptionStatus(...args),
 }));
 
@@ -92,6 +96,11 @@ const happyRateLimit = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockGetOrganization.mockResolvedValue({
+    id: "org-1",
+    name: "Acme",
+    role: "member",
+  });
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 

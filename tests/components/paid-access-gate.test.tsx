@@ -7,8 +7,12 @@ vi.mock("@/lib/dal", () => ({
 }));
 
 const mockGetSubscriptionStatus = vi.fn();
+const mockGetOrganization = vi.fn();
+vi.mock("@/lib/organization", () => ({
+  getOrganizationForUser: (...args: unknown[]) => mockGetOrganization(...args),
+}));
 vi.mock("@/lib/subscription", () => ({
-  getSubscriptionStatus: (...args: unknown[]) =>
+  getOrganizationSubscriptionStatus: (...args: unknown[]) =>
     mockGetSubscriptionStatus(...args),
 }));
 
@@ -35,6 +39,7 @@ describe("PaidAccessGate", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetCurrentSession.mockResolvedValue(session);
+    mockGetOrganization.mockResolvedValue({ id: "org-1", role: "member" });
   });
 
   it("renders children for an active native trial with STARTER access", async () => {

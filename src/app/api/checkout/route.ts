@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/dal";
 import { createCheckout, getCheckoutProduct } from "@/lib/checkout";
+import { getOrganizationForUser } from "@/lib/organization";
 
 export async function POST(request: Request) {
   try {
@@ -10,6 +11,14 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "Unauthorized", code: "UNAUTHORIZED" },
         { status: 401 }
+      );
+    }
+
+    const organization = await getOrganizationForUser(session.user.id);
+    if (!organization || organization.role !== "owner") {
+      return NextResponse.json(
+        { error: "Only the organization owner can manage billing" },
+        { status: 403 }
       );
     }
 

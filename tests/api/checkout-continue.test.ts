@@ -2,6 +2,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
 const mockGetCurrentSession = vi.fn();
+const mockGetOrganization = vi.fn();
+vi.mock("@/lib/organization", () => ({
+  getOrganizationForUser: (...args: unknown[]) => mockGetOrganization(...args),
+}));
 vi.mock("@/lib/dal", () => ({
   getCurrentSession: () => mockGetCurrentSession(),
 }));
@@ -37,9 +41,21 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.stubEnv("NEXT_PUBLIC_APP_URL", "http://localhost:3000");
   mockGetPolarProducts.mockReturnValue(products);
+  mockGetOrganization.mockResolvedValue({ id: "org-1", role: "owner" });
 });
 
 describe("GET /checkout/continue", () => {
+  it("redirects a member away from checkout", async () => {
+    mockGetCurrentSession.mockResolvedValue({ user: { id: "user-1" } });
+    mockGetOrganization.mockResolvedValue({ id: "org-1", role: "member" });
+    const response = await GET(
+      makeRequest("/checkout/continue?slug=starter-monthly")
+    );
+    expect(new URL(response.headers.get("location")!).pathname).toBe(
+      "/dashboard/settings"
+    );
+    expect(mockCheckoutsCreate).not.toHaveBeenCalled();
+  });
   it("redirects unauthenticated users to login with the selected slug", async () => {
     mockGetCurrentSession.mockResolvedValue(null);
 

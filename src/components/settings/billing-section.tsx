@@ -16,6 +16,7 @@ import type { Subscription } from "@/lib/db/schema";
 
 interface BillingSectionProps {
   subscription: Subscription | undefined;
+  canManage?: boolean;
 }
 
 const planColors = {
@@ -32,7 +33,10 @@ const statusColors = {
   PAST_DUE: "destructive",
 } as const;
 
-export function BillingSection({ subscription }: BillingSectionProps) {
+export function BillingSection({
+  subscription,
+  canManage = true,
+}: BillingSectionProps) {
   const plan = subscription?.plan || "FREE";
   const status = subscription?.status || "ACTIVE";
   const nativeTrialEndsAt = subscription?.nativeTrialEndsAt;
@@ -146,15 +150,21 @@ export function BillingSection({ subscription }: BillingSectionProps) {
 
         <Separator />
 
-        <div className="flex gap-3">
-          {hasPaidBilling ? (
-            <Button onClick={handleManageBilling}>Manage Billing</Button>
-          ) : (
-            <Button asChild>
-              <Link href="/pricing">Choose a Plan</Link>
-            </Button>
-          )}
-        </div>
+        {canManage ? (
+          <div className="flex gap-3">
+            {hasPaidBilling ? (
+              <Button onClick={handleManageBilling}>Manage Billing</Button>
+            ) : (
+              <Button asChild>
+                <Link href="/pricing">Choose a Plan</Link>
+              </Button>
+            )}
+          </div>
+        ) : (
+          <p className="text-muted-foreground text-sm">
+            Only the organization owner can manage billing.
+          </p>
+        )}
       </CardContent>
     </Card>
   );

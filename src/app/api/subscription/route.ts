@@ -1,5 +1,6 @@
 import { getCurrentSession } from "@/lib/dal";
-import { getSubscriptionStatus } from "@/lib/subscription";
+import { getOrganizationSubscriptionStatus } from "@/lib/subscription";
+import { getOrganizationForUser } from "@/lib/organization";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -12,7 +13,14 @@ export async function GET() {
     );
   }
 
-  const subscription = await getSubscriptionStatus(session.user.id);
+  const organization = await getOrganizationForUser(session.user.id);
+  if (!organization) {
+    return NextResponse.json(
+      { error: "Organization membership required", code: "NO_ORGANIZATION" },
+      { status: 403 }
+    );
+  }
+  const subscription = await getOrganizationSubscriptionStatus(organization.id);
 
   return NextResponse.json({
     plan: subscription.plan,

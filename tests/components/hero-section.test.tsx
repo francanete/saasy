@@ -18,16 +18,19 @@ describe("HeroSection", () => {
 
     render(<HeroSection />);
 
-    const cta = screen.getByRole("link", { name: /start free trial/i });
+    const cta = screen.getByRole("link", { name: generalCta.label });
     expect(cta).toHaveAttribute("href", generalCta.href);
     expect(cta).toHaveTextContent(generalCta.label);
   });
 
-  it("renders native-trial support copy when native trial is enabled", () => {
+  it("renders the support copy for the configured access mode", () => {
     render(<HeroSection />);
 
-    expect(
-      screen.getByText(`${appConfig.pricing.nativeTrialDays}-day free trial`)
-    ).toBeInTheDocument();
+    const supportCopy = !appConfig.pricing.requirePaidAccess
+      ? "Free plan available"
+      : appConfig.pricing.allowNativeTrial
+        ? `${appConfig.pricing.nativeTrialDays}-day free trial`
+        : "Paid plans only";
+    expect(screen.getByText(supportCopy)).toBeInTheDocument();
   });
 });

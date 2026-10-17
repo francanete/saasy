@@ -37,6 +37,10 @@ vi.mock("better-auth/plugins/magic-link", () => ({
   magicLink: vi.fn((config) => config),
 }));
 
+vi.mock("better-auth/plugins/organization", () => ({
+  organization: vi.fn((options) => ({ id: "organization", options })),
+}));
+
 vi.mock("better-auth/adapters/drizzle", () => ({
   drizzleAdapter: vi.fn(() => ({})),
 }));
@@ -101,6 +105,86 @@ vi.mock("@/lib/polar-client", () => ({
 }));
 
 import { auth } from "@/lib/auth";
+
+const organizationOptions = (
+  auth as unknown as {
+    plugins: Array<{
+      id: string;
+      options: {
+        disableOrganizationDeletion: boolean;
+        organizationHooks: {
+          beforeCreateInvitation: (data: {
+            invitation: { role: string };
+          }) => Promise<void>;
+          beforeAcceptInvitation: (data: {
+            invitation: { role: string };
+            user: { id: string };
+          }) => Promise<void>;
+          beforeUpdateMemberRole: (data: {
+            member: { role: string };
+            newRole: string;
+          }) => Promise<void>;
+          beforeRemoveMember: (data: {
+            member: { role: string };
+          }) => Promise<void>;
+        };
+      };
+    }>;
+  }
+).plugins.find((plugin) => plugin.id === "organization")!.options;
+
+describe("organization owner safeguards", () => {
+  const hooks = organizationOptions.organizationHooks;
+
+  it("disables organization deletion", () => {
+    expect(organizationOptions.disableOrganizationDeletion).toBe(true);
+  });
+
+  it("rejects owner invitations before creation and acceptance", async () => {
+    await expect(
+      hooks.beforeCreateInvitation({ invitation: { role: "owner" } })
+    ).rejects.toThrow("Owner invitations are not supported");
+    await expect(
+      hooks.beforeCreateInvitation({ invitation: { role: "admin, owner" } })
+    ).rejects.toThrow("Owner invitations are not supported");
+    await expect(
+      hooks.beforeAcceptInvitation({
+        invitation: { role: "owner" },
+        user: { id: "user-2" },
+      })
+    ).rejects.toThrow("Owner invitations are not supported");
+    await expect(
+      hooks.beforeCreateInvitation({ invitation: { role: "admin" } })
+    ).resolves.toBeUndefined();
+  });
+
+  it("rejects creating or transferring an owner role", async () => {
+    await expect(
+      hooks.beforeUpdateMemberRole({
+        member: { role: "member" },
+        newRole: "owner",
+      })
+    ).rejects.toThrow("Owner transfers are not supported");
+    await expect(
+      hooks.beforeUpdateMemberRole({
+        member: { role: "owner" },
+        newRole: "admin",
+      })
+    ).rejects.toThrow("Owner transfers are not supported");
+    await expect(
+      hooks.beforeUpdateMemberRole({
+        member: { role: "member" },
+        newRole: "admin",
+      })
+    ).resolves.toBeUndefined();
+  });
+
+  it("rejects removing the organization owner", async () => {
+    await expect(
+      hooks.beforeRemoveMember({ member: { role: "owner" } })
+    ).rejects.toThrow("The organization owner cannot be removed");
+  });
+});
 
 const runUserCreateHook = auth as unknown as {
   databaseHooks: {

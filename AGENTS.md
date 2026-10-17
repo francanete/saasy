@@ -30,11 +30,11 @@ configuration and copy, then add domain-specific features only where needed.
 Use npm. This repo has `package-lock.json`.
 
 ```bash
-npm run dev              # Next.js + Inngest + ngrok
-npm run dev:next         # Next.js only
-npm run dev:inngest      # Inngest dev server only
-npm run dev:ngrok        # ngrok tunnel for webhooks
-npm run dev:full         # local Postgres + full dev stack
+npm run dev              # Docker Compose: Next.js + Postgres + Inngest
+npm run dev:next         # Next.js only, used inside the app container
+npm run dev:inngest      # start the Compose Inngest service and dependencies
+npm run dev:ngrok        # optional ngrok tunnel for webhooks
+npm run dev:full         # alias for npm run dev
 
 npm run build            # migrations + Next build
 npm run start            # production server
@@ -45,8 +45,8 @@ npm run format           # Prettier write
 npm run format:check     # Prettier check
 
 npm run db:dev:up        # start local Postgres
-npm run db:dev:down      # stop local Postgres
-npm run db:dev:reset     # reset local DB volume and migrate
+npm run db:dev:down      # stop the local Compose stack
+npm run db:dev:reset     # reset only the local DB volume and migrate
 npm run db:generate      # generate Drizzle migrations
 npm run db:migrate       # apply local migrations with .env.local
 npm run db:push          # push schema directly, dev only
@@ -60,7 +60,11 @@ npm run test:coverage    # coverage
 Makefile shortcuts:
 
 ```bash
-make restart             # kill common dev ports and run npm run dev
+make up                  # build and start the local Compose stack
+make status              # show local service health
+make logs                # follow Compose logs
+make restart             # recreate app and Inngest without resetting the DB
+make down                # stop Compose without deleting data
 make db                  # reset DB and open Drizzle Studio
 ```
 

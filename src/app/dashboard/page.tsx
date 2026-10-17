@@ -1,62 +1,69 @@
 import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-header";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { db, subscriptions } from "@/lib/db";
+import { db, members } from "@/lib/db";
 import { eq } from "drizzle-orm";
+import { getOrganizationForUser } from "@/lib/organization";
+import { getOrganizationSubscriptionStatus } from "@/lib/subscription";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LayoutDashboard, MessageSquare, CreditCard, Zap } from "lucide-react";
+import { Building2, Users, CreditCard, Shield } from "lucide-react";
+import { redirect } from "next/navigation";
+import Link from "next/link";
 
 export default async function DashboardPage() {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
 
-  const [subscription] = await db
-    .select()
-    .from(subscriptions)
-    .where(eq(subscriptions.userId, session!.user.id))
-    .limit(1);
-
-  const isNativeTrialActive =
-    !!subscription?.nativeTrialEndsAt &&
-    subscription.nativeTrialEndsAt > new Date();
+  if (!session) redirect("/login");
+  const organization = await getOrganizationForUser(session.user.id);
+  if (!organization) redirect("/organizations/new");
+  const [subscription, memberRows] = await Promise.all([
+    getOrganizationSubscriptionStatus(organization.id),
+    db
+      .select({ id: members.id })
+      .from(members)
+      .where(eq(members.organizationId, organization.id)),
+  ]);
 
   const stats = [
     {
-      title: "Projects",
-      value: "3",
-      description: "Active projects",
-      icon: LayoutDashboard,
-      tourId: "stat-projects",
+      title: "Organization",
+      value: organization.name,
+      description: "Shared workspace",
+      icon: Building2,
+      tourId: "stat-organization",
     },
     {
-      title: "Messages",
-      value: "127",
-      description: "AI conversations",
-      icon: MessageSquare,
-      tourId: "stat-messages",
+      title: "Members",
+      value: String(memberRows.length),
+      description: "People with access",
+      icon: Users,
+      tourId: "stat-members",
     },
     {
       title: "Plan",
-      value: subscription?.plan || "FREE",
-      description: isNativeTrialActive ? "Trial active" : "Current plan",
+      value: subscription.plan,
+      description: subscription.isNativeTrialActive
+        ? "Trial active"
+        : "Organization plan",
       icon: CreditCard,
       tourId: "stat-plan",
     },
     {
-      title: "API Calls",
-      value: "1,234",
-      description: "This month",
-      icon: Zap,
-      tourId: "stat-api",
+      title: "Your role",
+      value: organization.role,
+      description: "Organization access",
+      icon: Shield,
+      tourId: "stat-role",
     },
   ];
 
   return (
     <div className="space-y-8">
       <DashboardPageHeader
-        title={`Welcome back, ${session!.user.name || "there"}!`}
-        subtitle="Here's what's happening with your account."
+        title={`Welcome back, ${session.user.name || "there"}!`}
+        subtitle={`Here's what's happening in ${organization.name}.`}
       />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -85,8 +92,11 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent className="space-y-2">
             <p className="text-muted-foreground text-sm">
-              Start a new AI conversation, create a project, or manage your
-              settings.
+              Visit{" "}
+              <Link className="underline" href="/dashboard/organization">
+                Organization
+              </Link>{" "}
+              to manage members, or open Settings to review your plan.
             </p>
           </CardContent>
         </Card>

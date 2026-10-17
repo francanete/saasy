@@ -11,6 +11,10 @@ vi.mock("@/lib/config", () => ({
 }));
 
 const mockGetCurrentSession = vi.fn();
+const mockGetOrganization = vi.fn();
+vi.mock("@/lib/organization", () => ({
+  getOrganizationForUser: (...args: unknown[]) => mockGetOrganization(...args),
+}));
 const mockSyncWithCustomerToken = vi.fn();
 const mockSyncWithPolar = vi.fn();
 const mockHasPaidAccess = vi.fn();
@@ -31,11 +35,20 @@ import { syncSubscriptionAction } from "@/actions/subscription";
 describe("syncSubscriptionAction", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockGetOrganization.mockResolvedValue({ id: "org-1", role: "owner" });
   });
 
   const mockSession = {
     user: { id: "user-123", email: "test@example.com" },
   };
+
+  it("rejects a member billing sync", async () => {
+    mockGetCurrentSession.mockResolvedValue(mockSession);
+    mockGetOrganization.mockResolvedValue({ id: "org-1", role: "member" });
+    const result = await syncSubscriptionAction();
+    expect(result.success).toBe(false);
+    expect(mockSyncWithPolar).not.toHaveBeenCalled();
+  });
 
   it("returns error when not authenticated", async () => {
     mockGetCurrentSession.mockResolvedValue(null);

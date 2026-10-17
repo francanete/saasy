@@ -3,6 +3,10 @@ import { vi, describe, it, expect, beforeEach } from "vitest";
 // --- Mocks ---
 
 const mockGetCurrentSession = vi.fn();
+const mockGetOrganization = vi.fn();
+vi.mock("@/lib/organization", () => ({
+  getOrganizationForUser: (...args: unknown[]) => mockGetOrganization(...args),
+}));
 vi.mock("@/lib/dal", () => ({
   getCurrentSession: () => mockGetCurrentSession(),
 }));
@@ -47,12 +51,21 @@ beforeEach(() => {
   vi.spyOn(console, "error").mockImplementation(() => {});
   vi.stubEnv("NEXT_PUBLIC_APP_URL", "http://localhost:3000");
   mockGetPolarProducts.mockReturnValue(products);
+  mockGetOrganization.mockResolvedValue({ id: "org-1", role: "owner" });
 });
 
 describe("POST /api/checkout", () => {
   const mockSession = {
     user: { id: "user-1", email: "session@example.com" },
   };
+
+  it("rejects a member checkout", async () => {
+    mockGetCurrentSession.mockResolvedValue(mockSession);
+    mockGetOrganization.mockResolvedValue({ id: "org-1", role: "member" });
+    const response = await POST(makeRequest({ slug: "starter" }));
+    expect(response.status).toBe(403);
+    expect(mockCheckoutsCreate).not.toHaveBeenCalled();
+  });
 
   it("returns 400 when slug is missing", async () => {
     mockGetCurrentSession.mockResolvedValue(mockSession);

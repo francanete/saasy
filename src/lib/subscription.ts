@@ -1,5 +1,11 @@
 import { polarClient } from "./polar-client";
-import { db, subscriptions, type Plan, type BillingType } from "./db";
+import {
+  db,
+  subscriptions,
+  type Plan,
+  type BillingType,
+  type Subscription,
+} from "./db";
 import { eq } from "drizzle-orm";
 import { appConfig, getPlanFromPolarProduct } from "./config";
 
@@ -368,7 +374,21 @@ export async function getSubscriptionStatus(
     });
   }
 
-  // Handle edge case where subscription still doesn't exist (race condition)
+  return toSubscriptionStatus(subscription ?? null);
+}
+
+export async function getOrganizationSubscriptionStatus(
+  organizationId: string
+): Promise<SubscriptionStatus> {
+  const subscription = await db.query.subscriptions.findFirst({
+    where: eq(subscriptions.organizationId, organizationId),
+  });
+  return toSubscriptionStatus(subscription ?? null);
+}
+
+function toSubscriptionStatus(
+  subscription: Subscription | null
+): SubscriptionStatus {
   if (!subscription) {
     return {
       hasAccess: false,

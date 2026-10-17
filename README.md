@@ -4,56 +4,36 @@ Reusable SaaS starter built with Next.js, Better Auth, Drizzle, Polar, Inngest, 
 
 ## Local Runtime
 
-This project targets Node 24 to match Vercel.
+The normal development stack runs in Docker Compose. Docker is required; Node 24 is only needed for commands run on the host, such as Drizzle Studio and tests. Copy `.env.example` to `.env.local` and set your local credentials before starting.
 
 ```bash
-nvm install 24
-nvm use
-npm install
+cp .env.example .env.local
+make up
 ```
 
-The repo includes `.nvmrc`, so after Node 24 is installed you can usually run:
+`make up` starts Postgres, Next.js, and Inngest, then waits for their health checks. It builds the app image when missing and reuses it on later runs. Use `make rebuild` after changing `Dockerfile.dev`. Pending Drizzle migrations run during app startup. Dependencies are installed only when `package-lock.json` changes; dependencies and the Next.js cache live in named Docker volumes.
+
+The services are available on loopback only:
 
 ```bash
-nvm use
+http://localhost:3000  # Next.js app
+http://localhost:8288  # Inngest dev UI
 ```
+
+The database uses the host port set by `DB_PORT` in `.env.local` (default `5432`). Inside Compose, the app connects to `db:5432`, and Inngest registers functions through `http://app:3000/api/inngest`.
 
 ## Main Development Commands
 
-### Start the full local app stack
-
-Use this for normal product development:
-
 ```bash
-make dev
+make up       # start the stack
+make status   # show service health
+make logs     # follow app, Inngest, and database logs
+make restart  # recreate app and Inngest without deleting database data
+make rebuild  # rebuild and recreate app and Inngest
+make down     # stop the stack without deleting data
 ```
 
-This will:
-
-1. Start local Postgres with Docker Compose.
-2. Run local Drizzle migrations.
-3. Start the dev stack:
-   - Next.js app on `http://localhost:3000`
-   - Inngest dev server
-   - ngrok tunnel for webhook testing
-
-`make dev` checks that Node 24 is active before starting. If it fails, run:
-
-```bash
-nvm install 24
-nvm use
-make dev
-```
-
-### Restart the app stack
-
-Use this when ports are stuck or you want a clean app restart without touching the database:
-
-```bash
-make restart
-```
-
-This kills common dev ports and starts the app stack again.
+`npm run dev` and `make dev` are aliases for `make up`. To expose the running app for webhook testing, run `npm run dev:ngrok` separately.
 
 ### Open Drizzle Studio
 
@@ -63,7 +43,7 @@ Use this when you want to inspect or edit local database data without resetting 
 make studio
 ```
 
-Run this in a second terminal while `make dev` is running.
+Run this in a second terminal while the stack is running. Host-side commands require Node 24 (`nvm use`) and `npm install`.
 
 ### Reset local database and open Drizzle Studio
 
@@ -73,7 +53,7 @@ Use this only when you intentionally want a fresh local database:
 make db
 ```
 
-This resets the local DB volume, applies migrations, and opens Drizzle Studio.
+This deletes only the local database volume, applies migrations, and opens Drizzle Studio. The app and Inngest remain stopped; run `make up` when you want to start them again. Dependencies and the Next.js cache are preserved.
 
 ### Fresh local database plus Polar sandbox cleanup
 
@@ -97,12 +77,29 @@ npm run test           # Run Vitest in watch mode
 ## Notes
 
 - Inngest functions are served from `/api/inngest`.
-- Inngest local auto-discovery is disabled because the dev script already passes the explicit Next.js endpoint.
-- Drizzle SQL query logs are opt-in. Enable them temporarily with:
+- Inngest local auto-discovery is disabled because Compose passes the explicit Next.js endpoint.
+- Drizzle SQL query logs are opt-in. Add `DRIZZLE_LOG_QUERIES=true` to `.env.local`, then run `make restart`.
 
-```bash
-DRIZZLE_LOG_QUERIES=true npm run dev
-```
+## Organizations
+
+After signing in, a user creates one organization or accepts an invitation. Each
+account belongs to one organization. The organization dashboard and plan are
+shared by its members. Owners manage billing, owners and admins invite members,
+and owners can change member roles. Invitations are sent through Resend, so
+`RESEND_API_KEY`, `EMAIL_FROM`, and `NEXT_PUBLIC_APP_URL` must be set for the
+invitation flow. Apply new migrations with `npm run db:migrate` when running
+outside Docker; `make up` applies pending migrations automatically.
+
+The original owner remains the billing owner. Organization deletion and owner
+transfers are disabled until the app supports cancelling or transferring the
+corresponding Polar subscription safely.
+
+If an account has pending invitations, the organization setup page offers them
+before creating a new organization. Someone who accidentally creates an
+organization can still join an invitation if they are its sole owner, have no
+outstanding invitations, and have no local or Polar billing activity. Joining
+removes that empty organization and its local trial. Recovery needs a working
+`POLAR_ACCESS_TOKEN` so billing can be checked; otherwise the switch is blocked.
 
 ## Deploy on Vercel
 

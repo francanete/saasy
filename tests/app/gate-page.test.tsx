@@ -4,6 +4,10 @@ import { afterEach, beforeEach, vi } from "vitest";
 const mockGetCurrentSession = vi.fn();
 const mockGetSubscriptionFromRequest = vi.fn();
 const mockGetSubscriptionStatus = vi.fn();
+const mockGetOrganization = vi.fn();
+vi.mock("@/lib/organization", () => ({
+  getOrganizationForUser: (...args: unknown[]) => mockGetOrganization(...args),
+}));
 const mockRedirect = vi.fn();
 
 vi.mock("@/lib/dal", () => ({
@@ -13,7 +17,7 @@ vi.mock("@/lib/dal", () => ({
 }));
 
 vi.mock("@/lib/subscription", () => ({
-  getSubscriptionStatus: (...args: unknown[]) =>
+  getOrganizationSubscriptionStatus: (...args: unknown[]) =>
     mockGetSubscriptionStatus(...args),
 }));
 
@@ -49,6 +53,11 @@ describe("GatePage", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-01-01T12:00:00.000Z"));
     mockGetCurrentSession.mockResolvedValue(session);
+    mockGetOrganization.mockResolvedValue({
+      id: "org-1",
+      name: "Acme",
+      role: "owner",
+    });
   });
 
   afterEach(() => {

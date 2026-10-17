@@ -1,20 +1,4 @@
 services:
-  # app:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "3000:3000"
-  #   volumes:
-  #     - .:/app
-  #     - /app/node_modules
-  #     - /app/.next
-  #   env_file:
-  #     - .env.local
-  #   environment:
-  #     - WATCHPACK_POLLING=true
-  #     - CHOKIDAR_USEPOLLING=true
-
   db:
     image: postgres:17
     container_name: ${DB_CONTAINER_NAME:-saasy-db}
@@ -23,15 +7,83 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-saasy}
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "127.0.0.1:${DB_PORT:-5432}:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-saasy}",
+        ]
+      interval: 3s
       timeout: 5s
       retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    working_dir: /workspace
+    env_file:
+      - .env.local
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-saasy}
+      INNGEST_DEV: "1"
+      INNGEST_BASE_URL: http://inngest:8288
+    command: ["sh", "scripts/docker-dev-start.sh"]
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - .:/workspace
+      - saasy_node_modules:/workspace/node_modules
+      - saasy_next_cache:/workspace/.next
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/inngest').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 3s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+
+  inngest:
+    image: inngest/inngest:v1.45.1@sha256:b251da91bd014d56816c3159c606f470d6e423be9a12fbed45808636160aa92c
+    command:
+      - inngest
+      - dev
+      - --no-discovery
+      - -u
+      - http://app:3000/api/inngest
+    ports:
+      - "127.0.0.1:8288:8288"
+    depends_on:
+      app:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "inngest",
+          "alpha",
+          "doctor",
+          "healthcheck",
+          "--skip-connect-gateway",
+        ]
+      interval: 3s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
 
 volumes:
   db_data:
     name: ${DB_VOLUME_NAME:-saasy_db_data}
+  saasy_node_modules:
+  saasy_next_cache:

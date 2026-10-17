@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentSession } from "@/lib/dal";
-import { getSubscriptionStatus } from "@/lib/subscription";
+import { getOrganizationSubscriptionStatus } from "@/lib/subscription";
+import { getOrganizationForUser } from "@/lib/organization";
 import { UpgradePrompt } from "@/components/upgrade-prompt";
 import type { Plan } from "@/lib/db/schema";
 
@@ -31,7 +32,9 @@ export async function PaidAccessGate({
     redirect(redirectTo);
   }
 
-  const subscription = await getSubscriptionStatus(session.user.id);
+  const organization = await getOrganizationForUser(session.user.id);
+  if (!organization) redirect("/organizations/new");
+  const subscription = await getOrganizationSubscriptionStatus(organization.id);
 
   if (
     !subscription.hasAccess ||

@@ -14,6 +14,7 @@ import { BillingSection } from "@/components/settings/billing-section";
 const baseSubscription: Subscription = {
   id: "subscription-1",
   userId: "user-1",
+  organizationId: null,
   polarCustomerId: null,
   polarSubscriptionId: null,
   polarOrderId: null,

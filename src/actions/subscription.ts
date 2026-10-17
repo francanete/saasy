@@ -1,6 +1,7 @@
 "use server";
 
 import { getCurrentSession } from "@/lib/dal";
+import { getOrganizationForUser } from "@/lib/organization";
 import {
   syncWithPolar,
   syncWithCustomerToken,
@@ -28,6 +29,15 @@ export async function syncSubscriptionAction(
       success: false,
       paymentConfirmed: false,
       error: "Not authenticated",
+    };
+  }
+
+  const organization = await getOrganizationForUser(session.user.id);
+  if (!organization || organization.role !== "owner") {
+    return {
+      success: false,
+      paymentConfirmed: false,
+      error: "Only the organization owner can manage billing",
     };
   }
 
