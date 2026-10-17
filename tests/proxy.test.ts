@@ -11,8 +11,15 @@ vi.mock("@/lib/auth", () => ({
 }));
 
 const mockGetSubscriptionStatus = vi.fn();
+const mockGetOrganization = vi.fn();
+vi.mock("@/lib/organization", () => ({
+  getOrganizationForUser: (...args: unknown[]) => mockGetOrganization(...args),
+}));
+vi.mock("@/lib/config", () => ({
+  appConfig: { pricing: { requirePaidAccess: true } },
+}));
 vi.mock("@/lib/subscription", () => ({
-  getSubscriptionStatus: (...args: unknown[]) =>
+  getOrganizationSubscriptionStatus: (...args: unknown[]) =>
     mockGetSubscriptionStatus(...args),
 }));
 
@@ -71,9 +78,26 @@ function getForwardedHeader(response: Response, name: string) {
 beforeEach(() => {
   mockGetSession.mockReset();
   mockGetSubscriptionStatus.mockReset();
+  mockGetOrganization.mockReset();
+  mockGetOrganization.mockResolvedValue({
+    id: "org-1",
+    name: "Acme",
+    slug: "acme",
+    role: "member",
+  });
 });
 
 describe("proxy dashboard access", () => {
+  it("sends a signed-in user without membership to organization setup", async () => {
+    mockGetSession.mockResolvedValue(session);
+    mockGetOrganization.mockResolvedValue(null);
+
+    const response = await proxy(makeRequest("/dashboard"));
+
+    expect(getLocationPath(response)).toBe("/organizations/new");
+    expect(mockGetSubscriptionStatus).not.toHaveBeenCalled();
+  });
+
   it("redirects an unauthenticated user to login with the dashboard callback", async () => {
     mockGetSession.mockResolvedValue(null);
 
@@ -100,10 +124,12 @@ describe("proxy dashboard access", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("x-middleware-next")).toBe("1");
     expect(getForwardedHeader(response, "x-user-id")).toBe("user-1");
+    expect(getForwardedHeader(response, "x-organization-id")).toBe("org-1");
+    expect(getForwardedHeader(response, "x-organization-role")).toBe("member");
     expect(getForwardedHeader(response, "x-subscription-status")).toBe(
       JSON.stringify(activeTrialSubscription)
     );
-    expect(mockGetSubscriptionStatus).toHaveBeenCalledWith("user-1");
+    expect(mockGetSubscriptionStatus).toHaveBeenCalledWith("org-1");
   });
 
   it("redirects an expired native trial to the gate", async () => {

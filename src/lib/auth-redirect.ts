@@ -16,6 +16,14 @@ export function getSafeAuthCallback(callbackUrl?: string): string {
       return "/dashboard";
     }
 
+    if (
+      /^\/invitations\/[a-zA-Z0-9_-]+$/.test(url.pathname) &&
+      !url.search &&
+      !url.hash
+    ) {
+      return url.pathname;
+    }
+
     if (url.pathname === "/checkout/continue") {
       const slug = url.searchParams.get("slug");
 

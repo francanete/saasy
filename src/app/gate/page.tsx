@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentSession, getSubscriptionFromRequest } from "@/lib/dal";
-import { getSubscriptionStatus } from "@/lib/subscription";
+import { getOrganizationSubscriptionStatus } from "@/lib/subscription";
+import { getOrganizationForUser } from "@/lib/organization";
 import { PricingSection } from "@/components/pricing/pricing-section";
 import { appConfig } from "@/lib/config";
 
@@ -27,11 +28,14 @@ export default async function GatePage() {
     redirect("/login?redirect=/gate");
   }
 
+  const organization = await getOrganizationForUser(session.user.id);
+  if (!organization) redirect("/organizations/new");
+
   // Check subscription from proxy-injected header (no DB query)
   // Falls back to DB query if header is missing
   let subscription = await getSubscriptionFromRequest();
   if (!subscription) {
-    subscription = await getSubscriptionStatus(session.user.id);
+    subscription = await getOrganizationSubscriptionStatus(organization.id);
   }
 
   // Paid user shouldn't see gate (proxy.ts should have redirected, but fallback)
@@ -66,7 +70,17 @@ export default async function GatePage() {
           </p>
         </div>
       )}
-      <PricingSection />
+      {organization.role === "owner" ? (
+        <PricingSection />
+      ) : (
+        <div className="mx-auto max-w-xl px-6 py-20 text-center">
+          <h1 className="text-3xl font-bold">Organization access is paused</h1>
+          <p className="text-muted-foreground mt-4">
+            Ask the owner of {organization.name} to update the organization
+            plan.
+          </p>
+        </div>
+      )}
     </>
   );
 }

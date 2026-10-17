@@ -4,7 +4,14 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { auth, type Session } from "./auth";
-import { getSubscriptionStatus, type SubscriptionStatus } from "./subscription";
+import {
+  getOrganizationSubscriptionStatus,
+  type SubscriptionStatus,
+} from "./subscription";
+import {
+  getOrganizationForUser,
+  type OrganizationContext,
+} from "./organization";
 import { checkAIRateLimit, type AIRateLimitResult } from "./rate-limit";
 import { handleApiError } from "./api-utils";
 import { db } from "./db";
@@ -28,6 +35,7 @@ export type AuthOptions = {
 
 export type AuthContext<P = Record<string, string>> = {
   session: NonNullable<Session>;
+  organization: OrganizationContext;
   subscription: SubscriptionStatus;
   rateLimit?: AIRateLimitResult;
   params: P;
@@ -72,6 +80,8 @@ export const getSubscriptionFromRequest = cache(
 
 export async function requirePaidAccess(): Promise<{
   userId: string;
+  organizationId: string;
+  role: OrganizationContext["role"];
   plan: string;
 }> {
   const session = await getCurrentSession();
@@ -79,12 +89,22 @@ export async function requirePaidAccess(): Promise<{
     throw new AuthError("Unauthorized");
   }
 
-  const subscription = await getSubscriptionStatus(session.user.id);
+  const organization = await getOrganizationForUser(session.user.id);
+  if (!organization) {
+    throw new AuthError("Organization membership required");
+  }
+
+  const subscription = await getOrganizationSubscriptionStatus(organization.id);
   if (!subscription.hasAccess) {
     throw new AuthError("Active subscription required");
   }
 
-  return { userId: session.user.id, plan: subscription.plan };
+  return {
+    userId: session.user.id,
+    organizationId: organization.id,
+    role: organization.role,
+    plan: subscription.plan,
+  };
 }
 
 // ============ API Route Wrapper ============
@@ -106,8 +126,20 @@ export function protectedApiRouteWrapper<P = Record<string, string>>(
         );
       }
 
-      // 2. Get subscription status
-      const subscription = await getSubscriptionStatus(session.user.id);
+      // 2. Resolve membership and organization subscription
+      const organization = await getOrganizationForUser(session.user.id);
+      if (!organization) {
+        return NextResponse.json(
+          {
+            error: "Organization membership required",
+            code: "NO_ORGANIZATION",
+          },
+          { status: 403 }
+        );
+      }
+      const subscription = await getOrganizationSubscriptionStatus(
+        organization.id
+      );
 
       // 3. Paid access check (default: required)
       if (requirePaid && !subscription.hasAccess) {
@@ -152,6 +184,7 @@ export function protectedApiRouteWrapper<P = Record<string, string>>(
       // 6. Call handler with context
       return await handler(request, {
         session,
+        organization,
         subscription,
         rateLimit: rateLimitResult,
         params,

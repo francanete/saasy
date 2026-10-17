@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/dal";
 import { createCheckout, getCheckoutProduct } from "@/lib/checkout";
+import { getOrganizationForUser } from "@/lib/organization";
 
 function redirectToPricing(request: NextRequest, reason: string) {
   const url = new URL("/pricing", request.url);
@@ -25,6 +26,12 @@ export async function GET(request: NextRequest) {
     );
     return NextResponse.redirect(loginUrl);
   }
+
+  const organization = await getOrganizationForUser(session.user.id);
+  if (!organization)
+    return NextResponse.redirect(new URL("/organizations/new", request.url));
+  if (organization.role !== "owner")
+    return NextResponse.redirect(new URL("/dashboard/settings", request.url));
 
   try {
     const checkoutUrl = await createCheckout({

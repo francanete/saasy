@@ -40,11 +40,10 @@ export const onboardingFlows: Record<string, OnboardingFlow> = {
         desktopOnly: true,
       },
       {
-        id: "projects",
-        title: "Your Projects",
-        content:
-          "Track all your active projects here. This is your command center.",
-        selector: "#tour-stat-projects",
+        id: "organization",
+        title: "Your Organization",
+        content: "This dashboard belongs to your shared organization.",
+        selector: "#tour-stat-organization",
         position: "bottom",
       },
       {

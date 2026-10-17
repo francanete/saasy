@@ -8,7 +8,7 @@ import {
   index,
   integer,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
 
 // ============ Enums ============
@@ -58,6 +58,7 @@ export const sessions = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
+    activeOrganizationId: text("active_organization_id"),
     token: text("token").notNull().unique(),
     expiresAt: timestamp("expires_at").notNull(),
     ipAddress: text("ip_address"),
@@ -69,6 +70,60 @@ export const sessions = pgTable(
       .$onUpdate(() => new Date()),
   },
   (table) => [index("sessions_user_id_idx").on(table.userId)]
+);
+
+// ============ Better Auth Organization Tables ============
+export const organizations = pgTable("organizations", {
+  id: text("id").primaryKey().$defaultFn(createId),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  logo: text("logo"),
+  metadata: text("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const members = pgTable(
+  "members",
+  {
+    id: text("id").primaryKey().$defaultFn(createId),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    role: text("role").default("member").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("members_user_id_unique").on(table.userId),
+    uniqueIndex("members_one_owner_per_org")
+      .on(table.organizationId)
+      .where(sql`${table.role} = 'owner'`),
+    index("members_organization_id_idx").on(table.organizationId),
+  ]
+);
+
+export const invitations = pgTable(
+  "invitations",
+  {
+    id: text("id").primaryKey().$defaultFn(createId),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    email: text("email").notNull(),
+    role: text("role"),
+    status: text("status").default("pending").notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    inviterId: text("inviter_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+  },
+  (table) => [
+    index("invitations_organization_id_idx").on(table.organizationId),
+    index("invitations_email_idx").on(table.email),
+  ]
 );
 
 export const accounts = pgTable(
@@ -138,6 +193,9 @@ export const subscriptions = pgTable(
       .notNull()
       .unique()
       .references(() => users.id, { onDelete: "cascade" }),
+    organizationId: text("organization_id")
+      .unique()
+      .references(() => organizations.id, { onDelete: "cascade" }),
 
     // Polar IDs
     polarCustomerId: text("polar_customer_id"),
@@ -271,6 +329,31 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   aiUsage: many(aiUsage),
   onboardingFlows: many(onboardingFlows),
   emailsSent: many(emailsSent),
+  membership: one(members),
+}));
+
+export const organizationsRelations = relations(
+  organizations,
+  ({ many, one }) => ({
+    members: many(members),
+    invitations: many(invitations),
+    subscription: one(subscriptions),
+  })
+);
+
+export const membersRelations = relations(members, ({ one }) => ({
+  user: one(users, { fields: [members.userId], references: [users.id] }),
+  organization: one(organizations, {
+    fields: [members.organizationId],
+    references: [organizations.id],
+  }),
+}));
+
+export const invitationsRelations = relations(invitations, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [invitations.organizationId],
+    references: [organizations.id],
+  }),
 }));
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -291,6 +374,10 @@ export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
   user: one(users, {
     fields: [subscriptions.userId],
     references: [users.id],
+  }),
+  organization: one(organizations, {
+    fields: [subscriptions.organizationId],
+    references: [organizations.id],
   }),
 }));
 
@@ -333,3 +420,4 @@ export type NewEmailSent = typeof emailsSent.$inferInsert;
 export type Plan = "FREE" | "STARTER" | "GROWTH" | "SCALE";
 export type BillingType = "recurring" | "one_time" | "none";
 export type Role = "user" | "admin";
+export type OrganizationRole = "owner" | "admin" | "member";

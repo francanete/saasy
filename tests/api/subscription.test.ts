@@ -8,8 +8,12 @@ vi.mock("@/lib/dal", () => ({
 }));
 
 const mockGetSubscriptionStatus = vi.fn();
+const mockGetOrganization = vi.fn();
+vi.mock("@/lib/organization", () => ({
+  getOrganizationForUser: (...args: unknown[]) => mockGetOrganization(...args),
+}));
 vi.mock("@/lib/subscription", () => ({
-  getSubscriptionStatus: (...args: unknown[]) =>
+  getOrganizationSubscriptionStatus: (...args: unknown[]) =>
     mockGetSubscriptionStatus(...args),
 }));
 
@@ -19,6 +23,7 @@ import { GET } from "@/app/api/subscription/route";
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockGetOrganization.mockResolvedValue({ id: "org-1", role: "member" });
 });
 
 describe("GET /api/subscription", () => {

@@ -1,7 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { LayoutDashboard, MessageSquare, Settings } from "lucide-react";
+import {
+  Building2,
+  LayoutDashboard,
+  MessageSquare,
+  Settings,
+} from "lucide-react";
 import { PlauderaLogo } from "@/components/plaudera-logo";
 import {
   Sidebar,
@@ -45,6 +50,7 @@ const navigation = [
   { name: "Chat", href: "/dashboard/chat", icon: MessageSquare },
 
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
+  { name: "Organization", href: "/dashboard/organization", icon: Building2 },
 ];
 
 const adminNavigation: typeof navigation = [];

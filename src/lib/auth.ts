@@ -1,18 +1,20 @@
 import { betterAuth } from "better-auth";
 import { magicLink } from "better-auth/plugins/magic-link";
+import { organization } from "better-auth/plugins/organization";
+import { APIError } from "better-auth/api";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { polar, checkout, portal, webhooks } from "@polar-sh/better-auth";
+import { polar, portal, webhooks } from "@polar-sh/better-auth";
 import { polarClient } from "./polar-client";
 import { eq } from "drizzle-orm";
-import { db, users, subscriptions } from "./db";
+import { db, users, subscriptions, members } from "./db";
 import * as schema from "./db/schema";
 import { sendEmail } from "./email";
 import { appConfig } from "./config";
-import { getPolarProducts } from "./pricing";
 import {
   upsertSubscription,
   updateSubscriptionStatus,
   mapPolarStatus,
+  getSubscriptionStatus,
 } from "./subscription";
 import { inngest } from "./inngest/client";
 import { trackEvent, trackRevenue } from "./openpanel";
@@ -158,6 +160,10 @@ async function grantNativeTrial(userId: string): Promise<void> {
     });
 }
 
+function hasOwnerRole(role: string): boolean {
+  return role.split(",").some((part) => part.trim() === "owner");
+}
+
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
@@ -172,6 +178,73 @@ export const auth = betterAuth({
     },
   },
   plugins: [
+    organization({
+      // Billing is still owned by the original user. Keep that owner and the
+      // organization in place until an explicit billing transfer/delete flow exists.
+      disableOrganizationDeletion: true,
+      allowUserToCreateOrganization: async (user) => {
+        const membership = await db.query.members.findFirst({
+          where: eq(members.userId, user.id),
+          columns: { id: true },
+        });
+        return !membership;
+      },
+      async sendInvitationEmail({ id, email }) {
+        const invitationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/invitations/${encodeURIComponent(id)}`;
+        await sendEmail({
+          to: email,
+          subject: `Invitation to join a ${appConfig.name} organization`,
+          html: `<p>You have been invited to join an organization on ${appConfig.name}.</p><p><a href="${invitationUrl}">Accept invitation</a></p>`,
+        });
+      },
+      organizationHooks: {
+        beforeCreateInvitation: async ({ invitation }) => {
+          if (hasOwnerRole(invitation.role)) {
+            throw new APIError("BAD_REQUEST", {
+              message: "Owner invitations are not supported",
+            });
+          }
+        },
+        beforeUpdateMemberRole: async ({ member, newRole }) => {
+          if (hasOwnerRole(member.role) || hasOwnerRole(newRole)) {
+            throw new APIError("BAD_REQUEST", {
+              message: "Owner transfers are not supported",
+            });
+          }
+        },
+        beforeRemoveMember: async ({ member }) => {
+          if (hasOwnerRole(member.role)) {
+            throw new APIError("BAD_REQUEST", {
+              message: "The organization owner cannot be removed",
+            });
+          }
+        },
+        afterCreateOrganization: async ({ organization: created, user }) => {
+          await getSubscriptionStatus(user.id);
+          await grantNativeTrial(user.id);
+          await db
+            .update(subscriptions)
+            .set({ organizationId: created.id })
+            .where(eq(subscriptions.userId, user.id));
+        },
+        beforeAcceptInvitation: async ({ invitation, user }) => {
+          if (invitation.role && hasOwnerRole(invitation.role)) {
+            throw new APIError("BAD_REQUEST", {
+              message: "Owner invitations are not supported",
+            });
+          }
+          const membership = await db.query.members.findFirst({
+            where: eq(members.userId, user.id),
+            columns: { id: true },
+          });
+          if (membership) {
+            throw new APIError("BAD_REQUEST", {
+              message: "This account already belongs to an organization",
+            });
+          }
+        },
+      },
+    }),
     magicLink({
       sendMagicLink: async ({ email, url }: { email: string; url: string }) => {
         await sendEmail({
@@ -194,11 +267,6 @@ export const auth = betterAuth({
       client: polarClient,
       createCustomerOnSignUp: true,
       use: [
-        checkout({
-          products: getPolarProducts(),
-          successUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?checkout=success`,
-          authenticatedUsersOnly: true,
-        }),
         portal(),
         webhooks({
           secret: process.env.POLAR_WEBHOOK_SECRET!,

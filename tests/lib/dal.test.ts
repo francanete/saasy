@@ -15,8 +15,12 @@ vi.mock("next/headers", () => ({
 }));
 
 const mockGetSubscriptionStatus = vi.fn();
+const mockGetOrganization = vi.fn();
+vi.mock("@/lib/organization", () => ({
+  getOrganizationForUser: (...args: unknown[]) => mockGetOrganization(...args),
+}));
 vi.mock("@/lib/subscription", () => ({
-  getSubscriptionStatus: (...args: unknown[]) =>
+  getOrganizationSubscriptionStatus: (...args: unknown[]) =>
     mockGetSubscriptionStatus(...args),
 }));
 
@@ -83,6 +87,12 @@ const mockSubscription = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockGetOrganization.mockResolvedValue({
+    id: "org-1",
+    name: "Acme",
+    slug: "acme",
+    role: "member",
+  });
 });
 
 describe("getCurrentSession", () => {
@@ -132,6 +142,17 @@ describe("getSubscriptionFromRequest", () => {
 });
 
 describe("requirePaidAccess", () => {
+  it("rejects a signed-in user without organization membership", async () => {
+    mockGetSession.mockResolvedValue(mockSession);
+    mockHeaders.mockResolvedValue(new Headers());
+    mockGetOrganization.mockResolvedValue(null);
+
+    await expect(requirePaidAccess()).rejects.toThrow(
+      "Organization membership required"
+    );
+    expect(mockGetSubscriptionStatus).not.toHaveBeenCalled();
+  });
+
   it("throws AuthError when no session", async () => {
     mockGetSession.mockResolvedValue(null);
     mockHeaders.mockResolvedValue(new Headers());
@@ -159,7 +180,12 @@ describe("requirePaidAccess", () => {
     mockGetSubscriptionStatus.mockResolvedValue(mockSubscription);
 
     const result = await requirePaidAccess();
-    expect(result).toEqual({ userId: "user-1", plan: "STARTER" });
+    expect(result).toEqual({
+      userId: "user-1",
+      organizationId: "org-1",
+      role: "member",
+      plan: "STARTER",
+    });
   });
 });
 
@@ -312,6 +338,7 @@ describe("protectedApiRouteWrapper", () => {
 
     expect(mockHandler).toHaveBeenCalledWith(mockRequest, {
       session: mockSession,
+      organization: { id: "org-1", name: "Acme", slug: "acme", role: "member" },
       subscription: mockSubscription,
       rateLimit: rateLimitResult,
       params: {},

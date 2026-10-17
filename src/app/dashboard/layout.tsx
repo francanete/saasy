@@ -6,7 +6,8 @@ import { redirect } from "next/navigation";
 import { eq, and } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { onboardingFlows } from "@/lib/db/schema";
-import { getSubscriptionStatus } from "@/lib/subscription";
+import { getOrganizationSubscriptionStatus } from "@/lib/subscription";
+import { getOrganizationForUser } from "@/lib/organization";
 import { getSubscriptionFromRequest, isUserAdmin } from "@/lib/dal";
 import { appConfig } from "@/lib/config";
 import { IdentifyUser } from "@/components/analytics/identify-user";
@@ -37,11 +38,14 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
+  const organization = await getOrganizationForUser(session.user.id);
+  if (!organization) redirect("/organizations/new");
+
   // Read subscription from proxy-injected header (no DB query)
   // Falls back to DB query if header is missing
   let subscription = await getSubscriptionFromRequest();
   if (!subscription) {
-    subscription = await getSubscriptionStatus(session.user.id);
+    subscription = await getOrganizationSubscriptionStatus(organization.id);
   }
 
   // Fallback: If paid access required and user has no access, redirect to gate
